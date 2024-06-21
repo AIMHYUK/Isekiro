@@ -2,16 +2,22 @@
 
 
 #include "Character/BossCharacter.h"
-#include "ActorComponents/FSMComponent.h"
+#include "FSM/FSMComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "FSM/StateObject.h"
 
 ABossCharacter::ABossCharacter()
 {
 	FSMComponent = CreateDefaultSubobject<UFSMComponent>("FSMComponent");
 
-	BufferDist = 150.f;
+	TargetOffset = 150.f;
 	StrafeSpeed = 100.f;
-	RunSpeed = 500.f;
+	RunSpeed = 400.f;
+	bHasPrevLoc = false;
+	PrevLoc = FVector::Zero();
+
+	MaxRunTime = 2.f;
+	TotalRunTime = 0.f;
 
 	CurrentState = ETestState::Strafe;
 	StateMaxTime = 5.f;
@@ -22,33 +28,31 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(Target)) 
+	if (ensureAlways(TargetO))
 	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
 		DirVector.Normalize();
 		FRotator newRotation = DirVector.Rotation();
-		newRotation.Pitch = 0.f; 
-		newRotation.Roll = 0.f; 
+		newRotation.Pitch = 0.f;
+		newRotation.Roll = 0.f;
 		SetActorRotation(newRotation.Quaternion());
 	}
 
+	TotalTime += DeltaTime;
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
+	if (TotalTime >= StateMaxTime)
 	{
-		TotalTime += DeltaTime;
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
-		if (TotalTime >= StateMaxTime) 
-		{
-			TotalTime = 0.f;
-			ETestState test;
-			do {
-				test = ETestState(FMath::RandRange(0, 3)); 
-			} while (test == CurrentState);			
-			CurrentState = test;
-		}
+		TotalTime = 0.f;
+		ETestState test;
+		do {
+			test = ETestState(FMath::RandRange(0, 3));
+		} while (test == CurrentState);
+		CurrentState = test;
 	}
 
-	switch (CurrentState) 
+	switch (CurrentState)
 	{
-	case ETestState::Strafe: 
+	case ETestState::Strafe:
 	{
 		FVector newLoc = GetActorLocation() + GetActorRightVector() * StrafeSpeed * DeltaTime;
 
@@ -59,23 +63,44 @@ void ABossCharacter::Tick(float DeltaTime)
 	{
 		float Dist = GetDistanceToTarget();
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Distance: %.2f"), Dist));
-		
-		if (Dist > BufferDist) 
+
+		if (Dist > TargetOffset)
 		{
 			FVector newLoc = GetActorLocation() + GetActorForwardVector() * RunSpeed * DeltaTime;
 			SetActorLocation(newLoc);
-
-			//FMath::Lerp();
 		}
 
 		break;
 	}
 	case ETestState::Rush:
 	{
+		if (StateObjClass)
+		{
+			UStateObject* Obj = NewObject<UStateObject>(this, StateObjClass);
+			if (Obj)
+			{
+				Obj->TestFunction();
+			}
+		}
+		CurrentState = ETestState::Run;
 		break;
 	}
 	case ETestState::Lunge:
 	{
+		if (!bHasPrevLoc)
+		{
+			bHasPrevLoc = true;
+			PrevLoc = GetActorLocation();
+		}
+		if (TotalRunTime < MaxRunTime) {
+			TotalRunTime += DeltaTime;
+		}
+		FVector ToTarget = GetTargetOffsetLocation();
+		ToTarget.Z = GetActorLocation().Z;
+
+		FVector Test = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+		SetActorLocation(Test);
+
 		break;
 	}
 	}
@@ -83,11 +108,22 @@ void ABossCharacter::Tick(float DeltaTime)
 
 float ABossCharacter::GetDistanceToTarget() const
 {
-	if (Target) 
+	if (TargetO)
 	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
-	
+
 	return -1.f;
+}
+
+FVector ABossCharacter::GetTargetOffsetLocation() const
+{
+	if (TargetO)
+	{
+		FVector WorkingVector = TargetO->GetActorForwardVector();
+		WorkingVector *= TargetOffset;
+		return WorkingVector;
+	}
+	return FVector();
 }

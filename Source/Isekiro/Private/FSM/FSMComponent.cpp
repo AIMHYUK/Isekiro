@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/FSMComponent.h"
+#include "FSM/FSMComponent.h"
 
 UFSMComponent::UFSMComponent()
 {

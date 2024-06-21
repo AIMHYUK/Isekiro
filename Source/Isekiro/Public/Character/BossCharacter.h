@@ -20,6 +20,7 @@ enum class ETestState : uint8
 };
 
 class UFSMComponent;
+class UStateObject;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -31,11 +32,18 @@ public:
 
 protected:
 	TObjectPtr<UFSMComponent> FSMComponent;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TSubclassOf<UStateObject> StateObjClass;
+
+	UPROPERTY(EditInstanceOnly, Category = "Test")
+	TObjectPtr<AActor> TargetO;
+	UPROPERTY(EditInstanceOnly, Category = "Test")
+	float TargetOffset;
 	
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	TObjectPtr<AActor> Target;
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float BufferDist;
+	bool bHasPrevLoc;
+	FVector PrevLoc;
+	float MaxRunTime = 2.f;
+	float TotalRunTime;
 
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	float StrafeSpeed;
@@ -50,4 +58,18 @@ protected:
 
 private:
 	float GetDistanceToTarget() const;
+	FVector GetTargetOffsetLocation() const;
+		
+	float EaseInOutCubic(float x) {
+		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;
+	}
+	float EaseOutSine(float x){
+		return FMath::Sin((x * PI) / 2.f);
+	}	
+	float EaseOutQuart(float x){
+		return 1 - FMath::Pow(1 - x, 4);
+	}		
+	float EaseOutCirc(float x) {
+		return FMath::Sqrt(1 - FMath::Pow(x - 1, 2));
+	}
 };

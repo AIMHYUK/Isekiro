@@ -14,6 +14,7 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 
 public:	
 	UFSMComponent();
+	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
