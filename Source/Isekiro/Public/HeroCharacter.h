@@ -4,7 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
 #include "HeroCharacter.generated.h"
+
+class UInputMappingContext;
+class UCapsuleComponent;
+class UInputAction;
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
@@ -12,20 +19,33 @@ class ISEKIRO_API AHeroCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	AHeroCharacter();
 
-	void Move();
-	void LookUp();
+	AHeroCharacter();
+	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	USpringArmComponent* SpringArm;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UCameraComponent* Camera;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputMappingContext* Context;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* MoveAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* RunAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* LookAction;
+
+	void Move(const FInputActionValue& value);
+	void Look(const FInputActionValue& value);
+
+
 
 };
