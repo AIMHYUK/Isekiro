@@ -9,17 +9,20 @@
 /**
  * 
  */
+class AActor;
 UCLASS(Blueprintable)
 class ISEKIRO_API UStateObject : public UObject
 {
 	GENERATED_BODY()
 	
 public:
-	void Initialize();
-	void TestFunction();
+	void Initialize(AActor* _Instigator, AActor* _Target);
+	
+	virtual void Start();
+	virtual UStateObject* Update(float DeltaTime);
+	virtual void Stop();
 protected:
 	virtual UWorld* GetWorld() const override;
-
-	UPROPERTY(EditDefaultsOnly, Category="Settings")
-	TSubclassOf<AActor> BossCharacterClass;
+	AActor* Instigator;
+	AActor* Target;
 };

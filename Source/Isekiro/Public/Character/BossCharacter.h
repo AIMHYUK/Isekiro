@@ -31,6 +31,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TSubclassOf<UStateObject> StateObjClass;

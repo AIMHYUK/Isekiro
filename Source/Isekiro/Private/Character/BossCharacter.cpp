@@ -28,82 +28,81 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(TargetO))
-	{
-		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
-		DirVector.Normalize();
-		FRotator newRotation = DirVector.Rotation();
-		newRotation.Pitch = 0.f;
-		newRotation.Roll = 0.f;
-		SetActorRotation(newRotation.Quaternion());
-	}
+	//if (ensureAlways(TargetO))
+	//{
+	//	FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
+	//	DirVector.Normalize();
+	//	FRotator newRotation = DirVector.Rotation();
+	//	newRotation.Pitch = 0.f;
+	//	newRotation.Roll = 0.f;
+	//	SetActorRotation(newRotation.Quaternion());
+	//}
 
-	TotalTime += DeltaTime;
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
-	if (TotalTime >= StateMaxTime)
-	{
-		TotalTime = 0.f;
-		ETestState test;
-		do {
-			test = ETestState(FMath::RandRange(0, 3));
-		} while (test == CurrentState);
-		CurrentState = test;
-	}
+	//TotalTime += DeltaTime;
+	//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
+	//if (TotalTime >= StateMaxTime)
+	//{
+	//	TotalTime = 0.f;
+	//	ETestState test;
+	//	do {
+	//		test = ETestState(FMath::RandRange(0, 3));
+	//	} while (test == CurrentState);
+	//	CurrentState = test;
+	//}
 
-	switch (CurrentState)
-	{
-	case ETestState::Strafe:
-	{
-		FVector newLoc = GetActorLocation() + GetActorRightVector() * StrafeSpeed * DeltaTime;
+	//switch (CurrentState)
+	//{
+	//case ETestState::Strafe:
+	//{
+	//	FVector newLoc = GetActorLocation() + GetActorRightVector() * StrafeSpeed * DeltaTime;
 
-		SetActorLocation(newLoc);
-		break;
-	}
-	case ETestState::Run:
-	{
-		float Dist = GetDistanceToTarget();
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Distance: %.2f"), Dist));
+	//	SetActorLocation(newLoc);
+	//	break;
+	//}
+	//case ETestState::Run:
+	//{
+	//	float Dist = GetDistanceToTarget();
+	//	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Distance: %.2f"), Dist));
 
-		if (Dist > TargetOffset)
-		{
-			FVector newLoc = GetActorLocation() + GetActorForwardVector() * RunSpeed * DeltaTime;
-			SetActorLocation(newLoc);
-		}
+	//	if (Dist > TargetOffset)
+	//	{
+	//		FVector newLoc = GetActorLocation() + GetActorForwardVector() * RunSpeed * DeltaTime;
+	//		SetActorLocation(newLoc);
+	//	}
 
-		break;
-	}
-	case ETestState::Rush:
-	{
-		if (StateObjClass)
-		{
-			UStateObject* Obj = NewObject<UStateObject>(this, StateObjClass);
-			if (Obj)
-			{
-				Obj->TestFunction();
-			}
-		}
-		CurrentState = ETestState::Run;
-		break;
-	}
-	case ETestState::Lunge:
-	{
-		if (!bHasPrevLoc)
-		{
-			bHasPrevLoc = true;
-			PrevLoc = GetActorLocation();
-		}
-		if (TotalRunTime < MaxRunTime) {
-			TotalRunTime += DeltaTime;
-		}
-		FVector ToTarget = GetTargetOffsetLocation();
-		ToTarget.Z = GetActorLocation().Z;
+	//	break;
+	//}
+	//case ETestState::Rush:
+	//{
+	//	if (StateObjClass)
+	//	{
+	//		UStateObject* Obj = NewObject<UStateObject>(this, StateObjClass);
+	//		if (Obj)
+	//		{
+	//		}
+	//	}
+	//	CurrentState = ETestState::Run;
+	//	break;
+	//}
+	//case ETestState::Lunge:
+	//{
+	//	if (!bHasPrevLoc)
+	//	{
+	//		bHasPrevLoc = true;
+	//		PrevLoc = GetActorLocation();
+	//	}
+	//	if (TotalRunTime < MaxRunTime) {
+	//		TotalRunTime += DeltaTime;
+	//	}
+	//	FVector ToTarget = GetTargetOffsetLocation();
+	//	ToTarget.Z = GetActorLocation().Z;
 
-		FVector Test = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-		SetActorLocation(Test);
+	//	FVector Test = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+	//	SetActorLocation(Test);
 
-		break;
-	}
-	}
+	//	break;
+	//}
+	//}
 }
 
 float ABossCharacter::GetDistanceToTarget() const

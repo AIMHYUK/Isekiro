@@ -4,21 +4,25 @@
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
 
-void UStateObject::Initialize()
+void UStateObject::Initialize(AActor* _Instigator, AActor* _Target)
 {
-	
+	Instigator = _Instigator;
+	Target = _Target;
 }
 
-void UStateObject::TestFunction()
+void UStateObject::Start()
 {
-	if (GetWorld())
-	{
-		if (BossCharacterClass) {
-			FActorSpawnParameters Params;
-			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			GetWorld()->SpawnActor<AActor>(BossCharacterClass, FTransform::Identity, Params);
-		}
-	}
+
+}
+
+UStateObject* UStateObject::Update(float DeltaTime)
+{
+	return nullptr;
+}
+
+void UStateObject::Stop()
+{
+
 }
 
 UWorld* UStateObject::GetWorld() const

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+		// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "FSMComponent.generated.h"
 
+class UStateObject;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UFSMComponent : public UActorComponent
@@ -14,13 +15,14 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 
 public:	
 	UFSMComponent();
-	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
-private:	
-
-		
+	TObjectPtr<UStateObject> CurrentState;
+	TObjectPtr<AActor> Target;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TSubclassOf<UStateObject> StateToStart;
+private:		
 };
