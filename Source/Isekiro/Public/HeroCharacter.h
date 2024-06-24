@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "CharacterTypes.h"
 #include "HeroCharacter.generated.h"
 
 class UInputMappingContext;
@@ -12,6 +13,8 @@ class UCapsuleComponent;
 class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
+class UAnimMontage;
+
 
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
@@ -23,6 +26,34 @@ public:
 	AHeroCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void AttackStart(const FInputActionValue& value);
+
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	void AttackStartComboState();
+	void AttackEndComboState();
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsAttacking;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool CanNextCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsComboInputOn;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 CurrentCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 MaxCombo;
+
+	UPROPERTY()
+	class UHeroAnimInstance* HeroAnim;
+
+	void PostInitializeComponents() override;
 protected:
 
 	virtual void BeginPlay() override;
@@ -42,9 +73,35 @@ protected:
 	UInputAction* RunAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* GuardAction;
+
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* AttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* GuardMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AttackMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
+	void Guard(const FInputActionValue& value);
+	void Jump(const FInputActionValue& value);
+	//void Attack(const FInputActionValue& value);
+
+	//UFUNCTION(BlueprintCallable)
+	/*bool CanAttack();*/
+
+	bool bIsAttacking = false;
+	bool bContinueAttack = false;
+private:
+	ECharacterGuardState GuardState = ECharacterGuardState::ECGS_UnGuarded;
+
+	FORCEINLINE ECharacterGuardState GetCharacterState() const { return GuardState; }
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 
 
