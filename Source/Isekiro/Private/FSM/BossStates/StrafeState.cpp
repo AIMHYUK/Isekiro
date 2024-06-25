@@ -7,6 +7,8 @@
 UStrafeState::UStrafeState()
 {
 	StrafeSpeed = 100.f;
+	StrafeMaxTime = 3.f;
+	StrafeTotalTime = 0.f;
 }
 
 void UStrafeState::Start()
@@ -14,19 +16,32 @@ void UStrafeState::Start()
 	Super::Start();
 }
 
-UStateObject* UStrafeState::Update(float DeltaTime)
+EBossState UStrafeState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
-	if (Instigator)
-	{
-		FVector newLoc = Instigator->GetActorLocation() + Instigator->GetActorRightVector() * StrafeSpeed * DeltaTime;
 
-		Instigator->SetActorLocation(newLoc);
+	if (StrafeTotalTime < StrafeMaxTime)
+	{
+		StrafeTotalTime += DeltaTime;
+
+		if (Instigator)
+		{
+			FVector newLoc = Instigator->GetActorLocation() + Instigator->GetActorRightVector() * StrafeSpeed * DeltaTime;
+			Instigator->SetActorLocation(newLoc);
+		}
 	}
-	return nullptr;
+	else {
+		return EBossState::LUNGE;
+	}
+
+	return EBossState::NONE;
 }
 
 void UStrafeState::Stop()
 {
 	Super::Stop();
+}
+
+void UStrafeState::Activate()
+{
 }

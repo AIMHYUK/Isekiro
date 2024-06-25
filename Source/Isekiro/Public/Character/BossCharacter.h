@@ -34,8 +34,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<UFSMComponent> FSMComponent;
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	TSubclassOf<UStateObject> StateObjClass;
 
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	TObjectPtr<AActor> TargetO;
@@ -46,9 +44,15 @@ protected:
 	FVector PrevLoc;
 	float MaxRunTime = 2.f;
 	float TotalRunTime;
+	float JumpHeight;
+	float JumpMaxTime;
+	float JumpTotalTime;
 
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	float StrafeSpeed;
+	float StrafeMaxTime;
+	float StrafeTotalTime;
+
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	float RunSpeed;
 

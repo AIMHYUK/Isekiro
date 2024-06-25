@@ -17,9 +17,14 @@ public:
 	UStrafeState();
 
 	virtual void Start() override;
-	virtual UStateObject* Update(float DeltaTime) override;
+	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
+	virtual void Activate();
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float StrafeSpeed;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float StrafeMaxTime;
+	float StrafeTotalTime;
+
 };

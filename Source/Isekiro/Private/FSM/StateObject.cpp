@@ -15,14 +15,18 @@ void UStateObject::Start()
 
 }
 
-UStateObject* UStateObject::Update(float DeltaTime)
+EBossState UStateObject::Update(float DeltaTime)
 {
-	return nullptr;
+	return EBossState::NONE;
 }
 
 void UStateObject::Stop()
 {
 
+}
+
+void UStateObject::Activate()
+{
 }
 
 UWorld* UStateObject::GetWorld() const

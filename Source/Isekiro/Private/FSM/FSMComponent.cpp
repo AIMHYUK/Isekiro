@@ -8,35 +8,52 @@
 UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
+	StateToStart = EBossState::STRAFE;
 }
 
 
 void UFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	if (StateToStart)
+	if (ensure(StateToStart != EBossState::NONE))
 	{
-		CurrentState = NewObject<UStrafeState>(GetOwner(), StateToStart);
-		if(CurrentState) 
-			CurrentState->Initialize(GetOwner(), Target);
+		PrepNewState(StateToStart);
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("Starting State has not been set. Boss will not perform any actions."));
 	}
 }
-
 
 void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	if (CurrentState)
 	{
-		UStateObject* NewState = CurrentState->Update(DeltaTime);
-		if (NewState)
+		EBossState NewState = CurrentState->Update(DeltaTime);
+		if (NewState != EBossState::NONE)
 		{
-			NewState->Initialize(GetOwner(), Target);
-			CurrentState->Stop();
-			NewState->Start();
-			CurrentState = NewState;
+			PrepNewState(NewState);
 		}
 	}
 }
 
+void UFSMComponent::ChangeStateTo(EBossState NewState)
+{
+	PrepNewState(NewState);
+}
+
+void UFSMComponent::PrepNewState(EBossState NewState)
+{
+	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);
+	if (StateObjectClass)
+	{
+		UStateObject* NewStateObj = NewObject<UStateObject>(GetOwner(), *StateObjectClass);
+		if (NewStateObj)
+		{
+			NewStateObj->Initialize(GetOwner(), Target);
+			if (CurrentState) CurrentState->Stop();
+			NewStateObj->Start();
+			CurrentState = NewStateObj;
+		}
+	}
+}
