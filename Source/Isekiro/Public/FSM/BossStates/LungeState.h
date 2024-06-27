@@ -23,19 +23,19 @@ public:
 	virtual void Activate();
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float JumpHeight;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float MaxRunTime = 2.f;
+
 	bool bHasPrevLoc;
 	FVector PrevLoc;
-	float MaxRunTime = 2.f;
+
 	float TotalRunTime;
-	float JumpHeight;
-	float JumpMaxTime;
+
 	float JumpTotalTime;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Test")
-	float TargetOffset;
 private:
-
-	FVector GetTargetOffsetLocation() const;
 
 	float EaseInOutCubic(float x) {
 		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;

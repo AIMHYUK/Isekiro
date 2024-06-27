@@ -5,34 +5,42 @@
 #include "FSM/FSMComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FSM/StateObject.h"
+#include "Components/BoxComponent.h"
 
 ABossCharacter::ABossCharacter()
 {
 	FSMComponent = CreateDefaultSubobject<UFSMComponent>("FSMComponent");
 
+	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
+	AttackBoxComp->SetupAttachment(RootComponent);
+	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
+
 	TargetOffset = 150.f;
-	StrafeSpeed = 100.f;
-	StrafeMaxTime = 3.f;
-	StrafeTotalTime = 0.f;
-
-	RunSpeed = 400.f;
-	bHasPrevLoc = false;
-	PrevLoc = FVector::Zero();
-
-	MaxRunTime = 2.f;
-	TotalRunTime = 0.f;
-	JumpHeight = 120.f;
-	JumpMaxTime = .5f;
-	JumpTotalTime = 0.f;
-
-	CurrentState = ETestState::Strafe;
-	StateMaxTime = 5.f;
 }
 
+void ABossCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (AttackBoxComp)
+	{
+		AttackBoxComp->IgnoreActorWhenMoving(this, true);
+
+		AttackBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnAttackBoxOverlapped);
+		AttackBoxComp->OnComponentDeactivated.AddDynamic(this, &ABossCharacter::OnDeactivated);
+		AttackBoxComp->SetActive(true);
+	}
+}
 
 void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (AttackBoxComp->IsActive()) 
+	{
+		AttackBoxComp->Deactivate();
+	}
 
 	if (ensureAlways(TargetO))
 	{
@@ -43,83 +51,26 @@ void ABossCharacter::Tick(float DeltaTime)
 		newRotation.Roll = 0.f;
 		SetActorRotation(newRotation.Quaternion());
 	}
+}
 
-	//TotalTime += DeltaTime;
-	//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
-	//if (TotalTime >= StateMaxTime)
-	//{
-	//	TotalTime = 0.f;
-	//	ETestState test;
-	//	do {
-	//		test = ETestState(FMath::RandRange(0, 3));
-	//	} while (test == CurrentState);
-	//	CurrentState = test;
-	//}
+void ABossCharacter::BeginAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
+	AttackBoxComp->Activate();
+}
 
-	//switch (CurrentState)
-	//{
-	//case ETestState::Strafe:
-	//{
-	//	StrafeTotalTime += DeltaTime;
-	//	if (StrafeTotalTime < StrafeMaxTime)
-	//	{
-	//		FVector newLoc = GetActorLocation() + GetActorRightVector() * StrafeSpeed * DeltaTime;
-	//		SetActorLocation(newLoc);
-	//	}
-	//	else
-	//	{
-	//		StrafeTotalTime = 0.f;
-	//		CurrentState = ETestState::Lunge;
-	//	}
-	//	break;
-	//}
-	//case ETestState::Run:
-	//{
-	//	float Dist = GetDistanceToTarget();
-	//	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Distance: %.2f"), Dist));
+void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
+	AttackBoxComp->Deactivate();
+}
 
-	//	if (Dist > TargetOffset)
-	//	{
-	//		FVector newLoc = GetActorLocation() + GetActorForwardVector() * RunSpeed * DeltaTime;
-	//		SetActorLocation(newLoc);
-	//	}
-
-	//	break;
-	//}
-	//case ETestState::Rush:
-	//{
-	//	CurrentState = ETestState::Run;
-	//	break;
-	//}
-	//case ETestState::Lunge:
-	//{
-	//	if (!bHasPrevLoc)
-	//	{
-	//		bHasPrevLoc = true;
-	//		PrevLoc = GetActorLocation();
-	//	}
-	//	FVector lungeVector;
-	//	FVector jumpVector;
-	//	if (TotalRunTime < MaxRunTime) {
-	//		TotalRunTime += DeltaTime;
-
-	//		FVector ToTarget = GetTargetOffsetLocation();
-	//		ToTarget.Z = GetActorLocation().Z;
-	//		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-	//		
-	//		//if (JumpTotalTime < JumpMaxTime) {
-	//		//	JumpTotalTime += DeltaTime;
-
-	//		//	FVector jumpDest = GetActorUpVector() * JumpHeight;
-	//		//	jumpVector = FMath::Lerp(PrevLoc, jumpDest, EaseOutSine(JumpTotalTime / JumpMaxTime));
-	//		//}
-
-	//		SetActorLocation(lungeVector + jumpVector);
-	//	}
-
-	//	break;
-	//}
-	//}
+void ABossCharacter::OnDeactivated(UActorComponent* Component)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Deactivated"));
 }
 
 float ABossCharacter::GetDistanceToTarget() const

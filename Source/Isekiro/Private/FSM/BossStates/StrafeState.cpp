@@ -2,7 +2,7 @@
 
 
 #include "FSM/BossStates/StrafeState.h"
-#include "GameFramework/Actor.h"
+#include "Character/BossCharacter.h"
 
 UStrafeState::UStrafeState()
 {

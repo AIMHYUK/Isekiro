@@ -13,6 +13,7 @@
 UENUM()
 enum class ETestState : uint8 
 {
+	None,
 	Strafe, 
 	Run,
 	Rush,
@@ -21,6 +22,7 @@ enum class ETestState : uint8
 
 class UFSMComponent;
 class UStateObject;
+class UBoxComponent;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -29,42 +31,40 @@ class ISEKIRO_API ABossCharacter : public ABaseCharacter
 public:
 	ABossCharacter();
 	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void BeginAttack();
+
+	float GetDistanceToTarget() const;
+	FVector GetTargetOffsetLocation() const;
+protected:
+	UFUNCTION()
+	void OnAttackBoxOverlapped(
+		UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, 
+		const FHitResult& SweepResult
+	);
+	UFUNCTION()
+	void OnDeactivated(UActorComponent* Component);
 
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<UFSMComponent> FSMComponent;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<UBoxComponent> AttackBoxComp;
+
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	TObjectPtr<AActor> TargetO;
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	float TargetOffset;
-	
-	bool bHasPrevLoc;
-	FVector PrevLoc;
-	float MaxRunTime = 2.f;
-	float TotalRunTime;
-	float JumpHeight;
-	float JumpMaxTime;
-	float JumpTotalTime;
-
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float StrafeSpeed;
-	float StrafeMaxTime;
-	float StrafeTotalTime;
-
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float RunSpeed;
 
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	ETestState CurrentState;
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float StateMaxTime;
-	float TotalTime;
 
 private:
-	float GetDistanceToTarget() const;
-	FVector GetTargetOffsetLocation() const;
 		
 	float EaseInOutCubic(float x) {
 		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;

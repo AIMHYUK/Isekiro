@@ -2,18 +2,16 @@
 
 
 #include "FSM/BossStates/LungeState.h"
+#include "Character/BossCharacter.h"
 
 ULungeState::ULungeState()
 {
-	TargetOffset = 150.f;
-
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
 	MaxRunTime = 2.f;
 	TotalRunTime = 0.f;
 	JumpHeight = 120.f;
-	JumpMaxTime = .5f;
 	JumpTotalTime = 0.f;
 }
 
@@ -33,16 +31,9 @@ EBossState ULungeState::Update(float DeltaTime)
 	if (TotalRunTime < MaxRunTime) {
 		TotalRunTime += DeltaTime;
 
-		FVector ToTarget = GetTargetOffsetLocation();
+		FVector ToTarget = Instigator->GetTargetOffsetLocation();
 		ToTarget.Z = Instigator->GetActorLocation().Z;
 		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-
-		//if (JumpTotalTime < JumpMaxTime) {
-		//	JumpTotalTime += DeltaTime;
-
-		//	FVector jumpDest = GetActorUpVector() * JumpHeight;
-		//	jumpVector = FMath::Lerp(PrevLoc, jumpDest, EaseOutSine(JumpTotalTime / JumpMaxTime));
-		//}
 
 		Instigator->SetActorLocation(lungeVector + jumpVector);
 	}
@@ -56,15 +47,4 @@ void ULungeState::Stop()
 
 void ULungeState::Activate()
 {
-}
-
-FVector ULungeState::GetTargetOffsetLocation() const
-{
-	if (Target)
-	{
-		FVector WorkingVector = Target->GetActorForwardVector();
-		WorkingVector *= TargetOffset;
-		return WorkingVector;
-	}
-	return FVector();
 }

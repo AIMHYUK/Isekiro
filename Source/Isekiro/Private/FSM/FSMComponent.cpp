@@ -4,6 +4,7 @@
 #include "FSM/FSMComponent.h"
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
+#include "Character/BossCharacter.h"
 
 UFSMComponent::UFSMComponent()
 {
@@ -27,7 +28,7 @@ void UFSMComponent::BeginPlay()
 void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (CurrentState)
+	if (IsValid(CurrentState))
 	{
 		EBossState NewState = CurrentState->Update(DeltaTime);
 		if (NewState != EBossState::NONE)
@@ -50,7 +51,7 @@ void UFSMComponent::PrepNewState(EBossState NewState)
 		UStateObject* NewStateObj = NewObject<UStateObject>(GetOwner(), *StateObjectClass);
 		if (NewStateObj)
 		{
-			NewStateObj->Initialize(GetOwner(), Target);
+			NewStateObj->Initialize(Cast<ABossCharacter>(GetOwner()), Target);
 			if (CurrentState) CurrentState->Stop();
 			NewStateObj->Start();
 			CurrentState = NewStateObj;

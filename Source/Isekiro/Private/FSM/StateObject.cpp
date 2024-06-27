@@ -4,7 +4,7 @@
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
 
-void UStateObject::Initialize(AActor* _Instigator, AActor* _Target)
+void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
 {
 	Instigator = _Instigator;
 	Target = _Target;

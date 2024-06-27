@@ -11,6 +11,7 @@
  * 
  */
 class AActor;
+class ABossCharacter;
 
 UCLASS(Blueprintable)
 class ISEKIRO_API UStateObject : public UObject
@@ -18,7 +19,7 @@ class ISEKIRO_API UStateObject : public UObject
 	GENERATED_BODY()
 	
 public:
-	void Initialize(AActor* _Instigator, AActor* _Target);
+	void Initialize(ABossCharacter* _Instigator, AActor* _Target);
 	
 	virtual void Start();
 	virtual EBossState Update(float DeltaTime);
@@ -26,6 +27,8 @@ public:
 	virtual void Activate();
 protected:
 	virtual UWorld* GetWorld() const override;
-	AActor* Instigator;
+	UPROPERTY()
+	ABossCharacter* Instigator;
+	UPROPERTY()
 	AActor* Target;
 };
