@@ -14,6 +14,9 @@ class UInputAction;
 class USpringArmComponent;
 class UCameraComponent;
 class UAnimMontage;
+class UBoxComponent;
+class UMaterialInterface;
+class UMaterialInstanceDynamic;
 
 
 UCLASS()
@@ -27,6 +30,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	//연속공격
 	void AttackStart(const FInputActionValue& value);
 
 	UFUNCTION()
@@ -54,6 +58,10 @@ public:
 	class UHeroAnimInstance* HeroAnim;
 
 	void PostInitializeComponents() override;
+
+	UFUNCTION(BlueprintCallable)
+	void DealDamage();
+	//연속공격
 protected:
 
 	virtual void BeginPlay() override;
@@ -62,6 +70,11 @@ protected:
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UBoxComponent* AttackGuardCheckBox;
+	UPROPERTY(EditDefaultsOnly, Category = "Material")
+	UMaterialInterface* BaseMaterial; 
+
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* Context;
@@ -82,12 +95,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GuardMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* KeepGuardMontage;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AttackMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
 	void Guard(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
+
 	//void Attack(const FInputActionValue& value);
 
 	//UFUNCTION(BlueprintCallable)
@@ -102,6 +120,7 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
+
 
 
 
