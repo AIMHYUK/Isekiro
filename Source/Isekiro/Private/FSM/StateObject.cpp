@@ -4,6 +4,11 @@
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
 
+UStateObject::UStateObject()
+{
+	bIsMoving = false;
+}
+
 void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
 {
 	Instigator = _Instigator;
@@ -17,7 +22,7 @@ void UStateObject::Start()
 
 EBossState UStateObject::Update(float DeltaTime)
 {
-	return EBossState::NONE;
+	return UpdateMovement(DeltaTime);
 }
 
 void UStateObject::Stop()
@@ -27,6 +32,26 @@ void UStateObject::Stop()
 
 void UStateObject::Activate()
 {
+}
+
+bool UStateObject::CanStartMovement() const
+{
+	return bIsMoving;
+}
+
+EBossState UStateObject::UpdateMovement(float DeltaTime)
+{
+	return EBossState::NONE;
+}
+
+void UStateObject::StartMovement()
+{
+	bIsMoving = true;
+}
+
+void UStateObject::StopMovement()
+{
+	bIsMoving = false;
 }
 
 UWorld* UStateObject::GetWorld() const

@@ -43,6 +43,22 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 	PrepNewState(NewState);
 }
 
+void UFSMComponent::StartMovement()
+{
+	if (CurrentState)
+	{
+		CurrentState->StartMovement();
+	}
+}
+
+void UFSMComponent::StopMovement()
+{
+	if (CurrentState)
+	{
+		CurrentState->StopMovement();
+	}
+}
+
 void UFSMComponent::PrepNewState(EBossState NewState)
 {
 	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);

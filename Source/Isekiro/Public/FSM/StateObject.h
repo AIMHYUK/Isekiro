@@ -19,16 +19,32 @@ class ISEKIRO_API UStateObject : public UObject
 	GENERATED_BODY()
 	
 public:
+	UStateObject();
+
 	void Initialize(ABossCharacter* _Instigator, AActor* _Target);
 	
 	virtual void Start();
 	virtual EBossState Update(float DeltaTime);
 	virtual void Stop();
 	virtual void Activate();
+
+	void StartMovement();
+	void StopMovement();
+
 protected:
 	virtual UWorld* GetWorld() const override;
-	UPROPERTY()
-	ABossCharacter* Instigator;
-	UPROPERTY()
-	AActor* Target;
+	
+protected:
+	virtual bool CanStartMovement() const;
+	virtual EBossState UpdateMovement(float DeltaTime);
+
+	TObjectPtr<ABossCharacter> Instigator;
+	TObjectPtr<AActor> Target;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<UAnimMontage> StateMontage;
+
+private:
+	bool bIsMoving;
 };

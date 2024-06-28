@@ -28,19 +28,12 @@ void ABossCharacter::BeginPlay()
 		AttackBoxComp->IgnoreActorWhenMoving(this, true);
 
 		AttackBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnAttackBoxOverlapped);
-		AttackBoxComp->OnComponentDeactivated.AddDynamic(this, &ABossCharacter::OnDeactivated);
-		AttackBoxComp->SetActive(true);
 	}
 }
 
 void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (AttackBoxComp->IsActive()) 
-	{
-		AttackBoxComp->Deactivate();
-	}
 
 	if (ensureAlways(TargetO))
 	{
@@ -56,7 +49,27 @@ void ABossCharacter::Tick(float DeltaTime)
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-	AttackBoxComp->Activate();
+
+	FHitResult Hit;
+	FVector Start = AttackBoxComp->GetComponentLocation();
+	FVector End = AttackBoxComp->GetComponentLocation();
+	
+	FCollisionObjectQueryParams ObjQueryParam;
+	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+	
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	
+	FCollisionShape Shape;
+	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
+	Shape.SetSphere(Radius);
+	
+	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
+
+	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
+	}	
 }
 
 void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
@@ -65,7 +78,6 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 	const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
-	AttackBoxComp->Deactivate();
 }
 
 void ABossCharacter::OnDeactivated(UActorComponent* Component)

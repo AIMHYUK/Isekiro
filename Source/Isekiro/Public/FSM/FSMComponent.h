@@ -28,6 +28,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	void ChangeStateTo(EBossState NewState);
+	void StartMovement();
+	void StopMovement();
 
 protected:
 	virtual void BeginPlay() override;

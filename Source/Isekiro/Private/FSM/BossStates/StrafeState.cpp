@@ -14,12 +14,25 @@ UStrafeState::UStrafeState()
 void UStrafeState::Start()
 {
 	Super::Start();
+	StartMovement();
 }
 
 EBossState UStrafeState::Update(float DeltaTime)
 {
-	Super::Update(DeltaTime);
+	return Super::Update(DeltaTime);
+}
 
+void UStrafeState::Stop()
+{
+	Super::Stop();
+}
+
+void UStrafeState::Activate()
+{
+}
+
+EBossState UStrafeState::UpdateMovement(float DeltaTime)
+{
 	if (StrafeTotalTime < StrafeMaxTime)
 	{
 		StrafeTotalTime += DeltaTime;
@@ -33,15 +46,5 @@ EBossState UStrafeState::Update(float DeltaTime)
 	else {
 		return EBossState::LUNGE;
 	}
-
 	return EBossState::NONE;
-}
-
-void UStrafeState::Stop()
-{
-	Super::Stop();
-}
-
-void UStrafeState::Activate()
-{
 }

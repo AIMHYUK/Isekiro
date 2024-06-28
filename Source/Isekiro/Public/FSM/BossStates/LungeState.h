@@ -23,6 +23,8 @@ public:
 	virtual void Activate();
 
 protected:
+	virtual EBossState UpdateMovement(float DeltaTime) override;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float JumpHeight;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
@@ -36,7 +38,6 @@ protected:
 	float JumpTotalTime;
 
 private:
-
 	float EaseInOutCubic(float x) {
 		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;
 	}

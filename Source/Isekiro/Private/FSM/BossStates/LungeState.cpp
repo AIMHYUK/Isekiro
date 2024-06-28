@@ -17,15 +17,41 @@ ULungeState::ULungeState()
 
 void ULungeState::Start()
 {
+	if (Instigator && StateMontage)
+	{
+		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(StateMontage);
+	}
 }
 
 EBossState ULungeState::Update(float DeltaTime)
 {
+	EBossState State = Super::Update(DeltaTime);
+
+	return State;
+}
+
+void ULungeState::Stop()
+{
+}
+
+void ULungeState::Activate()
+{
+}
+
+EBossState ULungeState::UpdateMovement(float DeltaTime)
+{
+	if (!CanStartMovement())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
+		return EBossState::NONE;
+	}
+
 	if (!bHasPrevLoc)
 	{
 		bHasPrevLoc = true;
 		PrevLoc = Instigator->GetActorLocation();
 	}
+
 	FVector lungeVector;
 	FVector jumpVector;
 	if (TotalRunTime < MaxRunTime) {
@@ -39,12 +65,4 @@ EBossState ULungeState::Update(float DeltaTime)
 	}
 
 	return EBossState::NONE;
-}
-
-void ULungeState::Stop()
-{
-}
-
-void ULungeState::Activate()
-{
 }

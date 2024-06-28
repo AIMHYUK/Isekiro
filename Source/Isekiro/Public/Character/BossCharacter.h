@@ -61,9 +61,6 @@ protected:
 	UPROPERTY(EditInstanceOnly, Category = "Test")
 	float TargetOffset;
 
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	ETestState CurrentState;
-
 private:
 		
 	float EaseInOutCubic(float x) {
