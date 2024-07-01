@@ -16,12 +16,14 @@ ABossCharacter::ABossCharacter()
 	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
 	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
 
-	TargetOffset = 150.f;
+	TargetOffset = 200.f;
 }
 
 void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	HeightZ = GetActorLocation().Z;
 
 	if (AttackBoxComp)
 	{
@@ -35,9 +37,9 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(TargetO))
+	if (ensureAlways(Target))
 	{
-		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		DirVector.Normalize();
 		FRotator newRotation = DirVector.Rotation();
 		newRotation.Pitch = 0.f;
@@ -53,23 +55,23 @@ void ABossCharacter::BeginAttack()
 	FHitResult Hit;
 	FVector Start = AttackBoxComp->GetComponentLocation();
 	FVector End = AttackBoxComp->GetComponentLocation();
-	
+
 	FCollisionObjectQueryParams ObjQueryParam;
 	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-	
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
-	
+
 	FCollisionShape Shape;
 	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
 	Shape.SetSphere(Radius);
-	
+
 	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
 
 	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
-	}	
+	}
 }
 
 void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
@@ -87,9 +89,9 @@ void ABossCharacter::OnDeactivated(UActorComponent* Component)
 
 float ABossCharacter::GetDistanceToTarget() const
 {
-	if (TargetO)
+	if (Target)
 	{
-		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 
@@ -98,11 +100,26 @@ float ABossCharacter::GetDistanceToTarget() const
 
 FVector ABossCharacter::GetTargetOffsetLocation() const
 {
-	if (TargetO)
+	if (Target)
 	{
-		FVector WorkingVector = TargetO->GetActorForwardVector();
-		WorkingVector *= TargetOffset;
-		return WorkingVector;
+		FVector End;
+		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();		
+		FVector Start = GetActorLocation();
+		End.Z = HeightZ;
+		Start.Z = HeightZ;
+
+		FVector TargetVector = End - Start;
+		FVector Dir = TargetVector;
+		Dir.Normalize();
+		Dir *= TargetOffset;
+		TargetVector -= Dir;
+
+		return TargetVector + GetActorLocation();
 	}
 	return FVector();
+}
+
+bool ABossCharacter::IsLockedOnTarget() const
+{
+	return true;
 }

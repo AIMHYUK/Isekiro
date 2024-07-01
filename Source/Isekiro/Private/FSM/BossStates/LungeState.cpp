@@ -3,16 +3,16 @@
 
 #include "FSM/BossStates/LungeState.h"
 #include "Character/BossCharacter.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimCompositeBase.h"
 
 ULungeState::ULungeState()
 {
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
-	MaxRunTime = 2.f;
+	MaxRunTime = .9f;
 	TotalRunTime = 0.f;
-	JumpHeight = 120.f;
-	JumpTotalTime = 0.f;
 }
 
 void ULungeState::Start()
@@ -42,7 +42,7 @@ EBossState ULungeState::UpdateMovement(float DeltaTime)
 {
 	if (!CanStartMovement())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
 		return EBossState::NONE;
 	}
 
@@ -52,17 +52,17 @@ EBossState ULungeState::UpdateMovement(float DeltaTime)
 		PrevLoc = Instigator->GetActorLocation();
 	}
 
-	FVector lungeVector;
-	FVector jumpVector;
+	FVector lungeVector = Instigator->GetActorLocation();
+	FVector ToTarget = Instigator->GetTargetOffsetLocation();
+	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
 	if (TotalRunTime < MaxRunTime) {
-		TotalRunTime += DeltaTime;
+	
+		TotalRunTime += DeltaTime / 2.f;
 
-		FVector ToTarget = Instigator->GetTargetOffsetLocation();
-		ToTarget.Z = Instigator->GetActorLocation().Z;
 		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-
-		Instigator->SetActorLocation(lungeVector + jumpVector);
 	}
+
+	Instigator->SetActorLocation(lungeVector);
 
 	return EBossState::NONE;
 }

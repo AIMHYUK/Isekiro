@@ -24,20 +24,18 @@ public:
 
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float MaxRunTime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float JumpHeight;
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float MaxRunTime = 2.f;
+	float MaxLungeDistance = 900.f;
 
+private:
+	float TotalRunTime;
 	bool bHasPrevLoc;
 	FVector PrevLoc;
 
-	float TotalRunTime;
-
-	float JumpTotalTime;
-
-private:
 	float EaseInOutCubic(float x) {
 		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;
 	}
