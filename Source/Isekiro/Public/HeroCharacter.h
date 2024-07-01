@@ -69,6 +69,35 @@ public:
 	//달리기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
 	float runSpeed = 600;
+
+
+	//앞으로 대쉬 기능 함수 선언
+	void LaunchFoward();
+
+	////대쉬할떄 위로 살짝 뜨게하는 함수 선언
+	//void LaunchUpward();
+	
+	//Cooldown초기화 함수 선언
+	void ResetLaunchCooldown();
+	//딜레이 처리할 변수세트 선언
+	FTimerHandle LaunchUpwardTimeHandle;
+	FTimerHandle CooldownTimerHandle;
+	FTimerHandle ResetFrictionTimerHandle;
+	//초기 상태를 대시 가능으로 체크할 변수 선언
+	bool bCanLaunch;
+	//기본 마찰력상태 변수 선언
+	float OriginalGroundFriction;
+	//마찰력상태 초기화 함수 선언
+	void ResetGroundFriction();
+
+	UFUNCTION() //이거 안붙이면 AddDynamic 으로 안붙어용
+	void OnAttackGuardCheckBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable, Category="Combat")
+    void ParryInput();
+
+    UFUNCTION()
+    void EndParryWindow();
 protected:
 
 	virtual void BeginPlay() override;
@@ -79,6 +108,10 @@ protected:
 	UCameraComponent* Camera;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* AttackGuardCheckBox;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UCapsuleComponent* ParryBox;
+
+
 	UPROPERTY(EditDefaultsOnly, Category = "Material")
 	UMaterialInterface* BaseMaterial; 
 
@@ -97,6 +130,8 @@ protected:
 	UInputAction* GuardAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* AttackAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* DashAction;
 
 
 
@@ -114,7 +149,7 @@ protected:
 	void Guard(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
-
+	void Dash(const FInputActionValue& value);
 	//void Attack(const FInputActionValue& value);
 
 	//UFUNCTION(BlueprintCallable)
@@ -129,8 +164,9 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
-
-
+	
+	bool bIsParryWindow;
+	FTimerHandle ParryTimerHandle;
 
 
 };

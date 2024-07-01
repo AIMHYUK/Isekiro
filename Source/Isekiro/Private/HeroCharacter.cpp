@@ -4,6 +4,7 @@
 #include "HeroCharacter.h"
 #include "Components/InputComponent.h"
 #include "Components/Boxcomponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Materials/MaterialInstanceDynamic.h" //메테리얼 인스턴스 사용
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h" //향상된 입력
@@ -15,6 +16,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
 #include <Kismet/GameplayStatics.h>
+#include <Kismet/KismetSystemLibrary.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include "GameFramework/SpringArmComponent.h"
 
@@ -33,6 +35,9 @@ AHeroCharacter::AHeroCharacter()
 	//공격,방어 체크박스
 	// BoxComponent 생성
 	AttackGuardCheckBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackGuardCheckBox"));
+	
+	ParryBox = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryBox"));
+	ParryBox->SetupAttachment(RootComponent);
 
 	// 캐릭터 메쉬의 특정 소켓에 컴포넌트를 붙임 (Weapon_r 소켓)
 	if (GetMesh())
@@ -48,15 +53,33 @@ AHeroCharacter::AHeroCharacter()
 		UE_LOG(LogTemp, Display, TEXT("Box attached to socket: %s"), *Weaponsocket.ToString());
 		UE_LOG(LogTemp, Display, TEXT("Box world location: %s"), *AttackGuardCheckBox->GetComponentLocation().ToString());
 	}
-	// 기본 콜리전 프로파일 설정
-	AttackGuardCheckBox->SetCollisionProfileName(TEXT("NoCollision")); // 기본적으로 콜리전 없음
 
 	MaxCombo = 3;
 	AttackEndComboState();
 
 	//초기 속도를 걷기로 설정
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+
+	//초기 상태를 대시 가능으로 설정
+	bCanLaunch = true;
+	//기본마찰력상태 변수 초기화
+	OriginalGroundFriction = GetCharacterMovement()->GroundFriction;
+
+	AttackGuardCheckBox->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin);
+	ParryBox->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin);
+
+	// AttackGuardCheckBox의 콜리전 설정
+	AttackGuardCheckBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 쿼리 가능하게 설정
+	AttackGuardCheckBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); // 월드 동적 콜리전으로 설정
+
+	// 모든 채널에 대해 충돌 무시
+	AttackGuardCheckBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+	// AttackBox와의 충돌에 대해서만 오버랩 이벤트를 받음
+	AttackGuardCheckBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
 }
+
 void AHeroCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -123,10 +146,11 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Jump);
-		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Guard);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::ParryInput);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::Guard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
 	}
 	
 }
@@ -163,7 +187,8 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 	{
 		Super::ACharacter::Jump();
 		GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
-		GetCharacterMovement()->GravityScale = 2.0f;
+		GetCharacterMovement()->GravityScale = 2.0f; //중력 2배
+		/*UKismetSystemLibrary::PrintString(GEngine->GetWorld(), "Hello", true, true, FLinearColor(0.0f, 0.66f, 1.0f, 1.0f), 2.0f);*/
 	}
 }
 void AHeroCharacter::Guard(const FInputActionValue& Value)
@@ -183,16 +208,49 @@ void AHeroCharacter::Guard(const FInputActionValue& Value)
 		}
 		else
 		{	
-			GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &APlayerCharacter::EndParryWindow, 0.2f, false);
 			UE_LOG(LogTemp, Display, TEXT("e;ses;e"));		
-			AnimInstance->Montage_Play(GuardMontage);
-			
+			AnimInstance->Montage_Play(GuardMontage);			
 		}
 	}
 }
 
+void AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Error, TEXT("overlapped"));
+	if (bIsParryWindow)
+	{
+		
+		{
+				UE_LOG(LogTemp, Warning, TEXT("Parry successful!"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to load BP_EnemyChar"));
+		}
+}
+
+
+void AHeroCharacter::ParryInput()
+{
+	bIsParryWindow = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+
+	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &AHeroCharacter::EndParryWindow, 0.2f, false);  // 0.2초 (12프레임) 후 EndParryWindow 호출
+}
+
+void AHeroCharacter::EndParryWindow()
+{
+	bIsParryWindow = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+}
+
+
 void AHeroCharacter::Run(const FInputActionValue& value)
 {
+	UE_LOG(LogTemp, Display, TEXT("Run"));
 	auto movement = GetCharacterMovement();
 	//현재 달리기 모드라면
 	if (movement->MaxWalkSpeed > walkSpeed)
@@ -325,6 +383,58 @@ void AHeroCharacter::DealDamage()
 			);
 		}
 	}
+}
+
+//대쉬 이벤트처리 함수 구현
+void AHeroCharacter::Dash(const FInputActionValue& value)
+{
+	//만약 지금 대쉬가 가능한 상태라면
+	if (bCanLaunch)
+	{
+		//1. cooldown이 끝날때까지 조건을 false로 변경
+		bCanLaunch = false;
+		//2. 대쉬하는 동안 마찰력 0인 상태로 변경
+		GetCharacterMovement()->GroundFriction = 0.0f;
+		//3. 앞으로 이동하고
+		LaunchFoward();
+
+		////4. 0.01 딜레이 후 UpVector 이동
+		//GetWorldTimerManager().SetTimer(LaunchUpwardTimeHandle, this, &AHeroCharacter::LaunchUpward, 0.01f, false);
+		// 
+		//5. 1초 딜레이 후 Cooldown 초기화
+		GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AHeroCharacter::ResetLaunchCooldown, 0.5f, false);
+		//6. 쿨다운 초기화 후 마찰력 복구
+		GetWorldTimerManager().SetTimer(ResetFrictionTimerHandle, this, &AHeroCharacter::ResetGroundFriction, 1.0f, false);
+	}
+}
+
+//앞으로 대쉬 기능 함수 구현
+void AHeroCharacter::LaunchFoward()
+{
+	//앞으로 이동시킬 Velocity
+	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 750;
+	//캐릭터를 앞으로 이동
+	LaunchCharacter(LaunchVelocity, true, false);
+}
+
+//대쉬할떄 위로 살짝 뜨게하는 함수 구현
+//void AHeroCharacter::LaunchUpward()
+//{
+//	//위로 300의 힘으로 이동시킬 변수
+//	FVector LaunchVelocity = FVector(0, 0, 300);
+//	LaunchCharacter(LaunchVelocity, false, true);
+//}
+
+//Cooldown초기화 함수 구현
+void AHeroCharacter::ResetLaunchCooldown()
+{
+	bCanLaunch = true;
+}
+
+//마찰력상태 초기화 함수 구현
+void AHeroCharacter::ResetGroundFriction()
+{
+	GetCharacterMovement()->GroundFriction = OriginalGroundFriction;
 }
 //void AHeroCharacter::OnWidget()
 //{
