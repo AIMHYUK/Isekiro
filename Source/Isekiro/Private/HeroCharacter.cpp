@@ -14,6 +14,8 @@
 #include "Engine/EngineTypes.h" //콜리전채널추가
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
+#include <Kismet/GameplayStatics.h>
+#include <GameFramework/CharacterMovementComponent.h>
 #include "GameFramework/SpringArmComponent.h"
 
 
@@ -51,6 +53,9 @@ AHeroCharacter::AHeroCharacter()
 
 	MaxCombo = 3;
 	AttackEndComboState();
+
+	//초기 속도를 걷기로 설정
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 }
 void AHeroCharacter::BeginPlay()
 {
@@ -121,6 +126,7 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Guard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::Guard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
+		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 	}
 	
 }
@@ -155,12 +161,15 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 {
 	if (!IsAttacking)
 	{
-		ACharacter::Jump();
+		Super::ACharacter::Jump();
+		GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
+		GetCharacterMovement()->GravityScale = 2.0f;
 	}
 }
 void AHeroCharacter::Guard(const FInputActionValue& Value)
 {
 	bool bIsPressed = Value.Get<bool>();
+	bool bIsParrying = true;
 	GuardState = ECharacterGuardState::ECGS_Guarding;
 	// Get the animation instance
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -173,7 +182,8 @@ void AHeroCharacter::Guard(const FInputActionValue& Value)
 			AnimInstance->Montage_Play(KeepGuardMontage);
 		}
 		else
-		{		
+		{	
+			GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &APlayerCharacter::EndParryWindow, 0.2f, false);
 			UE_LOG(LogTemp, Display, TEXT("e;ses;e"));		
 			AnimInstance->Montage_Play(GuardMontage);
 			
@@ -181,21 +191,43 @@ void AHeroCharacter::Guard(const FInputActionValue& Value)
 	}
 }
 
-//bool AHeroCharacter::CanAttack()
+void AHeroCharacter::Run(const FInputActionValue& value)
+{
+	auto movement = GetCharacterMovement();
+	//현재 달리기 모드라면
+	if (movement->MaxWalkSpeed > walkSpeed)
+	{
+		//걷기속도로 전환
+		movement->MaxWalkSpeed = walkSpeed;
+	}
+	//현재 달리기 모드가 아니라면
+	else
+	{
+		//달리기속도로 전환
+		movement->MaxWalkSpeed = runSpeed;
+	}
+}
+
+//void APlayerCharacter::ParryInput()
 //{
-//	return (ActionState == EActionState::EAS_Unoccupied);
-//}
-//	
+//	// 패링 상태로 전환
+//	bIsParryWindow = true;
 //
-//void AHeroCharacter::Attack(const FInputActionValue& value)
-//{
-//	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-//	if (AttackMontage && AnimInstance)
-//	{
-//		if(CanAttack())
-//			AnimInstance->Montage_Play(AttackMontage);			
-//	}
+//	// 패링 상태를 로그로 출력
+//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+//
+//	// 패링 상태를 일정 시간 후 종료하기 위해 타이머 설정
+//	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &APlayerCharacter::EndParryWindow, 0.2f, false); // 0.2초 (12프레임) 후 EndParryWindow 호출
 //}
+//
+//void APlayerCharacter::EndParryWindow()
+//{
+//	bIsParryWindow = false;
+//
+//	// 패링 상태 종료를 로그로 출력
+//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+//}
+
 void AHeroCharacter::AttackStart(const FInputActionValue& value)
 {
 	UE_LOG(LogTemp, Display, TEXT("CurrentCombo = %d"), CurrentCombo);

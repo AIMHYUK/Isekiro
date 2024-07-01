@@ -62,6 +62,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void DealDamage();
 	//연속공격
+
+		//걷기속도
+	UPROPERTY(EditAnywhere, Category=PlayerSetting)
+	float walkSpeed = 200;
+	//달리기속도
+	UPROPERTY(EditAnywhere, Category=PlayerSetting)
+	float runSpeed = 600;
 protected:
 
 	virtual void BeginPlay() override;
@@ -88,9 +95,10 @@ protected:
 	UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* GuardAction;
-
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* AttackAction;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GuardMontage;
@@ -105,6 +113,7 @@ protected:
 	void Look(const FInputActionValue& value);
 	void Guard(const FInputActionValue& value);
 	void Jump(const FInputActionValue& value);
+	void Run(const FInputActionValue& value);
 
 	//void Attack(const FInputActionValue& value);
 
