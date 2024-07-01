@@ -7,34 +7,33 @@
 void UDodgeState::Start()
 {
 	Super::Start();
-	FName SectionName = "";
 	if (Instigator)
 	{
 		switch (Instigator->GetCurrentDirection())
 		{
 		case EDirection::FORWARD:
 		{
-			SectionName = "Dodge_B";
+			MontageState.SectionName = "Dodge_B";
 			break;
 		}
 		case EDirection::BACK:
 		{
-			SectionName = "Dodge_B";
+			MontageState.SectionName = "Dodge_B";
 			break;
 		}
 		case EDirection::LEFT:
 		{
-			SectionName = "Dodge_L";
+			MontageState.SectionName = "Dodge_L";
 			break;
 		}
 		case EDirection::RIGHT:
 		{
-			SectionName = "Dodge_R";
+			MontageState.SectionName = "Dodge_R";
 			break;
 		}
 		}		
 	}
-	PlayMontage(SectionName);
+	PlayMontage();
 }
 
 EBossState UDodgeState::Update(float DeltaTime)

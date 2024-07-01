@@ -13,6 +13,18 @@
 class AActor;
 class ABossCharacter;
 
+USTRUCT()
+struct FMontageState
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<UAnimMontage> Montage = nullptr;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Settings")
+	FName SectionName = "";
+};
+
 UCLASS(Blueprintable)
 class ISEKIRO_API UStateObject : public UObject
 {
@@ -35,7 +47,7 @@ protected:
 	virtual UWorld* GetWorld() const override;
 	
 protected:
-	void PlayMontage(FName SectionName = "");
+	void PlayMontage();
 	virtual bool CanStartMovement() const;
 	virtual EBossState UpdateMovement(float DeltaTime);
 
@@ -43,8 +55,7 @@ protected:
 	TObjectPtr<AActor> Target;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	TObjectPtr<UAnimMontage> StateMontage;
-
+	FMontageState MontageState;
 private:
 	bool bIsMoving;
 };

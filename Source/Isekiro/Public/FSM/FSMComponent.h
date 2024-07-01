@@ -16,7 +16,8 @@ enum class EBossState
 	LUNGE UMETA(DisplayName = "Lunge"),
 	RUN UMETA(DisplayName = "Run"),
 	RUSH UMETA(DisplayName = "Rush"),
-	DODGE UMETA(DisplayName = "Dodge")
+	DODGE UMETA(DisplayName = "Dodge"),
+	JUMP UMETA(DisplayName = "Jump")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
