@@ -15,7 +15,8 @@ enum class EBossState
 	STRAFE UMETA(DisplayName = "Strafe"),
 	LUNGE UMETA(DisplayName = "Lunge"),
 	RUN UMETA(DisplayName = "Run"),
-	RUSH UMETA(DisplayName = "Rush")
+	RUSH UMETA(DisplayName = "Rush"),
+	DODGE UMETA(DisplayName = "Dodge")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -44,5 +45,6 @@ protected:
 
 private:
 	void PrepNewState(EBossState NewState);
+	UPROPERTY()
 	TObjectPtr<UStateObject> CurrentState;
 };

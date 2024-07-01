@@ -17,10 +17,7 @@ ULungeState::ULungeState()
 
 void ULungeState::Start()
 {
-	if (Instigator && StateMontage)
-	{
-		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(StateMontage);
-	}
+	PlayMontage();
 }
 
 EBossState ULungeState::Update(float DeltaTime)
@@ -31,10 +28,6 @@ EBossState ULungeState::Update(float DeltaTime)
 }
 
 void ULungeState::Stop()
-{
-}
-
-void ULungeState::Activate()
 {
 }
 

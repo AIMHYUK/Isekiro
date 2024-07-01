@@ -17,6 +17,8 @@ ABossCharacter::ABossCharacter()
 	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
 
 	TargetOffset = 200.f;
+
+	CurrDir = EDirection::LEFT;
 }
 
 void ABossCharacter::BeginPlay()
@@ -122,4 +124,9 @@ FVector ABossCharacter::GetTargetOffsetLocation() const
 bool ABossCharacter::IsLockedOnTarget() const
 {
 	return true;
+}
+
+EDirection ABossCharacter::GetCurrentDirection() const
+{
+	return CurrDir;
 }

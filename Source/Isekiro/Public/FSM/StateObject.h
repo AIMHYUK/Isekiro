@@ -35,12 +35,12 @@ protected:
 	virtual UWorld* GetWorld() const override;
 	
 protected:
+	void PlayMontage(FName SectionName = "");
 	virtual bool CanStartMovement() const;
 	virtual EBossState UpdateMovement(float DeltaTime);
 
 	TObjectPtr<ABossCharacter> Instigator;
 	TObjectPtr<AActor> Target;
-
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<UAnimMontage> StateMontage;

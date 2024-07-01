@@ -27,10 +27,6 @@ void UStrafeState::Stop()
 	Super::Stop();
 }
 
-void UStrafeState::Activate()
-{
-}
-
 EBossState UStrafeState::UpdateMovement(float DeltaTime)
 {
 	if (StrafeTotalTime < StrafeMaxTime)
@@ -44,7 +40,7 @@ EBossState UStrafeState::UpdateMovement(float DeltaTime)
 		}
 	}
 	else {
-		return EBossState::LUNGE;
+		return EBossState::DODGE;
 	}
 	return EBossState::NONE;
 }

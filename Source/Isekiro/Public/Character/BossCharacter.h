@@ -4,21 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Character/BaseCharacter.h"
+#include "FSM/GlobalTypes.h"
 #include "BossCharacter.generated.h"
 
 /**
  * 
  */
-
-UENUM()
-enum class ETestState : uint8 
-{
-	None,
-	Strafe, 
-	Run,
-	Rush,
-	Lunge
-};
 
 class UFSMComponent;
 class UStateObject;
@@ -39,6 +30,7 @@ public:
 	float GetDistanceToTarget() const;
 	FVector GetTargetOffsetLocation() const;
 	bool IsLockedOnTarget() const;
+	EDirection GetCurrentDirection() const;
 
 protected:
 	UFUNCTION()
@@ -51,7 +43,6 @@ protected:
 	void OnDeactivated(UActorComponent* Component);
 
 protected:
-
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
@@ -65,4 +56,5 @@ protected:
 
 private:
 	float HeightZ;
+	EDirection CurrDir;
 };

@@ -34,6 +34,16 @@ void UStateObject::Activate()
 {
 }
 
+void UStateObject::PlayMontage(FName SectionName)
+{
+	if (Instigator && StateMontage)
+	{
+		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(StateMontage);
+		if (!SectionName.IsNone())
+			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName, StateMontage);
+	}
+}
+
 bool UStateObject::CanStartMovement() const
 {
 	return bIsMoving;
