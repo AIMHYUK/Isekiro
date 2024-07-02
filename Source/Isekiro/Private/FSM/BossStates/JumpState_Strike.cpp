@@ -32,10 +32,10 @@ void UJumpState_Strike::Stop()
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
-		return EBossState::NONE;
-	/*if (!CanStartMovement())
+	if (!CanStartMovement())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
+		return EBossState::NONE;
 	}
 
 	if (!bHasPrevLoc)
@@ -56,5 +56,5 @@ EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 
 	Instigator->SetActorLocation(lungeVector);
 
-	return EBossState::NONE;*/
+	return EBossState::NONE;
 }

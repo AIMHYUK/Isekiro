@@ -73,4 +73,8 @@ void UFSMComponent::PrepNewState(EBossState NewState)
 			CurrentState = NewStateObj;
 		}
 	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not find State object to start."));
+	}
 }
