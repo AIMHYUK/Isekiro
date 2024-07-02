@@ -6,7 +6,6 @@
 
 void UDodgeState::Start()
 {
-	Super::Start();
 	if (Instigator)
 	{
 		switch (Instigator->GetCurrentDirection())
@@ -33,7 +32,7 @@ void UDodgeState::Start()
 		}
 		}		
 	}
-	PlayMontage();
+	Super::Start();
 }
 
 EBossState UDodgeState::Update(float DeltaTime)

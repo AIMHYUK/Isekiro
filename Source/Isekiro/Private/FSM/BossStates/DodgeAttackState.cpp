@@ -9,7 +9,7 @@ UDodgeAttackState::UDodgeAttackState()
 
 void UDodgeAttackState::Start()
 {
-	PlayMontage();
+	Super::Start();
 }
 
 EBossState UDodgeAttackState::Update(float DeltaTime)

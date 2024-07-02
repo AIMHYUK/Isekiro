@@ -17,7 +17,7 @@ ULungeState::ULungeState()
 
 void ULungeState::Start()
 {
-	PlayMontage();
+	Super::Start();
 }
 
 EBossState ULungeState::Update(float DeltaTime)

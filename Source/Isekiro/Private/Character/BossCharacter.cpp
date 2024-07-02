@@ -20,6 +20,9 @@ ABossCharacter::ABossCharacter()
 
 	TargetOffset = 200.f;
 
+	ArrowDamage = 20.f;
+	ArrowHardDamage = 30.f;
+
 	CurrDir = EDirection::LEFT;
 }
 
@@ -80,23 +83,12 @@ void ABossCharacter::BeginAttack()
 
 void ABossCharacter::FireArrow()
 {
-	if (Target && ArrowClass)
-	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
-		FRotator Rotate = DirVector.Rotation();
-		FTransform Trans;
-		
-		Trans.SetLocation(GetActorLocation() + GetActorForwardVector() * 10.f);
-		Trans.SetRotation(Rotate.Quaternion());
-		Trans.SetScale3D(FVector::One());
+	SetupFireArrow(ArrowDamage);
+}
 
-		AArrow* Spawned = GetWorld()->SpawnActorDeferred<AArrow>(ArrowClass, Trans, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-		if (Spawned)
-		{
-			Spawned->Initialize(Target);
-		}
-		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
-	}
+void ABossCharacter::FireArrowHard()
+{
+	SetupFireArrow(ArrowHardDamage);
 }
 
 void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
@@ -107,10 +99,27 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
 }
 
-void ABossCharacter::OnDeactivated(UActorComponent* Component)
+void ABossCharacter::SetupFireArrow(float Damage)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Deactivated"));
+	if (Target && ArrowClass)
+	{
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FRotator Rotate = DirVector.Rotation();
+		FTransform Trans;
+
+		Trans.SetLocation(GetActorLocation() + GetActorForwardVector() * 10.f);
+		Trans.SetRotation(Rotate.Quaternion());
+		Trans.SetScale3D(FVector::One());
+
+		AArrow* Spawned = GetWorld()->SpawnActorDeferred<AArrow>(ArrowClass, Trans, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		if (Spawned)
+		{
+			Spawned->Initialize(Target, Damage);
+		}
+		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
+	}
 }
+
 
 float ABossCharacter::GetDistanceToTarget() const
 {

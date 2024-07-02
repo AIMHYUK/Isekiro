@@ -17,7 +17,6 @@ UJumpState_Strike::UJumpState_Strike()
 void UJumpState_Strike::Start()
 {
 	Super::Start();
-	PlayMontage();
 }
 
 EBossState UJumpState_Strike::Update(float DeltaTime)

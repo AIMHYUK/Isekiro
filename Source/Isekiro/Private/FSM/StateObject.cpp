@@ -17,7 +17,7 @@ void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
 
 void UStateObject::Start()
 {
-
+	PlayMontage();
 }
 
 EBossState UStateObject::Update(float DeltaTime)

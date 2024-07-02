@@ -16,7 +16,7 @@ class ISEKIRO_API AArrow : public AActor
 	
 public:	
 	AArrow();
-	void Initialize(AActor* _Target);
+	void Initialize(AActor* _Target, float _Damage);
 
 protected:
 	virtual void PostInitializeComponents() override;
@@ -38,4 +38,5 @@ protected:
 private:
 	TObjectPtr<AActor> Target;
 	FVector Dir;
+	float Damage;
 };

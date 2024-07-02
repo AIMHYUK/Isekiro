@@ -28,12 +28,13 @@ AArrow::AArrow()
 
 }
 
-void AArrow::Initialize(AActor* _Target)
+void AArrow::Initialize(AActor* _Target, float _Damage)
 {
-	if (_Target) 
+	if (_Target)
 	{
 		Target = _Target;
 	}
+	Damage = _Damage;
 }
 
 void AArrow::PostInitializeComponents()
