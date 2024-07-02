@@ -62,7 +62,7 @@ void UFSMComponent::StopMovement()
 void UFSMComponent::PrepNewState(EBossState NewState)
 {
 	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);
-	if (StateObjectClass)
+	if (StateObjectClass && *StateObjectClass)
 	{
 		UStateObject* NewStateObj = NewObject<UStateObject>(GetOwner(), *StateObjectClass);
 		if (NewStateObj)

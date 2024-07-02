@@ -26,6 +26,9 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_StartAttack();
+	
+	UFUNCTION()
+	void AnimNotify_StartAttack_Arrow();
 
 private:
 	TObjectPtr<UFSMComponent> FSMComp;

@@ -6,6 +6,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FSM/StateObject.h"
 #include "Components/BoxComponent.h"
+#include "Arrow.h"
+#include "Kismet/GameplayStatics.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -73,6 +75,27 @@ void ABossCharacter::BeginAttack()
 	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
+	}
+}
+
+void ABossCharacter::FireArrow()
+{
+	if (Target && ArrowClass)
+	{
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FRotator Rotate = DirVector.Rotation();
+		FTransform Trans;
+		
+		Trans.SetLocation(GetActorLocation() + GetActorForwardVector() * 10.f);
+		Trans.SetRotation(Rotate.Quaternion());
+		Trans.SetScale3D(FVector::One());
+
+		AArrow* Spawned = GetWorld()->SpawnActorDeferred<AArrow>(ArrowClass, Trans, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		if (Spawned)
+		{
+			Spawned->Initialize(Target);
+		}
+		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
 	}
 }
 

@@ -14,6 +14,7 @@
 class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
+class AArrow;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -26,11 +27,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
+	UFUNCTION(BlueprintCallable)
+	void FireArrow();
 
 	float GetDistanceToTarget() const;
 	FVector GetTargetOffsetLocation() const;
 	bool IsLockedOnTarget() const;
 	EDirection GetCurrentDirection() const;
+
 
 protected:
 	UFUNCTION()
@@ -53,8 +57,11 @@ protected:
 	TObjectPtr<AActor> Target;
 	UPROPERTY(EditDefaultsOnly, Category = "Setting")
 	float TargetOffset;
+	UPROPERTY(EditAnywhere, Category = "Setting")
+	EDirection CurrDir;
+	UPROPERTY(EditAnywhere, Category = "Setting")
+	TSubclassOf<AArrow> ArrowClass;
 
 private:
 	float HeightZ;
-	EDirection CurrDir;
 };

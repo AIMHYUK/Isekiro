@@ -37,3 +37,13 @@ void UBossAnimInstance::AnimNotify_StartAttack()
 
 	BossCharacter->BeginAttack();
 }
+
+void UBossAnimInstance::AnimNotify_StartAttack_Arrow()
+{
+	if (!BossCharacter)
+	{
+		BossCharacter = Cast<ABossCharacter>(GetOwningActor());
+		if (!BossCharacter) return;
+	}
+	BossCharacter->FireArrow();
+}

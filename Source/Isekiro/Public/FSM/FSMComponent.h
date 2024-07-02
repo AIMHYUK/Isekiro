@@ -8,8 +8,8 @@
 
 class UStateObject;
 
-UENUM()
-enum class EBossState 
+UENUM(Blueprintable)
+enum class EBossState : uint8
 {
 	NONE UMETA(DisplayName = "None"),
 	STRAFE UMETA(DisplayName = "Strafe"),
@@ -17,7 +17,8 @@ enum class EBossState
 	RUN UMETA(DisplayName = "Run"),
 	RUSH UMETA(DisplayName = "Rush"),
 	DODGE UMETA(DisplayName = "Dodge"),
-	JUMP UMETA(DisplayName = "Jump")
+	JUMP UMETA(DisplayName = "Jump"),
+	DODGEATTACK UMETA(DisplayName = "DodgeAttack")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
