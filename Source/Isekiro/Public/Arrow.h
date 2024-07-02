@@ -9,6 +9,18 @@
 class AActor;
 class USphereComponent;
 class UStaticMeshComponent;
+
+USTRUCT()
+struct FArrowSetting
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	float Damage;
+	UPROPERTY(EditDefaultsOnly)
+	float Speed;
+};
+
 UCLASS()
 class ISEKIRO_API AArrow : public AActor
 {
@@ -16,7 +28,7 @@ class ISEKIRO_API AArrow : public AActor
 	
 public:	
 	AArrow();
-	void Initialize(AActor* _Target, float _Damage);
+	void Initialize(AActor* _Target, FArrowSetting _ArrowSetting);
 
 protected:
 	virtual void PostInitializeComponents() override;
@@ -32,11 +44,9 @@ protected:
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float Speed;
 		
 private:
 	TObjectPtr<AActor> Target;
 	FVector Dir;
-	float Damage;
+	FArrowSetting ArrowSetting;
 };

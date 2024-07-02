@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Character/BaseCharacter.h"
 #include "FSM/GlobalTypes.h"
+#include "Arrow.h"
 #include "BossCharacter.generated.h"
 
 /**
@@ -14,7 +15,6 @@
 class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
-class AArrow;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -56,10 +56,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
 	TSubclassOf<AArrow> ArrowClass;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
-	float ArrowDamage;
+	FArrowSetting DefaultSetting;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
-	float ArrowHardDamage;
+	FArrowSetting HardSetting;
 private:
 	float HeightZ;
-	void SetupFireArrow(float Damage);
+	void SetupFireArrow(FArrowSetting Setting);
 };

@@ -20,8 +20,10 @@ ABossCharacter::ABossCharacter()
 
 	TargetOffset = 200.f;
 
-	ArrowDamage = 20.f;
-	ArrowHardDamage = 30.f;
+	DefaultSetting.Damage = 20.f;
+	DefaultSetting.Speed = 1800.f;
+	HardSetting.Damage = 30.f;
+	HardSetting.Speed= 2600.f;
 
 	CurrDir = EDirection::LEFT;
 }
@@ -83,12 +85,12 @@ void ABossCharacter::BeginAttack()
 
 void ABossCharacter::FireArrow()
 {
-	SetupFireArrow(ArrowDamage);
+	SetupFireArrow(DefaultSetting);
 }
 
 void ABossCharacter::FireArrowHard()
 {
-	SetupFireArrow(ArrowHardDamage);
+	SetupFireArrow(HardSetting);
 }
 
 void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
@@ -99,7 +101,7 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
 }
 
-void ABossCharacter::SetupFireArrow(float Damage)
+void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 {
 	if (Target && ArrowClass)
 	{
@@ -114,7 +116,7 @@ void ABossCharacter::SetupFireArrow(float Damage)
 		AArrow* Spawned = GetWorld()->SpawnActorDeferred<AArrow>(ArrowClass, Trans, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 		if (Spawned)
 		{
-			Spawned->Initialize(Target, Damage);
+			Spawned->Initialize(Target, Setting);
 		}
 		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
 	}

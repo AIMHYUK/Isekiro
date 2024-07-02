@@ -8,7 +8,6 @@
 AArrow::AArrow()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	Speed = 200.f;
 
 	SceneComp = CreateDefaultSubobject<USceneComponent>("SceneComponent");
 	RootComponent = SceneComp;
@@ -28,13 +27,13 @@ AArrow::AArrow()
 
 }
 
-void AArrow::Initialize(AActor* _Target, float _Damage)
+void AArrow::Initialize(AActor* _Target, FArrowSetting _ArrowSetting)
 {
 	if (_Target)
 	{
 		Target = _Target;
 	}
-	Damage = _Damage;
+	ArrowSetting = _ArrowSetting;
 }
 
 void AArrow::PostInitializeComponents()
@@ -60,7 +59,7 @@ void AArrow::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector DirVector = Dir * Speed * DeltaTime;
+	FVector DirVector = Dir * ArrowSetting.Speed * DeltaTime;
 	SetActorLocation(DirVector + GetActorLocation());
 }
 
