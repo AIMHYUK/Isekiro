@@ -21,6 +21,7 @@
 #include <Kismet/KismetSystemLibrary.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include "RealParryBox.h"
+#include "Camera/PlayerCameraManager.h"
 #include "GameFramework/SpringArmComponent.h"
 
 
@@ -35,25 +36,6 @@ AHeroCharacter::AHeroCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm); //생성자에서 만들자..
 
-	//공격,방어 체크박스
-	// BoxComponent 생성
-	AttackGuardCheckBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackGuardCheckBox"));
-
-	// 캐릭터 메쉬의 특정 소켓에 컴포넌트를 붙임 (Weapon_r 소켓)
-	if (GetMesh())
-	{
-		FName Weaponsocket(TEXT("Weapon_r"));
-		AttackGuardCheckBox->SetupAttachment(GetMesh(), Weaponsocket);
-
-		// 박스 크기 설정
-		FVector BoxSize = FVector(10, 10, 10);
-		AttackGuardCheckBox->SetBoxExtent(BoxSize);
-
-		// 위치 확인을 위한 로그 추가
-		UE_LOG(LogTemp, Display, TEXT("Box attached to socket: %s"), *Weaponsocket.ToString());
-		UE_LOG(LogTemp, Display, TEXT("Box world location: %s"), *AttackGuardCheckBox->GetComponentLocation().ToString());
-	}
-
 	MaxCombo = 3;
 	AttackEndComboState();
 
@@ -65,8 +47,11 @@ AHeroCharacter::AHeroCharacter()
 	//기본마찰력상태 변수 초기화
 	OriginalGroundFriction = GetCharacterMovement()->GroundFriction;
 
+	//공격,방어 체크박스
 	ParryCheck = CreateDefaultSubobject<URealParryBox>(TEXT("ParryCheck"));
 	ParryCheck->SetupAttachment(RootComponent);
+
+
 }
 
 void AHeroCharacter::BeginPlay()
@@ -83,39 +68,16 @@ void AHeroCharacter::BeginPlay()
 		}
 	}
 	// Ensure the owner is valid and has a mesh component
-	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	USkeletalMeshComponent* CharacterMesh = GetMesh();
+	ParryCheck->AttachToComponent(CharacterMesh,FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
+
+	if (GetCapsuleComponent() != nullptr)
 	{
-		// PBox를 CharacterMesh의 ParryCheckBox 소켓에 부착합니다.
-		if (CharacterMesh && ParryCheck)
-		{
-			UE_LOG(LogTemp, Error, TEXT("TEXT"));
-			ParryCheck->AttachToComponent(CharacterMesh,FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
-
-			// AttachToComponent 이후에 부모 정보를 출력합니다.
-			USceneComponent* PPParentComponent = ParryCheck->GetAttachParent();
-			if (PPParentComponent)
-			{
-				FString ParentName = PPParentComponent->GetName();
-				FVector ParentLocation = PPParentComponent->GetComponentLocation();
-				FRotator ParentRotation = PPParentComponent->GetComponentRotation();
-
-				UE_LOG(LogTemp, Log, TEXT("Parrycheck is attached to parent: %s at location (%f, %f, %f) and rotation (%f, %f, %f)"),
-					*ParentName, ParentLocation.X, ParentLocation.Y, ParentLocation.Z,
-					ParentRotation.Roll, ParentRotation.Pitch, ParentRotation.Yaw);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("Parrycheck's parent component is null after attaching."));
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("CharacterMesh or PBox is not valid."));
-		}
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
+		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::PlayHittedMontage);
+		UE_LOG(LogTemp, Error, TEXT("Clear"));
 	}
-
 }
-
 
 void AHeroCharacter::PostInitializeComponents()
 {
@@ -226,30 +188,84 @@ void AHeroCharacter::Guard(const FInputActionValue& Value)
 			AnimInstance->Montage_Play(GuardMontage);	
 		}
 	}
+
 }
 
 void AHeroCharacter::PlayParryMontage()
 {
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetIgnoreMoveInput(true); //패링중 못움직이게
+	
+	ParryMontageSections = { TEXT("Parry1"), TEXT("Parry2"), TEXT("Parry3") }; //섹션 이름 받아서
+
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	AnimInstance->Montage_Play(ParryMontage);
+		if (ParryMontageSections.Num() > 0)
+		{
+			// Select a random section from the array
+			int32 SectionIndex = FMath::RandRange(0, ParryMontageSections.Num() - 1);
+			FName SelectedSection = ParryMontageSections[SectionIndex]; //랜덤하게 플레이하기
+
+			// Jump to the selected section
+			AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
+			// Log the selected section (optional, for debugging)
+			UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
+		}
+		KnockBack();
+
+		float MontageDuration = ParryMontage->GetPlayLength(); // 몽타주의 길이
+		GetWorld()->GetTimerManager().SetTimer(KnockBackTimerHandle, this, &AHeroCharacter::KnockBack, 0.1f, true);
+		
+		FOnMontageEnded MontageEndedDelegate;
+		MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnParryMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, ParryMontage);
 }
 
-//void AHeroCharacter::ParryInput()
-//{
-//	bIsParryWindow = true;
-//
-//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-//
-//	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &AHeroCharacter::EndParryWindow, 0.2f, false);  // 0.2초 (12프레임) 후 EndParryWindow 호출
-//}
-//
-//void AHeroCharacter::EndParryWindow()
-//{
-//	bIsParryWindow = false;
-//
-//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-//}
+void AHeroCharacter::OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 타이머를 멈추고 플레이어 입력을 재활성화
+	GetWorld()->GetTimerManager().ClearTimer(KnockBackTimerHandle);
 
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->SetIgnoreMoveInput(false); // 패링 및 넉백 후 움직임 재활성화
+	}
+}
+
+void AHeroCharacter::KnockBack() // 뒤로 밀리는 함수
+{
+	GetCharacterMovement()->GroundFriction = OriginalGroundFriction;
+	FVector KnockBackDirection = -GetActorForwardVector();
+	float KnockBackDistance = 50.0f; // 지속적으로 밀리는 거리
+
+	LaunchCharacter(KnockBackDirection * KnockBackDistance, true, true);
+}
+void AHeroCharacter::ShakeCam()
+{
+	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+	if (CameraManager)
+	{
+		GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(CamShake); // 여기에 사용할 CameraShake 클래스를 설정하세요
+		CameraManager->PlayWorldCameraShake(GetWorld(), CamShake, GetActorLocation(), 0, 500, 1);
+	}
+}
+
+void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetIgnoreMoveInput(true);
+	UE_LOG(LogTemp, Error, TEXT("HIt!"));
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(HittedMontage);
+	}
+	PlayerController->SetIgnoreMoveInput(false);
+
+}
 
 void AHeroCharacter::Run(const FInputActionValue& value)
 {
@@ -269,26 +285,6 @@ void AHeroCharacter::Run(const FInputActionValue& value)
 	}
 }
 
-//void APlayerCharacter::ParryInput()
-//{
-//	// 패링 상태로 전환
-//	bIsParryWindow = true;
-//
-//	// 패링 상태를 로그로 출력
-//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-//
-//	// 패링 상태를 일정 시간 후 종료하기 위해 타이머 설정
-//	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &APlayerCharacter::EndParryWindow, 0.2f, false); // 0.2초 (12프레임) 후 EndParryWindow 호출
-//}
-//
-//void APlayerCharacter::EndParryWindow()
-//{
-//	bIsParryWindow = false;
-//
-//	// 패링 상태 종료를 로그로 출력
-//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-//}
-
 void AHeroCharacter::AttackStart(const FInputActionValue& value)
 {
 	UE_LOG(LogTemp, Display, TEXT("CurrentCombo = %d"), CurrentCombo);
@@ -306,7 +302,6 @@ void AHeroCharacter::AttackStart(const FInputActionValue& value)
 		HeroAnim->PlayAttackMontage();
 		HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 		IsAttacking = true;
-		//UE_LOG(LogTemp, Display, TEXT("CurrentCombo = %d"), CurrentCombo);
 	}
 }
 
@@ -322,7 +317,6 @@ void AHeroCharacter::AttackStartComboState()
 	CanNextCombo = true;
 	IsComboInputOn = false;
 	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
-	//UE_LOG(LogTemp, Error, TEXT("upup, Currentcombo = %d"), CurrentCombo);
 }
 
 void AHeroCharacter::AttackEndComboState()
@@ -330,15 +324,14 @@ void AHeroCharacter::AttackEndComboState()
 	IsComboInputOn = false;
 	CanNextCombo = false;
 	CurrentCombo = 0;
-	//UE_LOG(LogTemp, Error, TEXT("End, Currentcombo = %d"), CurrentCombo);
 }
 
 void AHeroCharacter::DealDamage()
 {
-	if (AttackGuardCheckBox)
+	if (ParryCheck)
 	{
-		FVector BoxLocation = AttackGuardCheckBox->GetComponentLocation();
-		FVector BoxExtent = AttackGuardCheckBox->GetScaledBoxExtent();
+		FVector SphereLocation = ParryCheck->GetComponentLocation();
+		float SphereSize = ParryCheck->GetScaledSphereRadius();
 
 		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1)); // 예시로 LockOnPawn 타입 추가
@@ -346,47 +339,37 @@ void AHeroCharacter::DealDamage()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AActor*> OutActors;
 
-		// BoxOverlapActors 함수를 사용하여 겹치는 액터들을 찾음
-		UKismetSystemLibrary::BoxOverlapActors(
+		UKismetSystemLibrary::SphereOverlapActors(
 			GetWorld(),
-			BoxLocation,
-			BoxExtent,
+			SphereLocation,
+			SphereSize,
 			ObjectTypes,
-			nullptr, // TraceComplex를 사용하지 않을 경우 nullptr 전달
+			nullptr, // QueryParams, 기본값 사용 (모든 타입의 액터와 오버랩)
 			ActorsToIgnore,
 			OutActors
 		);
 
-		// 겹치는 액터들이 있는 경우에만 DrawDebugBox 호출
 		for (AActor* OverlappedActor : OutActors)
 		{
-			FLinearColor LineColor(0, 1, 0, 1);
-
-			// Rotation: 상자의 회전 (기본값은 FRotator::ZeroRotator)
-			FRotator Rotation(0, 0, 0);
-
-			// Duration: 디버그 라인이 표시될 시간 (기본값은 2초)
-			float Duration = 2.0f;
-
-			// Thickness: 선의 두께 (기본값은 0)
-			float Thickness = 0.0f;
-
-			// 각 액터의 위치와 회전에 따라 DrawDebugBox 호출
 			FVector ActorLocation = OverlappedActor->GetActorLocation();
-			FVector ActorExtent = FVector::ZeroVector; // 액터의 경우, 액터의 크기에 맞게 설정해야 함
+			float SphereRadius = 50.0f; // 구의 반지름 설정
 
-			UKismetSystemLibrary::DrawDebugBox(
+			FLinearColor LineColor(0, 1, 0, 1); // 라인 색상 설정 (초록색)
+
+			// DrawDebugSphere 함수를 사용하여 구체 그리기
+			UKismetSystemLibrary::DrawDebugSphere(
 				GetWorld(),
 				ActorLocation,
-				BoxExtent,
+				SphereRadius,
+				12, // Segments (구체 표현을 위한 세그먼트 수)
 				LineColor,
-				Rotation,
-				Duration,
-				Thickness
+				true, // PersistentLines (라이프타임 동안 지속됨)
+				5.0f // Duration (지속 시간)
 			);
 		}
 	}
 }
+	
 
 //대쉬 이벤트처리 함수 구현
 void AHeroCharacter::Dash(const FInputActionValue& value)
@@ -419,15 +402,6 @@ void AHeroCharacter::LaunchFoward()
 	//캐릭터를 앞으로 이동
 	LaunchCharacter(LaunchVelocity, true, false);
 }
-
-//대쉬할떄 위로 살짝 뜨게하는 함수 구현
-//void AHeroCharacter::LaunchUpward()
-//{
-//	//위로 300의 힘으로 이동시킬 변수
-//	FVector LaunchVelocity = FVector(0, 0, 300);
-//	LaunchCharacter(LaunchVelocity, false, true);
-//}
-
 //Cooldown초기화 함수 구현
 void AHeroCharacter::ResetLaunchCooldown()
 {
@@ -439,11 +413,4 @@ void AHeroCharacter::ResetGroundFriction()
 {
 	GetCharacterMovement()->GroundFriction = OriginalGroundFriction;
 }
-//void AHeroCharacter::OnWidget()
-//{
-//	Hud = CreateWidget<UUserWidget>(GetWorld(), HUDClass);
-//	if (Hud != nullptr)
-//	{
-//		Hud->AddToViewport();
-//	}
-//}
+

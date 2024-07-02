@@ -89,10 +89,22 @@ public:
 	float OriginalGroundFriction;
 	//마찰력상태 초기화 함수 선언
 	void ResetGroundFriction();
-
+	
+	UFUNCTION()
 	void PlayParryMontage();
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+    TArray<FName> ParryMontageSections; // Array to hold section names
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	URealParryBox* ParryCheck;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UCameraShakeBase> CamShake;
+
+	void OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	FTimerHandle KnockBackTimerHandle;
 protected:
 
 	virtual void BeginPlay() override;
@@ -101,8 +113,7 @@ protected:
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UCameraComponent* Camera;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	UBoxComponent* AttackGuardCheckBox;
+
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* Context;
@@ -131,6 +142,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AttackMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* HittedMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -138,6 +151,10 @@ protected:
 	void Jump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
 	void Dash(const FInputActionValue& value);
+	void KnockBack();
+	void ShakeCam();
+	UFUNCTION()
+	void PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	//UFUNCTION(BlueprintCallable)
 	/*bool CanAttack();*/
