@@ -5,6 +5,8 @@
 #include "Components/InputComponent.h"
 #include "Components/Boxcomponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/SceneComponent.h"
 #include "Materials/MaterialInstanceDynamic.h" //메테리얼 인스턴스 사용
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h" //향상된 입력
@@ -18,26 +20,24 @@
 #include <Kismet/GameplayStatics.h>
 #include <Kismet/KismetSystemLibrary.h>
 #include <GameFramework/CharacterMovementComponent.h>
+#include "RealParryBox.h"
 #include "GameFramework/SpringArmComponent.h"
 
 
 // Sets default values
 AHeroCharacter::AHeroCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm); //생성자에서 만들자..
-	
+
 	//공격,방어 체크박스
 	// BoxComponent 생성
 	AttackGuardCheckBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackGuardCheckBox"));
-	
-	ParryBox = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ParryBox"));
-	ParryBox->SetupAttachment(RootComponent);
 
 	// 캐릭터 메쉬의 특정 소켓에 컴포넌트를 붙임 (Weapon_r 소켓)
 	if (GetMesh())
@@ -65,19 +65,8 @@ AHeroCharacter::AHeroCharacter()
 	//기본마찰력상태 변수 초기화
 	OriginalGroundFriction = GetCharacterMovement()->GroundFriction;
 
-	AttackGuardCheckBox->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin);
-	ParryBox->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin);
-
-	// AttackGuardCheckBox의 콜리전 설정
-	AttackGuardCheckBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 쿼리 가능하게 설정
-	AttackGuardCheckBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); // 월드 동적 콜리전으로 설정
-
-	// 모든 채널에 대해 충돌 무시
-	AttackGuardCheckBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-
-	// AttackBox와의 충돌에 대해서만 오버랩 이벤트를 받음
-	AttackGuardCheckBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-
+	ParryCheck = CreateDefaultSubobject<URealParryBox>(TEXT("ParryCheck"));
+	ParryCheck->SetupAttachment(RootComponent);
 }
 
 void AHeroCharacter::BeginPlay()
@@ -93,15 +82,38 @@ void AHeroCharacter::BeginPlay()
 			Subsystem->AddMappingContext(Context, 0);
 		}
 	}
-	
-	// 매터리얼을 생성하고 설정합니다.
-	//UMaterialInstanceDynamic* BoxMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, nullptr);
-	//if (BoxMaterial)
-	//{
-	//	UE_LOG(LogTemp, Display, TEXT("boxmaterial"));
-	//	BoxMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.0f, 0.0f, 0.0f)); // 색상을 빨강(1, 0, 0)으로 설정
-	//	AttackGuardCheckBox->SetMaterial(0, BoxMaterial);
-	//}
+	// Ensure the owner is valid and has a mesh component
+	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	{
+		// PBox를 CharacterMesh의 ParryCheckBox 소켓에 부착합니다.
+		if (CharacterMesh && ParryCheck)
+		{
+			UE_LOG(LogTemp, Error, TEXT("TEXT"));
+			ParryCheck->AttachToComponent(CharacterMesh,FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
+
+			// AttachToComponent 이후에 부모 정보를 출력합니다.
+			USceneComponent* PPParentComponent = ParryCheck->GetAttachParent();
+			if (PPParentComponent)
+			{
+				FString ParentName = PPParentComponent->GetName();
+				FVector ParentLocation = PPParentComponent->GetComponentLocation();
+				FRotator ParentRotation = PPParentComponent->GetComponentRotation();
+
+				UE_LOG(LogTemp, Log, TEXT("Parrycheck is attached to parent: %s at location (%f, %f, %f) and rotation (%f, %f, %f)"),
+					*ParentName, ParentLocation.X, ParentLocation.Y, ParentLocation.Z,
+					ParentRotation.Roll, ParentRotation.Pitch, ParentRotation.Yaw);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Parrycheck's parent component is null after attaching."));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("CharacterMesh or PBox is not valid."));
+		}
+	}
+
 }
 
 
@@ -146,7 +158,7 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Jump);
-		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::ParryInput);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Guard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::Guard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
@@ -194,7 +206,8 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 void AHeroCharacter::Guard(const FInputActionValue& Value)
 {
 	bool bIsPressed = Value.Get<bool>();
-	bool bIsParrying = true;
+	ParryCheck->ParryStarted();
+	bool bIsParrying = ParryCheck->GetParryWindow();
 	GuardState = ECharacterGuardState::ECGS_Guarding;
 	// Get the animation instance
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -206,46 +219,36 @@ void AHeroCharacter::Guard(const FInputActionValue& Value)
 			// Play the guard montage
 			AnimInstance->Montage_Play(KeepGuardMontage);
 		}
-		else
-		{	
-			UE_LOG(LogTemp, Display, TEXT("e;ses;e"));		
-			AnimInstance->Montage_Play(GuardMontage);			
+
+		else if(bIsParrying)
+		{
+					
+			AnimInstance->Montage_Play(GuardMontage);	
 		}
 	}
 }
 
-void AHeroCharacter::OnAttackGuardCheckBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AHeroCharacter::PlayParryMontage()
 {
-	UE_LOG(LogTemp, Error, TEXT("overlapped"));
-	if (bIsParryWindow)
-	{
-		
-		{
-				UE_LOG(LogTemp, Warning, TEXT("Parry successful!"));
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to load BP_EnemyChar"));
-		}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AnimInstance->Montage_Play(ParryMontage);
 }
 
-
-void AHeroCharacter::ParryInput()
-{
-	bIsParryWindow = true;
-
-	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-
-	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &AHeroCharacter::EndParryWindow, 0.2f, false);  // 0.2초 (12프레임) 후 EndParryWindow 호출
-}
-
-void AHeroCharacter::EndParryWindow()
-{
-	bIsParryWindow = false;
-
-	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
-}
+//void AHeroCharacter::ParryInput()
+//{
+//	bIsParryWindow = true;
+//
+//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Started: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+//
+//	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &AHeroCharacter::EndParryWindow, 0.2f, false);  // 0.2초 (12프레임) 후 EndParryWindow 호출
+//}
+//
+//void AHeroCharacter::EndParryWindow()
+//{
+//	bIsParryWindow = false;
+//
+//	UE_LOG(LogTemp, Warning, TEXT("Parry Window Ended: %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
+//}
 
 
 void AHeroCharacter::Run(const FInputActionValue& value)

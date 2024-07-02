@@ -17,7 +17,7 @@ class UAnimMontage;
 class UBoxComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
-
+class URealParryBox;
 
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
@@ -90,14 +90,9 @@ public:
 	//마찰력상태 초기화 함수 선언
 	void ResetGroundFriction();
 
-	UFUNCTION() //이거 안붙이면 AddDynamic 으로 안붙어용
-	void OnAttackGuardCheckBoxOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void PlayParryMontage();
 
-	UFUNCTION(BlueprintCallable, Category="Combat")
-    void ParryInput();
-
-    UFUNCTION()
-    void EndParryWindow();
+	URealParryBox* ParryCheck;
 protected:
 
 	virtual void BeginPlay() override;
@@ -108,13 +103,6 @@ protected:
 	UCameraComponent* Camera;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* AttackGuardCheckBox;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	UCapsuleComponent* ParryBox;
-
-
-	UPROPERTY(EditDefaultsOnly, Category = "Material")
-	UMaterialInterface* BaseMaterial; 
-
 
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputMappingContext* Context;
@@ -133,13 +121,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* DashAction;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GuardMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* KeepGuardMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ParryMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* AttackMontage;
@@ -150,7 +138,6 @@ protected:
 	void Jump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
 	void Dash(const FInputActionValue& value);
-	//void Attack(const FInputActionValue& value);
 
 	//UFUNCTION(BlueprintCallable)
 	/*bool CanAttack();*/
@@ -164,9 +151,6 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
-	
-	bool bIsParryWindow;
-	FTimerHandle ParryTimerHandle;
 
 
 };
