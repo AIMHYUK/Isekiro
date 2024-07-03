@@ -24,11 +24,14 @@ public:
 	float GetPosture() const;
 	FStatusChangedDelegate OnStatusChanged; 
 
+	UFUNCTION(BlueprintCallable)
+	float GetHPPercent();
 protected:
 	virtual void BeginPlay() override;
 
 private:	
 	float Health; 
 	float Posture;
+	float MaxHealth;
 		
 };

@@ -23,6 +23,7 @@ void UHeroAnimInstance::NativeInitializeAnimation()
 	{
         HeroCharacterMovement = HeroCharacter->GetCharacterMovement();
 	}
+
 }
 
 void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
@@ -55,6 +56,16 @@ void UHeroAnimInstance::AnimNotify_NextAttackCheck()
 {
 	OnNextAttackCheck.Broadcast();
 }
+
+//void UHeroAnimInstance::AnimNotify_GuardCheck()
+//{
+//	AHeroCharacter* OwningCharacter = Cast<AHeroCharacter>(TryGetPawnOwner());
+//	if (OwningCharacter && OwningCharacter->bGuardButtonHold)
+//	{
+//		OwningCharacter->PlayGuardMontage(FName("KeepGuard"));
+//		UE_LOG(LogTemp, Display, TEXT("Keepguard"));
+//	}	
+//}
 
 FName UHeroAnimInstance::GetAttackMontageSectionName(int32 Section)
 {

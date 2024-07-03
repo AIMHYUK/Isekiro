@@ -11,6 +11,7 @@
 //다음 공격 체크 딜리게이트
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnGuardCheckDelegate);
 /**
  * 
  */
@@ -45,17 +46,28 @@ public:
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate  OnAttackHitCheck;
+	FOnGuardCheckDelegate	OnGuardCheck;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* GuardMontage;
+
 
 private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* AttackMontage;
 
+
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
 
 	UFUNCTION()
 	void AnimNotify_NextAttackCheck();
+
+	//UFUNCTION()
+ //   void AnimNotify_GuardCheck();
+
+
 
 	FName GetAttackMontageSectionName(int32 Section);
 };

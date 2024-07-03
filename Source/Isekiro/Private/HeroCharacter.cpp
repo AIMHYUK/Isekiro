@@ -22,6 +22,8 @@
 #include <GameFramework/CharacterMovementComponent.h>
 #include "RealParryBox.h"
 #include "Camera/PlayerCameraManager.h"
+#include "ActorComponents/StatusComponent.h"
+#include "IsekiroGameModeBase.h"
 #include "GameFramework/SpringArmComponent.h"
 
 
@@ -73,9 +75,8 @@ void AHeroCharacter::BeginPlay()
 
 	if (GetCapsuleComponent() != nullptr)
 	{
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
-		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::PlayHittedMontage);
-		UE_LOG(LogTemp, Error, TEXT("Clear"));
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap); //캡슐콜리전이 attackbox감지
+		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::PlayHittedMontage); //오버랩되면  함수실행
 	}
 }
 
@@ -109,6 +110,15 @@ void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
+	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));
+
+
 }
 
 // Called to bind functionality to input
@@ -120,8 +130,8 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Look);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Jump);
-		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Guard);
-		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::Guard);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StartGuard);
+		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::EndGuard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
@@ -165,30 +175,55 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 		/*UKismetSystemLibrary::PrintString(GEngine->GetWorld(), "Hello", true, true, FLinearColor(0.0f, 0.66f, 1.0f, 1.0f), 2.0f);*/
 	}
 }
-void AHeroCharacter::Guard(const FInputActionValue& Value)
+//void AHeroCharacter::StartGuard(const FInputActionValue& Value)
+//{
+//	bIsGuarding = true;
+//	bGuardButtonHold = true;
+//
+//	PlayGuardMontage(FName("StartGuard"));
+//	UE_LOG(LogTemp, Display, TEXT("Startguard"));
+//	
+//}
+void AHeroCharacter::EndGuard(const FInputActionValue& Value)
+{
+	GuardState = ECharacterGuardState::ECGS_UnGuarded;
+	
+	// 이미 몽타주가 재생 중인 경우, 끝까지 기다립니다.
+}
+
+void AHeroCharacter::PlayGuardMontage(FName SectionName)
+{
+	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
+	if (HeroAnimInstance && HeroAnimInstance->GuardMontage)
+	{
+		// Guard 몽타주가 이미 재생 중이 아닌 경우에만 재생
+		if (!HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+		{
+			HeroAnimInstance->Montage_Play(HeroAnimInstance->GuardMontage);
+			HeroAnimInstance->Montage_JumpToSection(SectionName, HeroAnimInstance->GuardMontage);
+		}
+
+	}
+}
+
+void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 {
 	bool bIsPressed = Value.Get<bool>();
 	ParryCheck->ParryStarted();
-	bool bIsParrying = ParryCheck->GetParryWindow();
 	GuardState = ECharacterGuardState::ECGS_Guarding;
+	
 	// Get the animation instance
+	//GuardMontage->GetAnimationData();
+	//UAnimMontage* Montage = MyAnimInstance->GetCurrentActiveMontage();
+}
+void AHeroCharacter::PlayGuardMontage()
+{
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
 	if (AnimInstance)
 	{
-		// Check if the button is pressed
-		if (bIsPressed)
-		{
-			// Play the guard montage
-			AnimInstance->Montage_Play(KeepGuardMontage);
-		}
-
-		else if(bIsParrying)
-		{
-					
-			AnimInstance->Montage_Play(GuardMontage);	
-		}
+		AnimInstance->Montage_Play(GuardMontage);
 	}
-
 }
 
 void AHeroCharacter::PlayParryMontage()
@@ -209,36 +244,19 @@ void AHeroCharacter::PlayParryMontage()
 
 			// Jump to the selected section
 			AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
+			ShakeCam();
+			KnockBack();
 			// Log the selected section (optional, for debugging)
 			UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
 		}
-		KnockBack();
+		PlayerController->SetIgnoreMoveInput(false);
 
-		float MontageDuration = ParryMontage->GetPlayLength(); // 몽타주의 길이
-		GetWorld()->GetTimerManager().SetTimer(KnockBackTimerHandle, this, &AHeroCharacter::KnockBack, 0.1f, true);
-		
-		FOnMontageEnded MontageEndedDelegate;
-		MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnParryMontageEnded);
-		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, ParryMontage);
 }
-
-void AHeroCharacter::OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	// 타이머를 멈추고 플레이어 입력을 재활성화
-	GetWorld()->GetTimerManager().ClearTimer(KnockBackTimerHandle);
-
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		PlayerController->SetIgnoreMoveInput(false); // 패링 및 넉백 후 움직임 재활성화
-	}
-}
-
 void AHeroCharacter::KnockBack() // 뒤로 밀리는 함수
 {
 	GetCharacterMovement()->GroundFriction = OriginalGroundFriction;
 	FVector KnockBackDirection = -GetActorForwardVector();
-	float KnockBackDistance = 50.0f; // 지속적으로 밀리는 거리
+	float KnockBackDistance = 100.0f; // 지속적으로 밀리는 거리
 
 	LaunchCharacter(KnockBackDirection * KnockBackDistance, true, true);
 }
@@ -247,26 +265,46 @@ void AHeroCharacter::ShakeCam()
 	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 	if (CameraManager)
 	{
-		GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(CamShake); // 여기에 사용할 CameraShake 클래스를 설정하세요
-		CameraManager->PlayWorldCameraShake(GetWorld(), CamShake, GetActorLocation(), 0, 500, 1);
+		// 클라이언트에서 카메라 흔들림 효과 시작
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController)
+		{
+			PlayerController->ClientStartCameraShake(CamShake);
+		}
+
+		// 월드 공간에서 카메라 흔들림 효과 적용
+		CameraManager->PlayWorldCameraShake(GetWorld(), CamShake, GetActorLocation(), 0.0f, 50.0f, 1.0f);
 	}
 }
 
 void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	PlayerController->SetIgnoreMoveInput(true);
-	UE_LOG(LogTemp, Error, TEXT("HIt!"));
-	
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
+	if (!GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주 재생중일 때 실행 불가능
 	{
-		AnimInstance->Montage_Play(HittedMontage);
-	}
-	PlayerController->SetIgnoreMoveInput(false);
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		PlayerController->SetIgnoreMoveInput(true);
+		UE_LOG(LogTemp, Error, TEXT("HIt!"));
 
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(HittedMontage);
+			// 몽타주가 끝났을 때 호출될 델리게이트 설정
+			FOnMontageEnded MontageEndedDelegate;
+			MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
+		}
+	}
 }
 
+void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->SetIgnoreMoveInput(false); // 몽타주가 끝난 후 이동 재활성화
+	}
+}
 void AHeroCharacter::Run(const FInputActionValue& value)
 {
 	UE_LOG(LogTemp, Display, TEXT("Run"));
@@ -297,11 +335,14 @@ void AHeroCharacter::AttackStart(const FInputActionValue& value)
 	}
 	else
 	{
-		DealDamage();
-		AttackStartComboState();
-		HeroAnim->PlayAttackMontage();
-		HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-		IsAttacking = true;
+		if (!GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주 재생중일 때 실행 불가능
+		{
+			DealDamage();
+			AttackStartComboState();
+			HeroAnim->PlayAttackMontage();
+			HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+			IsAttacking = true;
+		}
 	}
 }
 

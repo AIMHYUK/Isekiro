@@ -22,6 +22,7 @@ public:
 	// Sets default values for this component's properties
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -42,4 +43,11 @@ public:
 	void ResetTimeDilation();
 
 	FTimerHandle TimeDilationHandle;
+
+	FTimerHandle CooldownTimerHandle;
+
+	void ResetParryCooldown();
+
+	bool bCanParry;
+
 };

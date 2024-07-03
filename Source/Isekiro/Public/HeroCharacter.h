@@ -18,6 +18,7 @@ class UBoxComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class URealParryBox;
+class AIsekiroGameModeBase;
 
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
@@ -63,7 +64,7 @@ public:
 	void DealDamage();
 	//연속공격
 
-		//걷기속도
+	//걷기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
 	float walkSpeed = 200;
 	//달리기속도
@@ -73,12 +74,10 @@ public:
 
 	//앞으로 대쉬 기능 함수 선언
 	void LaunchFoward();
-
-	////대쉬할떄 위로 살짝 뜨게하는 함수 선언
-	//void LaunchUpward();
 	
 	//Cooldown초기화 함수 선언
 	void ResetLaunchCooldown();
+
 	//딜레이 처리할 변수세트 선언
 	FTimerHandle LaunchUpwardTimeHandle;
 	FTimerHandle CooldownTimerHandle;
@@ -90,6 +89,7 @@ public:
 	//마찰력상태 초기화 함수 선언
 	void ResetGroundFriction();
 	
+	//패리
 	UFUNCTION()
 	void PlayParryMontage();
 
@@ -102,16 +102,23 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UCameraShakeBase> CamShake;
 
-	void OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	//가드
+	bool bIsGuarding = false;
+	bool bGuardButtonHold = false;
 
-	FTimerHandle KnockBackTimerHandle;
+	void StartGuard(const struct FInputActionValue& Value);
+	void EndGuard(const struct FInputActionValue& Value);
+
+	void PlayGuardMontage(FName Section);
+	void PlayGuardMontage();
+	class UHeroAnimInstance* HeroAnimInstance;
 protected:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArm;
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	UCameraComponent* Camera;
 
 
@@ -151,23 +158,28 @@ protected:
 	void Jump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
 	void Dash(const FInputActionValue& value);
+	
+	//타격감
 	void KnockBack();
 	void ShakeCam();
+	
 	UFUNCTION()
 	void PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	//UFUNCTION(BlueprintCallable)
-	/*bool CanAttack();*/
+	void OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	bool bIsAttacking = false;
 	bool bContinueAttack = false;
+
 private:
 	ECharacterGuardState GuardState = ECharacterGuardState::ECGS_UnGuarded;
 
+	UFUNCTION(BlueprintCallable)
 	FORCEINLINE ECharacterGuardState GetCharacterState() const { return GuardState; }
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
-
+	void GetHPPercent();
 };
+
+

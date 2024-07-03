@@ -22,6 +22,7 @@ URealParryBox::URealParryBox()
 	SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	//SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap); // Example: Respond to GameTraceChannel1
 
+	bCanParry = true;
 }
 
 // Called when the game starts
@@ -32,6 +33,7 @@ void URealParryBox::BeginPlay()
 	// ParryCheck에 대한 충돌 이벤트 핸들러를 바인딩합니다.
 
 	OnComponentBeginOverlap.AddDynamic(this, &URealParryBox::OnParryCheckBeginOverlap);
+
 }
 
 void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -46,8 +48,6 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
 	}
-	else
-		UE_LOG(LogTemp, Log, TEXT("Failed"));
 }
 
 
@@ -61,16 +61,33 @@ void URealParryBox::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 
 void URealParryBox::ParryStarted()
 {
+
+	if (!bCanParry)
+	{
+		return; //패링 쿨다운 중이면 패링시작하지 않음
+
+	}
 	bIsParryWindow = true;
 	SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore); //패링상태이면 데미지 안받음
-	
-	// Set collision response specifically for ECC_GameTraceChannel2
+	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주를 실행중이지 않다면
+	{
+		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행
+	}
+
+		
+	UE_LOG(LogTemp, Display, TEXT("GuardMontage"));
+	// ECC_GameTraceChannel3에 대한 충돌 응답 설정
 	SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
-	// Set a timer to end the parry window after 0.2 seconds
-	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &URealParryBox::ParryEnded, 12.0f / 60.0f, false);
+
+	// 패링 종료 타이머 설정
+	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &URealParryBox::ParryEnded, 8.0f / 60.0f, false);
+
+	// 패링 쿨다운 설정
+	bCanParry = false;
+	GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &URealParryBox::ResetParryCooldown, 8.0f / 60.0f, false);
 }
 
 void URealParryBox::ParryEnded()
@@ -81,9 +98,8 @@ void URealParryBox::ParryEnded()
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 	
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-
 }
+
 bool URealParryBox::GetParryWindow()
 {
 	return bIsParryWindow;
@@ -91,4 +107,9 @@ bool URealParryBox::GetParryWindow()
 void URealParryBox::ResetTimeDilation()
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
+}
+
+void URealParryBox::ResetParryCooldown()
+{
+	bCanParry = true;
 }
