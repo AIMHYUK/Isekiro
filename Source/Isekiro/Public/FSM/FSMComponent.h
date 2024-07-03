@@ -20,7 +20,8 @@ enum class EBossState : uint8
 	JUMP UMETA(DisplayName = "Jump"),
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
-	PARRY UMETA(DisplayName = "Parry")
+	PARRY UMETA(DisplayName = "Parry"),
+	THRUST UMETA(DisplayName = "Thrust")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -30,6 +31,7 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 
 public:	
 	UFSMComponent();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	void ChangeStateTo(EBossState NewState);

@@ -40,7 +40,7 @@ public:
 	virtual void Stop();
 	virtual void Activate();
 
-	void StartMovement();
+	virtual void StartMovement();
 	void StopMovement();
 
 protected:

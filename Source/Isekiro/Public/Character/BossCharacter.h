@@ -31,9 +31,12 @@ public:
 	void FireArrow();
 	UFUNCTION(BlueprintCallable)
 	void FireArrowHard();
+	
+	AActor* GetTarget() const; 
+	//Following Target location
+	FVector GetTargetOffsetLocation() const;
 
 	float GetDistanceToTarget() const;
-	FVector GetTargetOffsetLocation() const;
 	bool IsLockedOnTarget() const;
 	EDirection GetCurrentDirection() const;
 

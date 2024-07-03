@@ -93,6 +93,11 @@ void ABossCharacter::FireArrowHard()
 	SetupFireArrow(HardSetting);
 }
 
+AActor* ABossCharacter::GetTarget() const
+{
+	return Target;
+}
+
 void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep,
@@ -121,7 +126,6 @@ void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
 	}
 }
-
 
 float ABossCharacter::GetDistanceToTarget() const
 {
