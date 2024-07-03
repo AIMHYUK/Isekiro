@@ -31,7 +31,7 @@ void UStatusComponent::ApplyPostureDamage(float Damage)
 {
 	if (ensureAlways(Damage < 0.f)) 
 	{
-		Posture -= Damage;
+		Posture += Damage;
 		OnStatusChanged.Broadcast(Health, Posture);
 	}
 }

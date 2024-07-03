@@ -3,19 +3,17 @@
 
 #include "CharacterWidget.h"
 #include "ActorComponents/StatusComponent.h"
+#include "GameFramework/Pawn.h"
 #include "Components/ProgressBar.h"
+
 
 void UCharacterWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    StateComponent = GetOwningPlayerPawn()->GetComponentByClass<UStatusComponent>();
 }
 
 void UCharacterWidget::UpdateProgressBar()
 {
-    if (HPBar && StateComponent)
-    {
-        HPBar->SetPercent(StateComponent->GetHPPercent());
-    }
+       
 }

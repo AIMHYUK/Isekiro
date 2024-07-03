@@ -18,6 +18,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UCharacterWidget> MainWidget;
 
+	class UStatusComponent* State;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -26,5 +28,6 @@ private:
 	float HPPercent;
 	class UCharacterWidget* mainUI;
 
-	void PrintHpBar();
+	void UpdateHPBar();
+	void UpdatePostureBar();
 };
