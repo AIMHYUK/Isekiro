@@ -36,6 +36,8 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 			PrepNewState(NewState);
 		}
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
 void UFSMComponent::ChangeStateTo(EBossState NewState)

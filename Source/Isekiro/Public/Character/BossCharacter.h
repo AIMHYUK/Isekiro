@@ -37,6 +37,9 @@ public:
 	bool IsLockedOnTarget() const;
 	EDirection GetCurrentDirection() const;
 
+	UFUNCTION(BlueprintCallable)
+	void StartParry();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;

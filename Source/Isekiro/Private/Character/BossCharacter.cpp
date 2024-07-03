@@ -164,3 +164,8 @@ EDirection ABossCharacter::GetCurrentDirection() const
 {
 	return CurrDir;
 }
+
+void ABossCharacter::StartParry()
+{
+	FSMComponent->ChangeStateTo(EBossState::PARRY);
+}
