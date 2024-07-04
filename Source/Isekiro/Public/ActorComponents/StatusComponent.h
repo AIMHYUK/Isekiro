@@ -26,12 +26,33 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetHPPercent();
+	UFUNCTION(BlueprintCallable)
+	float GetPosturePercent();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+    float PostureRecoveryPerSecond = 5.0f; // 초당 회복되는 posture 양
+
+	UFUNCTION(BlueprintCallable)
+	void StartPostureRecovery();
+	UFUNCTION(BlueprintCallable)
+	void StopPostureRecovery();
+
+	float CurrentPosture; // 현재 posture 값
+	FTimerHandle PostureRecoveryTimerHandle;
+
+	UFUNCTION(BlueprintCallable)
+	void RecoverPosture(); // posture를 회복하는 함수
+
+	void SetPostureZero();
 protected:
-	virtual void BeginPlay() override;
+	virtual void BeginPlay() override; // BeginPlay에서 자연 회복 시작
 
 private:	
 	float Health; 
 	float Posture;
 	float MaxHealth;
 		
+
+	
+
 };

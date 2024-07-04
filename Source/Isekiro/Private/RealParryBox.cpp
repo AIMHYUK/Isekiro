@@ -6,6 +6,8 @@
 #include "HeroAnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
+#include "IsekiroGameModeBase.h"
+#include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
 
 // Sets default values for this component's properties
@@ -15,7 +17,7 @@ URealParryBox::URealParryBox()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	InitSphereRadius(10.0f); // Example: Set the sphere radius
+	InitSphereRadius(20.0f); // Example: Set the sphere radius
 	// Set collision settings
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -23,6 +25,7 @@ URealParryBox::URealParryBox()
 	//SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap); // Example: Respond to GameTraceChannel1
 
 	bCanParry = true;
+	/*State = Cast<UStatusComponent>(GetWorld()->GetAuthGameMode());*/
 }
 
 // Called when the game starts
@@ -43,7 +46,9 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 	if (MyCharacter && bIsParryWindow)
 	{
 		MyCharacter->PlayParryMontage();
-		UGameplayStatics::SetGlobalTimeDilation(this, 0.5f);
+		UGameplayStatics::SetGlobalTimeDilation(this, 0.7f);
+		UStatusComponent* State = MyCharacter->GetStatusComponent();
+		State->ApplyPostureDamage(5);
 
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
@@ -74,7 +79,7 @@ void URealParryBox::ParryStarted()
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore); //패링상태이면 데미지 안받음
 	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주를 실행중이지 않다면 = 패링에 실패해서 몽타주가 안나오면 
 	{
-		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행
+		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행 -> 후에 가드히트로 바꿔야함.
 	}
 		
 	UE_LOG(LogTemp, Display, TEXT("GuardMontage"));
