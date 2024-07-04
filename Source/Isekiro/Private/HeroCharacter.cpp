@@ -187,8 +187,9 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 void AHeroCharacter::EndGuard(const FInputActionValue& Value)
 {
 	GuardState = ECharacterGuardState::ECGS_UnGuarded;
-	
-	// 이미 몽타주가 재생 중인 경우, 끝까지 기다립니다.
+	auto Movement = GetCharacterMovement();
+	//가드걷기속도로 전환
+	Movement->MaxWalkSpeed = walkSpeed;
 }
 
 void AHeroCharacter::PlayGuardMontage(FName SectionName)
@@ -212,10 +213,12 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 	ParryCheck->ParryStarted();
 	GuardState = ECharacterGuardState::ECGS_Guarding;
 	
-	// Get the animation instance
-	//GuardMontage->GetAnimationData();
-	//UAnimMontage* Montage = MyAnimInstance->GetCurrentActiveMontage();
+	auto Movement = GetCharacterMovement();
+	//가드걷기속도로 전환
+	Movement->MaxWalkSpeed = GuardWalkSpeed;
+
 }
+
 void AHeroCharacter::PlayGuardMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -245,20 +248,19 @@ void AHeroCharacter::PlayParryMontage()
 			// Jump to the selected section
 			AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
 			ShakeCam();
-			KnockBack();
+			KnockBack(500);
 			// Log the selected section (optional, for debugging)
 			UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
 		}
 		PlayerController->SetIgnoreMoveInput(false);
 
 }
-void AHeroCharacter::KnockBack() // 뒤로 밀리는 함수
+void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
 {
 	GetCharacterMovement()->GroundFriction = OriginalGroundFriction;
 	FVector KnockBackDirection = -GetActorForwardVector();
-	float KnockBackDistance = 100.0f; // 지속적으로 밀리는 거리
 
-	LaunchCharacter(KnockBackDirection * KnockBackDistance, true, true);
+	LaunchCharacter(KnockBackDirection * Distance, true, true);
 }
 void AHeroCharacter::ShakeCam()
 {
@@ -279,13 +281,14 @@ void AHeroCharacter::ShakeCam()
 
 void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주 재생중일 때 실행 불가능
-	{
-		APlayerController* PlayerController = Cast<APlayerController>(GetController());
-		PlayerController->SetIgnoreMoveInput(true);
-		UE_LOG(LogTemp, Error, TEXT("HIt!"));
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	HeroAnimInstance = Cast<UHeroAnimInstance>(AnimInstance);
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (GuardState == ECharacterGuardState::ECGS_UnGuarded && !HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //가드를 내리고 있고 패링 몽타주가 실행되고 있지 않다면
+	{
+		PlayerController->SetIgnoreMoveInput(true); //못 움직이게 하고
+
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_Play(HittedMontage);
@@ -293,6 +296,22 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			FOnMontageEnded MontageEndedDelegate;
 			MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
+		}
+	}
+	else if(!HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //패링이 실패했다면 그냥 가드 모션 띄우기
+	{
+		GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(HittedWhileGuardMontage);
+			if (GuardMontageSections.Num() > 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
+				int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
+				FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
+				AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
+				KnockBack(300);
+			}
 		}
 	}
 }
@@ -439,7 +458,7 @@ void AHeroCharacter::Dash(const FInputActionValue& value)
 void AHeroCharacter::LaunchFoward()
 {
 	//앞으로 이동시킬 Velocity
-	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 750;
+	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 900;
 	//캐릭터를 앞으로 이동
 	LaunchCharacter(LaunchVelocity, true, false);
 }

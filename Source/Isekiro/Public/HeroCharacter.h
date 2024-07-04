@@ -64,9 +64,12 @@ public:
 	void DealDamage();
 	//연속공격
 
+	//가드중 이동 속도
+	UPROPERTY(EditAnywhere, Category=PlayerSetting)
+	float GuardWalkSpeed = 200;
 	//걷기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
-	float walkSpeed = 200;
+	float walkSpeed = 400;
 	//달리기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
 	float runSpeed = 600;
@@ -95,6 +98,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
     TArray<FName> ParryMontageSections; // Array to hold section names
+
+	
+	UPROPERTY(EditAnywhere, Category = "Animation")
+    TArray<FName> GuardMontageSections; // Array to hold section names
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	URealParryBox* ParryCheck;
@@ -151,6 +158,8 @@ protected:
 	UAnimMontage* AttackMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* HittedMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* HittedWhileGuardMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -160,7 +169,7 @@ protected:
 	void Dash(const FInputActionValue& value);
 	
 	//타격감
-	void KnockBack();
+	void KnockBack(float distance);
 	void ShakeCam();
 	
 	UFUNCTION()

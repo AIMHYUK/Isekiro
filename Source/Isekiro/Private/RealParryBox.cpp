@@ -72,11 +72,10 @@ void URealParryBox::ParryStarted()
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore); //패링상태이면 데미지 안받음
-	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주를 실행중이지 않다면
+	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주를 실행중이지 않다면 = 패링에 실패해서 몽타주가 안나오면 
 	{
 		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행
 	}
-
 		
 	UE_LOG(LogTemp, Display, TEXT("GuardMontage"));
 	// ECC_GameTraceChannel3에 대한 충돌 응답 설정
