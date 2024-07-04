@@ -21,25 +21,25 @@ void AIsekiroGameModeBase::BeginPlay()
             mainUI->AddToViewport();
     }
     APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-    if (PlayerController)
-    {
-        APawn* PlayerPawn = PlayerController->GetPawn();
-        if (PlayerPawn)
-        {
-            State = PlayerPawn->FindComponentByClass<UStatusComponent>();
-            if (State == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("StateComponent is null in AIsekiroGameModeBase::BeginPlay"));
-            }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("PlayerPawn is null in AIsekiroGameModeBase::BeginPlay"));
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
+	if (PlayerController)
+	{
+		APawn* PlayerPawn = PlayerController->GetPawn();
+		if (PlayerPawn)
+		{
+			State = PlayerPawn->FindComponentByClass<UStatusComponent>();
+			if (State == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("StateComponent is null in AIsekiroGameModeBase::BeginPlay"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("PlayerPawn is null in AIsekiroGameModeBase::BeginPlay"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
     }
 }
 
@@ -57,7 +57,7 @@ void AIsekiroGameModeBase::UpdatePostureBar()
 {
     if (mainUI)
     {
-        mainUI->PostureBar->SetPercent(State->GetHPPercent());
+        mainUI->PostureBar->SetPercent(State->GetPosturePercent());
         UE_LOG(LogTemp, Display, TEXT("MAUI"));
     }
 }

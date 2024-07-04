@@ -19,7 +19,9 @@ public:
 	TSubclassOf<class UCharacterWidget> MainWidget;
 
 	class UStatusComponent* State;
-
+	
+	void UpdateHPBar();
+	void UpdatePostureBar();
 protected:
 
 	virtual void BeginPlay() override;
@@ -28,6 +30,5 @@ private:
 	float HPPercent;
 	class UCharacterWidget* mainUI;
 
-	void UpdateHPBar();
-	void UpdatePostureBar();
+
 };

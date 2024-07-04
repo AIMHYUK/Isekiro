@@ -53,8 +53,9 @@ AHeroCharacter::AHeroCharacter()
 	ParryCheck = CreateDefaultSubobject<URealParryBox>(TEXT("ParryCheck"));
 	ParryCheck->SetupAttachment(RootComponent);
 
-
+	Status = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
 }
+
 
 void AHeroCharacter::BeginPlay()
 {
@@ -78,6 +79,33 @@ void AHeroCharacter::BeginPlay()
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap); //캡슐콜리전이 attackbox감지
 		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AHeroCharacter::PlayHittedMontage); //오버랩되면  함수실행
 	}
+
+	if (PlayerController)
+	{
+		APawn* PlayerPawn = PlayerController->GetPawn();
+		if (PlayerPawn)
+		{
+			Status = PlayerPawn->FindComponentByClass<UStatusComponent>();
+			Status->StartPostureRecovery();
+			UE_LOG(LogTemp, Display, TEXT("ENHANCED"));
+			if (!Status)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("UStatusComponent not found on PlayerPawn"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayerPawn not found"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerController not found"));
+	}
+	IsekiroGameModeBase = Cast<AIsekiroGameModeBase>(GetWorld()->GetAuthGameMode());
+
+	//CallHPBarFunction();
+	//CallPostureBarFunction();
 }
 
 void AHeroCharacter::PostInitializeComponents()
@@ -102,7 +130,7 @@ void AHeroCharacter::PostInitializeComponents()
 			
 			DealDamage();
 			//OnWidget();
-			UE_LOG(LogTemp, Error, TEXT("ATC"));
+			UE_LOG(LogTemp, Error, TEXT("ATTackHitCheck"));
 		});	
 }
 // Called every frame
@@ -116,9 +144,35 @@ void AHeroCharacter::Tick(float DeltaTime)
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
 	}
 	else
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
+
+}
 
 
+void AHeroCharacter::ApplyDamage(float damage)
+{
+	Status->ApplyHealthDamage(damage);
+
+}
+
+void AHeroCharacter::ApplyPosture(float posture)
+{
+	Status->ApplyPostureDamage(posture);
+}
+
+void AHeroCharacter::CallHPBarFunction()
+{
+	IsekiroGameModeBase->UpdateHPBar();
+}
+
+void AHeroCharacter::CallPostureBarFunction()
+{
+	IsekiroGameModeBase->UpdatePostureBar();
+}
+
+UStatusComponent* AHeroCharacter::GetStatusComponent()
+{
+	return Status;
 }
 
 // Called to bind functionality to input
@@ -186,6 +240,7 @@ void AHeroCharacter::Jump(const FInputActionValue& value)
 //}
 void AHeroCharacter::EndGuard(const FInputActionValue& Value)
 {
+	UE_LOG(LogTemp, Log, TEXT("Endguard"));
 	GuardState = ECharacterGuardState::ECGS_UnGuarded;
 	auto Movement = GetCharacterMovement();
 	//가드걷기속도로 전환
@@ -284,36 +339,54 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	HeroAnimInstance = Cast<UHeroAnimInstance>(AnimInstance);
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-
-	if (GuardState == ECharacterGuardState::ECGS_UnGuarded && !HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //가드를 내리고 있고 패링 몽타주가 실행되고 있지 않다면
+	UE_LOG(LogTemp, Display, TEXT("%f"), Status->GetPosture());
+	if (Status->GetPosture() > 100)
 	{
-		PlayerController->SetIgnoreMoveInput(true); //못 움직이게 하고
-
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(HittedMontage);
-			// 몽타주가 끝났을 때 호출될 델리게이트 설정
-			FOnMontageEnded MontageEndedDelegate;
-			MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
-		}
+		PlayerController->SetIgnoreMoveInput(true);
+		AnimInstance->Montage_Play(DefenseBreakMontage);
+		Status->SetPostureZero();
+		PlayerController->SetIgnoreMoveInput(false);
 	}
-	else if(!HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //패링이 실패했다면 그냥 가드 모션 띄우기
+	else
 	{
-		GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
-		if (AnimInstance)
+		if (GuardState == ECharacterGuardState::ECGS_UnGuarded && !HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //가드를 내리고 있고 패링 몽타주가 실행되고 있지 않다면
 		{
-			AnimInstance->Montage_Play(HittedWhileGuardMontage);
-			if (GuardMontageSections.Num() > 0)
+			PlayerController->SetIgnoreMoveInput(true); //못 움직이게 하고 맞는 판정
+			
+			if (AnimInstance)
 			{
-				UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
-				int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
-				FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
-				AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
-				KnockBack(300);
+				ApplyDamage(10);
+				ApplyPosture(10); //그래플링하면 중간에 겹쳐서 한대 맞은 판정임;;;;
+				AnimInstance->Montage_Play(HittedMontage);
+				// 몽타주가 끝났을 때 호출될 델리게이트 설정
+				FOnMontageEnded MontageEndedDelegate;
+				MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
+				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
+				UE_LOG(LogTemp, Display, TEXT("HP : %f"), Status->GetHealth())
+			}
+		}
+		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //패링이 실패했다면 그냥 가드 모션 띄우기
+		{
+			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				if (GuardMontageSections.Num() > 0)
+				{
+					ApplyDamage(4);
+					ApplyPosture(10);
+					UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
+					int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
+					FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
+					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
+					KnockBack(300);
+
+				}
 			}
 		}
 	}
+	//CallHPBarFunction();
+	//CallPostureBarFunction();
 }
 
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -344,7 +417,6 @@ void AHeroCharacter::Run(const FInputActionValue& value)
 
 void AHeroCharacter::AttackStart(const FInputActionValue& value)
 {
-	UE_LOG(LogTemp, Display, TEXT("CurrentCombo = %d"), CurrentCombo);
 	if (IsAttacking)
 	{
 		if (CanNextCombo)
@@ -411,21 +483,17 @@ void AHeroCharacter::DealDamage()
 
 		for (AActor* OverlappedActor : OutActors)
 		{
-			FVector ActorLocation = OverlappedActor->GetActorLocation();
-			float SphereRadius = 50.0f; // 구의 반지름 설정
-
-			FLinearColor LineColor(0, 1, 0, 1); // 라인 색상 설정 (초록색)
-
-			// DrawDebugSphere 함수를 사용하여 구체 그리기
-			UKismetSystemLibrary::DrawDebugSphere(
-				GetWorld(),
-				ActorLocation,
-				SphereRadius,
-				12, // Segments (구체 표현을 위한 세그먼트 수)
-				LineColor,
-				true, // PersistentLines (라이프타임 동안 지속됨)
-				5.0f // Duration (지속 시간)
-			);
+			if (OverlappedActor) // 액터 유효성 확인
+			{
+				// State 컴포넌트를 가져옴
+				Status = OverlappedActor->FindComponentByClass<UStatusComponent>();
+				if (Status)
+				{
+					Status->ApplyHealthDamage(10);
+					Status->ApplyPostureDamage(10);
+					UE_LOG(LogTemp, Display, TEXT("HP %f"), Status->GetHealth());
+				}
+			}
 		}
 	}
 }

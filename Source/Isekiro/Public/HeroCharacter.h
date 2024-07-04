@@ -19,6 +19,7 @@ class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class URealParryBox;
 class AIsekiroGameModeBase;
+class AHeroPlayerController;
 
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
@@ -119,6 +120,18 @@ public:
 	void PlayGuardMontage(FName Section);
 	void PlayGuardMontage();
 	class UHeroAnimInstance* HeroAnimInstance;
+
+	class UStatusComponent* Status;
+
+	AHeroPlayerController* HeroPlayerController;
+
+	AIsekiroGameModeBase* IsekiroGameModeBase;
+
+	void ApplyDamage(float damage);
+	void ApplyPosture(float Posture);
+	void CallHPBarFunction();
+	void CallPostureBarFunction();
+	UStatusComponent* GetStatusComponent();
 protected:
 
 	virtual void BeginPlay() override;
@@ -160,6 +173,8 @@ protected:
 	UAnimMontage* HittedMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* HittedWhileGuardMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* DefenseBreakMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);

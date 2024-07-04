@@ -22,7 +22,7 @@ public:
 	// Sets default values for this component's properties
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-
+	/*class UStatusComponent* State;*/
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
