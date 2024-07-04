@@ -56,6 +56,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	FMontageState MontageState;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float TriggerDistance;
+
 private:
 	bool bIsMoving;
 };

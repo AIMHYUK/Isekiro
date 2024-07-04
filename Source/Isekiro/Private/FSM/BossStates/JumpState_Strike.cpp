@@ -9,9 +9,7 @@ UJumpState_Strike::UJumpState_Strike()
 	TriggerDistance = 150.f;
 	PrevLoc = FVector::Zero();
 	MaxRunTime = .9f;
-	TotalRunTime = 0.f;
-
-	
+	TotalRunTime = 0.f;	
 }
 
 void UJumpState_Strike::Start()

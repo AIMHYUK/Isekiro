@@ -27,9 +27,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float MaxLungeDistance = 900.f;
-
 private:
 	float TotalRunTime;
 	bool bHasPrevLoc;

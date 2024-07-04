@@ -3,6 +3,11 @@
 
 #include "FSM/BossStates/DistAttackState.h"
 
+UDistAttackState::UDistAttackState()
+{
+    TriggerDistance = 1000.f;
+}
+
 void UDistAttackState::Start()
 {
     Super::Start();

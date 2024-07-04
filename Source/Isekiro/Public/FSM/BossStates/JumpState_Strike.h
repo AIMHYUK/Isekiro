@@ -23,8 +23,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;	
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float TriggerDistance = 900.f;
 	float TotalRunTime;
 	bool bHasPrevLoc;
 	FVector PrevLoc;

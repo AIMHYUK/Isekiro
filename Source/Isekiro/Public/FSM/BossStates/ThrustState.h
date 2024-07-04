@@ -28,9 +28,6 @@ protected:
 	float MaxRunTime;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float TriggerDistance;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float Speed;
 
 private:

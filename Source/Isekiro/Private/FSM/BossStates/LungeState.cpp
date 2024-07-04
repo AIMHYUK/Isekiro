@@ -11,6 +11,8 @@ ULungeState::ULungeState()
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
+	TriggerDistance = 900.f;
+
 	MaxRunTime = .9f;
 	TotalRunTime = 0.f;
 }
