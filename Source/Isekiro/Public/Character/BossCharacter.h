@@ -15,6 +15,7 @@
 class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
+class UCapsuleComponent;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -51,6 +52,9 @@ protected:
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
+	TObjectPtr<UCapsuleComponent> LockOnComponent;
 
 protected:
 	UPROPERTY(EditInstanceOnly, Category = "Setting|Target")
