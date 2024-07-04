@@ -5,128 +5,133 @@
 #include "FSM/FSMComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "FSM/StateObject.h"
+#include "Components/BoxComponent.h"
+#include "Arrow.h"
+#include "Kismet/GameplayStatics.h"
 
 ABossCharacter::ABossCharacter()
 {
 	FSMComponent = CreateDefaultSubobject<UFSMComponent>("FSMComponent");
 
-	TargetOffset = 150.f;
-	StrafeSpeed = 100.f;
-	StrafeMaxTime = 3.f;
-	StrafeTotalTime = 0.f;
+	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
+	AttackBoxComp->SetupAttachment(RootComponent);
+	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
 
-	RunSpeed = 400.f;
-	bHasPrevLoc = false;
-	PrevLoc = FVector::Zero();
+	TargetOffset = 200.f;
 
-	MaxRunTime = 2.f;
-	TotalRunTime = 0.f;
-	JumpHeight = 120.f;
-	JumpMaxTime = .5f;
-	JumpTotalTime = 0.f;
+	DefaultSetting.Damage = 20.f;
+	DefaultSetting.Speed = 1800.f;
+	HardSetting.Damage = 30.f;
+	HardSetting.Speed= 2600.f;
 
-	CurrentState = ETestState::Strafe;
-	StateMaxTime = 5.f;
+	CurrDir = EDirection::LEFT;
 }
 
+void ABossCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HeightZ = GetActorLocation().Z;
+
+	if (AttackBoxComp)
+	{
+		AttackBoxComp->IgnoreActorWhenMoving(this, true);
+
+		AttackBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnAttackBoxOverlapped);
+	}
+}
 
 void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(TargetO))
+	if (ensureAlways(Target))
 	{
-		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		DirVector.Normalize();
 		FRotator newRotation = DirVector.Rotation();
 		newRotation.Pitch = 0.f;
 		newRotation.Roll = 0.f;
 		SetActorRotation(newRotation.Quaternion());
 	}
+}
 
-	//TotalTime += DeltaTime;
-	//GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Time: %.2f"), TotalTime));
-	//if (TotalTime >= StateMaxTime)
-	//{
-	//	TotalTime = 0.f;
-	//	ETestState test;
-	//	do {
-	//		test = ETestState(FMath::RandRange(0, 3));
-	//	} while (test == CurrentState);
-	//	CurrentState = test;
-	//}
+void ABossCharacter::BeginAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
 
-	//switch (CurrentState)
-	//{
-	//case ETestState::Strafe:
-	//{
-	//	StrafeTotalTime += DeltaTime;
-	//	if (StrafeTotalTime < StrafeMaxTime)
-	//	{
-	//		FVector newLoc = GetActorLocation() + GetActorRightVector() * StrafeSpeed * DeltaTime;
-	//		SetActorLocation(newLoc);
-	//	}
-	//	else
-	//	{
-	//		StrafeTotalTime = 0.f;
-	//		CurrentState = ETestState::Lunge;
-	//	}
-	//	break;
-	//}
-	//case ETestState::Run:
-	//{
-	//	float Dist = GetDistanceToTarget();
-	//	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Distance: %.2f"), Dist));
+	FHitResult Hit;
+	FVector Start = AttackBoxComp->GetComponentLocation();
+	FVector End = AttackBoxComp->GetComponentLocation();
 
-	//	if (Dist > TargetOffset)
-	//	{
-	//		FVector newLoc = GetActorLocation() + GetActorForwardVector() * RunSpeed * DeltaTime;
-	//		SetActorLocation(newLoc);
-	//	}
+	FCollisionObjectQueryParams ObjQueryParam;
+	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
 
-	//	break;
-	//}
-	//case ETestState::Rush:
-	//{
-	//	CurrentState = ETestState::Run;
-	//	break;
-	//}
-	//case ETestState::Lunge:
-	//{
-	//	if (!bHasPrevLoc)
-	//	{
-	//		bHasPrevLoc = true;
-	//		PrevLoc = GetActorLocation();
-	//	}
-	//	FVector lungeVector;
-	//	FVector jumpVector;
-	//	if (TotalRunTime < MaxRunTime) {
-	//		TotalRunTime += DeltaTime;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
 
-	//		FVector ToTarget = GetTargetOffsetLocation();
-	//		ToTarget.Z = GetActorLocation().Z;
-	//		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-	//		
-	//		//if (JumpTotalTime < JumpMaxTime) {
-	//		//	JumpTotalTime += DeltaTime;
+	FCollisionShape Shape;
+	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
+	Shape.SetSphere(Radius);
 
-	//		//	FVector jumpDest = GetActorUpVector() * JumpHeight;
-	//		//	jumpVector = FMath::Lerp(PrevLoc, jumpDest, EaseOutSine(JumpTotalTime / JumpMaxTime));
-	//		//}
+	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
 
-	//		SetActorLocation(lungeVector + jumpVector);
-	//	}
+	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
+	}
+}
 
-	//	break;
-	//}
-	//}
+void ABossCharacter::FireArrow()
+{
+	SetupFireArrow(DefaultSetting);
+}
+
+void ABossCharacter::FireArrowHard()
+{
+	SetupFireArrow(HardSetting);
+}
+
+AActor* ABossCharacter::GetTarget() const
+{
+	return Target;
+}
+
+void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
+}
+
+void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
+{
+	if (Target && ArrowClass)
+	{
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FRotator Rotate = DirVector.Rotation();
+		FTransform Trans;
+
+		Trans.SetLocation(GetActorLocation() + GetActorForwardVector() * 10.f);
+		Trans.SetRotation(Rotate.Quaternion());
+		Trans.SetScale3D(FVector::One());
+
+		AArrow* Spawned = GetWorld()->SpawnActorDeferred<AArrow>(ArrowClass, Trans, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		if (Spawned)
+		{
+			Spawned->Initialize(Target, Setting);
+		}
+		UGameplayStatics::FinishSpawningActor(Spawned, Trans);
+	}
 }
 
 float ABossCharacter::GetDistanceToTarget() const
 {
-	if (TargetO)
+	if (Target)
 	{
-		FVector DirVector = TargetO->GetActorLocation() - GetActorLocation();
+		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 
@@ -135,11 +140,36 @@ float ABossCharacter::GetDistanceToTarget() const
 
 FVector ABossCharacter::GetTargetOffsetLocation() const
 {
-	if (TargetO)
+	if (Target)
 	{
-		FVector WorkingVector = TargetO->GetActorForwardVector();
-		WorkingVector *= TargetOffset;
-		return WorkingVector;
+		FVector End;
+		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();		
+		FVector Start = GetActorLocation();
+		End.Z = HeightZ;
+		Start.Z = HeightZ;
+
+		FVector TargetVector = End - Start;
+		FVector Dir = TargetVector;
+		Dir.Normalize();
+		Dir *= TargetOffset;
+		TargetVector -= Dir;
+
+		return TargetVector + GetActorLocation();
 	}
 	return FVector();
+}
+
+bool ABossCharacter::IsLockedOnTarget() const
+{
+	return true;
+}
+
+EDirection ABossCharacter::GetCurrentDirection() const
+{
+	return CurrDir;
+}
+
+void ABossCharacter::StartParry()
+{
+	FSMComponent->ChangeStateTo(EBossState::PARRY);
 }

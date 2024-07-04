@@ -8,14 +8,20 @@
 
 class UStateObject;
 
-UENUM()
-enum class EBossState 
+UENUM(Blueprintable)
+enum class EBossState : uint8
 {
 	NONE UMETA(DisplayName = "None"),
 	STRAFE UMETA(DisplayName = "Strafe"),
 	LUNGE UMETA(DisplayName = "Lunge"),
 	RUN UMETA(DisplayName = "Run"),
-	RUSH UMETA(DisplayName = "Rush")
+	RUSH UMETA(DisplayName = "Rush"),
+	DODGE UMETA(DisplayName = "Dodge"),
+	JUMP UMETA(DisplayName = "Jump"),
+	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
+	PARRY UMETA(DisplayName = "Parry"),
+	THRUST UMETA(DisplayName = "Thrust")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -25,9 +31,12 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 
 public:	
 	UFSMComponent();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	void ChangeStateTo(EBossState NewState);
+	void StartMovement();
+	void StopMovement();
 
 protected:
 	virtual void BeginPlay() override;
@@ -42,5 +51,6 @@ protected:
 
 private:
 	void PrepNewState(EBossState NewState);
+	UPROPERTY()
 	TObjectPtr<UStateObject> CurrentState;
 };

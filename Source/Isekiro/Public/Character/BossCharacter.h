@@ -4,23 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Character/BaseCharacter.h"
+#include "FSM/GlobalTypes.h"
+#include "Arrow.h"
 #include "BossCharacter.generated.h"
 
 /**
  * 
  */
 
-UENUM()
-enum class ETestState : uint8 
-{
-	Strafe, 
-	Run,
-	Rush,
-	Lunge
-};
-
 class UFSMComponent;
 class UStateObject;
+class UBoxComponent;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -29,53 +23,49 @@ class ISEKIRO_API ABossCharacter : public ABaseCharacter
 public:
 	ABossCharacter();
 	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void BeginAttack();
+	UFUNCTION(BlueprintCallable)
+	void FireArrow();
+	UFUNCTION(BlueprintCallable)
+	void FireArrowHard();
+	
+	AActor* GetTarget() const; 
+	//Following Target location
+	FVector GetTargetOffsetLocation() const;
+
+	float GetDistanceToTarget() const;
+	bool IsLockedOnTarget() const;
+	EDirection GetCurrentDirection() const;
+
+	UFUNCTION(BlueprintCallable)
+	void StartParry();
 
 protected:
-
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
+	TObjectPtr<UBoxComponent> AttackBoxComp;
+	UFUNCTION()
+	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	TObjectPtr<AActor> TargetO;
-	UPROPERTY(EditInstanceOnly, Category = "Test")
+protected:
+	UPROPERTY(EditInstanceOnly, Category = "Setting|Target")
+	TObjectPtr<AActor> Target;
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffset;
-	
-	bool bHasPrevLoc;
-	FVector PrevLoc;
-	float MaxRunTime = 2.f;
-	float TotalRunTime;
-	float JumpHeight;
-	float JumpMaxTime;
-	float JumpTotalTime;
-
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float StrafeSpeed;
-	float StrafeMaxTime;
-	float StrafeTotalTime;
-
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float RunSpeed;
-
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	ETestState CurrentState;
-	UPROPERTY(EditInstanceOnly, Category = "Test")
-	float StateMaxTime;
-	float TotalTime;
-
+	UPROPERTY(EditAnywhere, Category = "Setting|Target")
+	EDirection CurrDir;
+	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
+	TSubclassOf<AArrow> ArrowClass;
+	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
+	FArrowSetting DefaultSetting;
+	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
+	FArrowSetting HardSetting;
 private:
-	float GetDistanceToTarget() const;
-	FVector GetTargetOffsetLocation() const;
-		
-	float EaseInOutCubic(float x) {
-		return x < 0.5 ? 4 * x * x * x : 1 - FMath::Pow(-2 * x + 2, 3) / 2;
-	}
-	float EaseOutSine(float x){
-		return FMath::Sin((x * PI) / 2.f);
-	}	
-	float EaseOutQuart(float x){
-		return 1 - FMath::Pow(1 - x, 4);
-	}		
-	float EaseOutCirc(float x) {
-		return FMath::Sqrt(1 - FMath::Pow(x - 1, 2));
-	}
+	float HeightZ;
+	void SetupFireArrow(FArrowSetting Setting);
 };

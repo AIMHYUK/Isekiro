@@ -4,7 +4,12 @@
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
 
-void UStateObject::Initialize(AActor* _Instigator, AActor* _Target)
+UStateObject::UStateObject()
+{
+	bIsMoving = false;
+}
+
+void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
 {
 	Instigator = _Instigator;
 	Target = _Target;
@@ -12,12 +17,12 @@ void UStateObject::Initialize(AActor* _Instigator, AActor* _Target)
 
 void UStateObject::Start()
 {
-
+	PlayMontage();
 }
 
 EBossState UStateObject::Update(float DeltaTime)
 {
-	return EBossState::NONE;
+	return UpdateMovement(DeltaTime);
 }
 
 void UStateObject::Stop()
@@ -27,6 +32,36 @@ void UStateObject::Stop()
 
 void UStateObject::Activate()
 {
+}
+
+void UStateObject::PlayMontage()
+{
+	if (Instigator && MontageState.Montage)
+	{
+		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
+		if (!MontageState.SectionName.IsNone())
+			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+	}
+}
+
+bool UStateObject::CanStartMovement() const
+{
+	return bIsMoving;
+}
+
+EBossState UStateObject::UpdateMovement(float DeltaTime)
+{
+	return EBossState::NONE;
+}
+
+void UStateObject::StartMovement()
+{
+	bIsMoving = true;
+}
+
+void UStateObject::StopMovement()
+{
+	bIsMoving = false;
 }
 
 UWorld* UStateObject::GetWorld() const
