@@ -43,10 +43,10 @@ protected:
 	
 	TObjectPtr<AActor> Target;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	EBossState StateToStart;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 
 private:
