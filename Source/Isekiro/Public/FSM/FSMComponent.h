@@ -21,7 +21,8 @@ enum class EBossState : uint8
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
 	PARRY UMETA(DisplayName = "Parry"),
-	THRUST UMETA(DisplayName = "Thrust")
+	THRUST UMETA(DisplayName = "Thrust"),
+	ATTACK UMETA(DisplayName = "Attack")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -33,6 +33,9 @@ protected:
 	UFUNCTION()
 	void AnimNotify_StartAttack_ArrowHard();
 
+	UFUNCTION()
+	void AnimNotify_Transition();
+
 private:
 	TObjectPtr<UFSMComponent> FSMComp;
 	TObjectPtr<ABossCharacter> BossCharacter;
