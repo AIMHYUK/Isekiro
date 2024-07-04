@@ -38,8 +38,10 @@ public:
 	FVector GetTargetOffsetLocation() const;
 
 	float GetDistanceToTarget() const;
-	bool IsLockedOnTarget() const;
 	EDirection GetCurrentDirection() const;
+
+	bool IsLockedOnTarget() const;
+	void SetLockOnTarget(bool _bLockOnTarget);
 
 	UFUNCTION(BlueprintCallable)
 	void StartParry();
@@ -71,5 +73,6 @@ protected:
 	FArrowSetting HardSetting;
 private:
 	float HeightZ;
+	bool bLockOnTarget;
 	void SetupFireArrow(FArrowSetting Setting);
 };

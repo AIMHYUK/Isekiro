@@ -19,7 +19,7 @@ ABossCharacter::ABossCharacter()
 	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
 	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
 
-	TargetOffset = 200.f;
+	TargetOffset = 60.0f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
@@ -27,6 +27,8 @@ ABossCharacter::ABossCharacter()
 	HardSetting.Speed= 2600.f;
 
 	CurrDir = EDirection::LEFT;
+
+	bLockOnTarget = true;
 
 	LockOnComponent = CreateDefaultSubobject<UCapsuleComponent>("LockOnComponent");
 	LockOnComponent->SetupAttachment(RootComponent);
@@ -55,7 +57,7 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(Target))
+	if (ensureAlways(Target) && bLockOnTarget)
 	{
 		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		DirVector.Normalize();
@@ -171,6 +173,11 @@ FVector ABossCharacter::GetTargetOffsetLocation() const
 bool ABossCharacter::IsLockedOnTarget() const
 {
 	return true;
+}
+
+void ABossCharacter::SetLockOnTarget(bool _bLockOnTarget)
+{
+	bLockOnTarget = _bLockOnTarget;
 }
 
 EDirection ABossCharacter::GetCurrentDirection() const
