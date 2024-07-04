@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Arrow.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -26,6 +27,12 @@ ABossCharacter::ABossCharacter()
 	HardSetting.Speed= 2600.f;
 
 	CurrDir = EDirection::LEFT;
+
+	LockOnComponent = CreateDefaultSubobject<UCapsuleComponent>("LockOnComponent");
+	LockOnComponent->SetupAttachment(RootComponent);
+	LockOnComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
 }
 
 void ABossCharacter::BeginPlay()
@@ -39,6 +46,8 @@ void ABossCharacter::BeginPlay()
 		AttackBoxComp->IgnoreActorWhenMoving(this, true);
 
 		AttackBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnAttackBoxOverlapped);
+
+		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
 
