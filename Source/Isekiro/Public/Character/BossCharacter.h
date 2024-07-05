@@ -40,6 +40,10 @@ public:
 	float GetDistanceToTarget() const;
 	EDirection GetCurrentDirection() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool IsWithinAttackRange() const; // not in use
+	bool IsWithinTargetOffsetBuffer() const;
+
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
 
@@ -63,6 +67,12 @@ protected:
 	TObjectPtr<AActor> Target;
 	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffset;
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float TargetOffsetBuffer;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float AttackRangeDist;
+
 	UPROPERTY(EditAnywhere, Category = "Setting|Target")
 	EDirection CurrDir;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")

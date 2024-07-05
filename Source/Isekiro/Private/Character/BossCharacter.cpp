@@ -19,7 +19,9 @@ ABossCharacter::ABossCharacter()
 	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
 	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
 
-	TargetOffset = 60.0f;
+	TargetOffset = 120.0f;
+	TargetOffsetBuffer = 50.f;
+	AttackRangeDist = 210.f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
@@ -183,6 +185,37 @@ void ABossCharacter::SetLockOnTarget(bool _bLockOnTarget)
 EDirection ABossCharacter::GetCurrentDirection() const
 {
 	return CurrDir;
+}
+
+bool ABossCharacter::IsWithinAttackRange() const
+{
+	if (Target)
+	{
+		FVector DistVector = Target->GetActorLocation() - GetActorLocation();
+		float DistSq = FVector::DotProduct(DistVector, DistVector);
+		float Dist = FMath::Sqrt(DistSq);
+		return Dist <= AttackRangeDist;
+	}
+	return false;
+}
+
+bool ABossCharacter::IsWithinTargetOffsetBuffer() const
+{
+	if (Target) 
+	{
+		FVector DirVector = GetActorLocation() - GetTargetOffsetLocation();
+		DirVector.Normalize();
+		FVector BufferLoc = DirVector * TargetOffsetBuffer + GetTargetOffsetLocation();
+
+		FVector BossDistVector = Target->GetActorLocation() - GetActorLocation();
+		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
+
+		float BufferDistSq = FVector::DotProduct(BufferDistVector, BufferDistVector);
+		float BossDistSq = FVector::DotProduct(BossDistVector, BossDistVector);
+
+		return BossDistSq < BufferDistSq;
+	}
+	return false;
 }
 
 void ABossCharacter::StartParry()

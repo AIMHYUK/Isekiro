@@ -7,7 +7,7 @@
 #include "LungeState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class ISEKIRO_API ULungeState : public UStateObject
@@ -23,7 +23,7 @@ public:
 
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;
 
@@ -43,5 +43,13 @@ private:
 	}
 	float EaseOutCirc(float x) {
 		return FMath::Sqrt(1 - FMath::Pow(x - 1, 2));
+	}
+
+	float EaseInSine(float x) {
+		return 1 - FMath::Cos((x * PI) / 2);
+	}
+
+	float EaseInOutQuad(float x) {
+		return x < 0.5 ? 2 * x * x : 1 - FMath::Pow(-2 * x + 2, 2) / 2;
 	}
 };

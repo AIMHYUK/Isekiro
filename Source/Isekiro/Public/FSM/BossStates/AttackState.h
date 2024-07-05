@@ -7,17 +7,21 @@
 #include "AttackState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class ISEKIRO_API UAttackState : public UStateObject
 {
 	GENERATED_BODY()
 public:
+	UAttackState();
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
 
 protected:
-	virtual void StartMovement() override;
+	virtual EBossState UpdateMovement(float DeltaTime) override;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float MoveSpeed;
+
 };

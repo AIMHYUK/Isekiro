@@ -52,9 +52,9 @@ EBossState ULungeState::UpdateMovement(float DeltaTime)
 	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
 	if (TotalRunTime < MaxRunTime) {
 	
-		TotalRunTime += DeltaTime / 2.f;
+		TotalRunTime += DeltaTime;
 
-		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+		lungeVector = FMath::Lerp(PrevLoc, ToTarget, TotalRunTime / MaxRunTime);
 	}
 
 	Instigator->SetActorLocation(lungeVector);

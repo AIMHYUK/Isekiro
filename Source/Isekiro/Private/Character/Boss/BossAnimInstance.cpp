@@ -5,71 +5,54 @@
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
 
+void UBossAnimInstance::NativeBeginPlay()
+{
+	Super::NativeBeginPlay();
+	FSMComp = GetOwningActor()->GetComponentByClass<UFSMComponent>();
+	BossCharacter = Cast<ABossCharacter>(GetOwningActor());
+}
+
 void UBossAnimInstance::AnimNotify_StartMovement()
 {
-	if (!FSMComp)
-	{
-		FSMComp = GetOwningActor()->GetComponentByClass<UFSMComponent>();
-		if (!FSMComp) return;
-	}
+	if (!FSMComp) return;
 
 	FSMComp->StartMovement();
 }
 
 void UBossAnimInstance::AnimNotify_StopMovement()
 {
-	if (!FSMComp)
-	{
-		FSMComp = GetOwningActor()->GetComponentByClass<UFSMComponent>();
-		if (!FSMComp) return;
-	}
+	if (!FSMComp) return;
 
 	FSMComp->StopMovement();
 }
 
 void UBossAnimInstance::AnimNotify_StartAttack()
 {
-	if (!BossCharacter)
-	{
-		BossCharacter = Cast<ABossCharacter>(GetOwningActor());
-		if (!BossCharacter) return;
-	}
+	if (!BossCharacter) return;
 
 	BossCharacter->BeginAttack();
 }
 
 void UBossAnimInstance::AnimNotify_StartAttack_Arrow()
 {
-	if (!BossCharacter)
-	{
-		BossCharacter = Cast<ABossCharacter>(GetOwningActor());
-		if (!BossCharacter) return;
-	}
+	if (!BossCharacter) return;
+
 	BossCharacter->FireArrow();
 }
 
 void UBossAnimInstance::AnimNotify_StartAttack_ArrowHard()
 {
-	if (!BossCharacter)
-	{
-		BossCharacter = Cast<ABossCharacter>(GetOwningActor());
-		if (!BossCharacter) return;
-	}
+	if (!BossCharacter) return;
+
 	BossCharacter->FireArrowHard();
 }
 
 void UBossAnimInstance::AnimNotify_Transition()
 {
-	if (!BossCharacter)
-	{
-		BossCharacter = Cast<ABossCharacter>(GetOwningActor());
-		if (!BossCharacter) return;
-	}
-	if (!FSMComp)
-	{
-		FSMComp = GetOwningActor()->GetComponentByClass<UFSMComponent>();
-		if (!FSMComp) return;
-	}
+	if (!BossCharacter) return;
+	if (!FSMComp) return;
+
+	BossCharacter->IsWithinTargetOffsetBuffer() ? FSMComp->StartMovement() : FSMComp->StopMovement();
 
 	int val = FMath::RandRange(0, 9);
 	if (val <= 9) // if player is not dead, continue combo
@@ -81,16 +64,9 @@ void UBossAnimInstance::AnimNotify_Transition()
 		num++;
 		SectionS = FString::FromInt(num);
 
-		if (/*Is target within attack range*/true)
-		{
-			//Set SectionS for in-place anim sequence
-		}
-		else
-		{
-			//Set SectionS for play root anim sequence
-		}	
-		
-		SectionS.Append("_r");
+		if (!BossCharacter->IsWithinTargetOffsetBuffer())
+			SectionS.Append("_r"); // play root anim sequence
+
 		Montage_JumpToSection(FName(SectionS), GetCurrentActiveMontage());
 	}
 }

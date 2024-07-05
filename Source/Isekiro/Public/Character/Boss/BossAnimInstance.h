@@ -16,7 +16,8 @@ UCLASS()
 class ISEKIRO_API UBossAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
-	
+public: 
+	virtual void NativeBeginPlay() override;
 protected:
 	UFUNCTION()
 	void AnimNotify_StartMovement();
