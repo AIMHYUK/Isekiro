@@ -33,11 +33,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetMaxPortion() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
-    float PostureRecoveryPerSecond = 5.0f; // 초당 회복되는 posture 양
-
-	UFUNCTION(BlueprintCallable)
-	void StartPostureRecovery();
 	UFUNCTION(BlueprintCallable)
 	void StopPostureRecovery();
 
@@ -45,7 +40,7 @@ public:
 	FTimerHandle PostureRecoveryTimerHandle;
 
 	UFUNCTION(BlueprintCallable)
-	void RecoverPosture(); // posture를 회복하는 함수
+	void RecoverPosture(float PostureRecoveryPerSecond); // posture를 회복하는 함수
 
 	void SetPostureZero();
 	void UsePortion();

@@ -18,15 +18,7 @@ UStatusComponent::UStatusComponent()
 void UStatusComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	StartPostureRecovery();
 }
-
-void UStatusComponent::StartPostureRecovery()
-{
-
-	GetWorld()->GetTimerManager().SetTimer(PostureRecoveryTimerHandle, this, &UStatusComponent::RecoverPosture, 1.0f, true);
-}
-
 
 void UStatusComponent::StopPostureRecovery()
 {
@@ -98,7 +90,7 @@ float UStatusComponent::GetMaxPortion() const
 	return MaxPortion;
 }
 
-void UStatusComponent::RecoverPosture()
+void UStatusComponent::RecoverPosture(float PostureRecoveryPerSecond)
 {
 	// 초당 회복 속도에 따라 posture 회복
 	float DeltaPosture = PostureRecoveryPerSecond * GetWorld()->GetDeltaSeconds();

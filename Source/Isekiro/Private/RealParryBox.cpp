@@ -17,7 +17,7 @@ URealParryBox::URealParryBox()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	InitSphereRadius(20.0f); // Example: Set the sphere radius
+	InitSphereRadius(30.0f); // Example: Set the sphere radius
 	// Set collision settings
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -41,15 +41,14 @@ void URealParryBox::BeginPlay()
 
 void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("bIsParryWindow = %s"), bIsParryWindow ? TEXT("true") : TEXT("false"));
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	if (MyCharacter && bIsParryWindow)
 	{
 		MyCharacter->PlayParryMontage();
-		UGameplayStatics::SetGlobalTimeDilation(this, 0.7f);
+		UGameplayStatics::SetGlobalTimeDilation(this, 0.8f);
 		UStatusComponent* State = MyCharacter->GetStatusComponent();
 		State->ApplyPostureDamage(5);
-
+		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
 	}
@@ -77,7 +76,7 @@ void URealParryBox::ParryStarted()
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore); //패링상태이면 데미지 안받음
-	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주를 실행중이지 않다면 = 패링에 실패해서 몽타주가 안나오면 
+	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //패리상태로 가드 올리기
 	{
 		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행 -> 후에 가드히트로 바꿔야함.
 	}

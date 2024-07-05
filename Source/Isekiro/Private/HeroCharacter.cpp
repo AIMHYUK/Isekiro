@@ -86,7 +86,6 @@ void AHeroCharacter::BeginPlay()
 		if (PlayerPawn)
 		{
 			Status = PlayerPawn->FindComponentByClass<UStatusComponent>();
-			Status->StartPostureRecovery();
 			UE_LOG(LogTemp, Display, TEXT("ENHANCED"));
 			if (!Status)
 			{
@@ -108,7 +107,7 @@ void AHeroCharacter::BeginPlay()
 	//CallPostureBarFunction();
 }
 
-void AHeroCharacter::PostInitializeComponents()
+void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 그런느낌
 {
 	Super::PostInitializeComponents();
 	HeroAnim = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
@@ -186,7 +185,8 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Jump);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StartGuard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::EndGuard);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Canceled, this, &AHeroCharacter::Attack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);	
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
@@ -304,7 +304,6 @@ void AHeroCharacter::PlayParryMontage()
 			// Jump to the selected section
 			AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
 			ShakeCam();
-			KnockBack(500);
 			// Log the selected section (optional, for debugging)
 			UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
 		}
@@ -331,7 +330,37 @@ void AHeroCharacter::ShakeCam()
 		}
 
 		// 월드 공간에서 카메라 흔들림 효과 적용
-		CameraManager->PlayWorldCameraShake(GetWorld(), CamShake, GetActorLocation(), 0.0f, 50.0f, 1.0f);
+		CameraManager->PlayWorldCameraShake(GetWorld(), CamShake, GetActorLocation(), 0.0f, 5.0f, 1.0f);
+	}
+}
+void AHeroCharacter::ResetCombo()
+{
+	CurrentCombo = 0;
+}
+
+void AHeroCharacter::StrongAttack(const FInputActionValue& value)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->SetIgnoreMoveInput(true);
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && StrongAttackMontage)
+		{
+			AnimInstance->Montage_Play(StrongAttackMontage);
+		}
+
+		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 2.0f, false);
+	}
+}
+
+void AHeroCharacter::EndStrongAttack()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->SetIgnoreMoveInput(false);
 	}
 }
 
@@ -342,10 +371,8 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	UE_LOG(LogTemp, Display, TEXT("%f"), Status->GetPosture());
 	
-	bool bPostureExceeded = false; //체간이 100을 넘었을때 한대 더 맞으면 가드 브레이크
-	if (Status->GetPosture() > 100)
-		bPostureExceeded = true;
-	if (bPostureExceeded)
+
+	if (Status->GetPosture() >= 100) //체간이 100을 넘었을때 한대 더 맞으면 가드 브레이크
 	{
 		PlayerController->SetIgnoreMoveInput(true);
 		AnimInstance->Montage_Play(DefenseBreakMontage);
@@ -367,6 +394,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 				FOnMontageEnded MontageEndedDelegate;
 				MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
 				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
+				ResetCombo();
 				UE_LOG(LogTemp, Display, TEXT("HP : %f"), Status->GetHealth())
 			}
 		}
@@ -385,7 +413,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
 					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
 					KnockBack(300);
-
+					ResetCombo();
 				}
 			}
 		}
@@ -420,7 +448,7 @@ void AHeroCharacter::Run(const FInputActionValue& value)
 	}
 }
 
-void AHeroCharacter::AttackStart(const FInputActionValue& value)
+void AHeroCharacter::Attack(const FInputActionValue& value)
 {
 	if (IsAttacking)
 	{
@@ -430,15 +458,18 @@ void AHeroCharacter::AttackStart(const FInputActionValue& value)
 		}
 	}
 	else
-	{
-		if (!GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //다른 몽타주 재생중일 때 실행 불가능
-		{
+	{ //근데 가드 몽타주면 실행가능   = 가드중이거나 다른 몽타주를 실행중이지 않다면 
 			DealDamage();
 			AttackStartComboState();
-			HeroAnim->PlayAttackMontage();
-			HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-			IsAttacking = true;
-		}
+
+			bool bIsPlaying =HeroAnim->Montage_IsPlaying(AttackMontage);
+			if (!bIsPlaying)
+			{
+				HeroAnim->PlayAttackMontage();
+				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+				IsAttacking = true;
+				KnockBack(-300);
+			}
 	}
 }
 
@@ -462,6 +493,7 @@ void AHeroCharacter::AttackEndComboState()
 	CanNextCombo = false;
 	CurrentCombo = 0;
 }
+
 
 void AHeroCharacter::DealDamage()
 {
@@ -491,12 +523,12 @@ void AHeroCharacter::DealDamage()
 			if (OverlappedActor) // 액터 유효성 확인
 			{
 				// State 컴포넌트를 가져옴
-				Status = OverlappedActor->FindComponentByClass<UStatusComponent>();
-				if (Status)
+				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
+				if (ActorStatus)
 				{
-					Status->ApplyHealthDamage(10);
-					Status->ApplyPostureDamage(10);
-					UE_LOG(LogTemp, Display, TEXT("HP %f"), Status->GetHealth());
+					ActorStatus->ApplyHealthDamage(10);
+					ActorStatus->ApplyPostureDamage(10);
+					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 				}
 			}
 		}

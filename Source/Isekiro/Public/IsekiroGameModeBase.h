@@ -9,6 +9,8 @@
 /**
  * 
  */
+class UCharacterWidget;
+
 UCLASS()
 class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 {
@@ -18,7 +20,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UCharacterWidget> MainWidget;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UBossWidget> BossWidget;
+
 	class UStatusComponent* State;
+	UPROPERTY()
+    class UStatusComponent* BossState;
 	
 	void UpdateHPBar();
 	void UpdatePostureBar();
@@ -26,13 +33,18 @@ public:
 	void SetMaxPortion();
 	UFUNCTION(BlueprintCallable)
 	void UpdateCurrentPortion();
+
+	
+
+	bool bIsPlayerBossFight = false;
 protected:
 
 	virtual void BeginPlay() override;
 
 private:
 	float HPPercent;
-	class UCharacterWidget* mainUI;
+	UCharacterWidget* mainUI;
+	class UBossWidget* BossUI;
 
 
 };

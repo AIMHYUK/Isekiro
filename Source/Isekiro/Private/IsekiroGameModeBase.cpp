@@ -4,11 +4,14 @@
 #include "IsekiroGameModeBase.h"
 #include "Blueprint/UserWidget.h"
 #include "CharacterWidget.h"
+#include "BossWidget.h"
 #include "ActorComponents/StatusComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Components/ProgressBar.h"
+#include "HeroCharacter.h"
+#include "Character/BossCharacter.h"
 #include "Components/TextBlock.h"
-
+#include "Kismet/GameplayStatics.h"
 
 void AIsekiroGameModeBase::BeginPlay()
 {
@@ -42,7 +45,39 @@ void AIsekiroGameModeBase::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
     }
+	bIsPlayerBossFight = true;
+	if (bIsPlayerBossFight)
+	{
+		if (BossWidget != nullptr)
+		{
+			BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
+
+			if (BossUI != nullptr)
+				BossUI->AddToViewport();
+		}
+	}
+	// Boss initialization
+	ABossCharacter* BossCharacter = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ABossCharacter::StaticClass()));
+	if (BossCharacter)
+	{
+		BossState = BossCharacter->FindComponentByClass<UStatusComponent>();
+		if (BossState == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("BossStateComponent is null in AIsekiroGameModeBase::BeginPlay"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("BossStateComponent is not null in AIsekiroGameModeBase::BeginPlay"));
+		}
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("BossCharacter is null in AIsekiroGameModeBase::BeginPlay"));
+	}
 }
+
+
 
 
 void AIsekiroGameModeBase::UpdateHPBar()
@@ -80,3 +115,4 @@ void AIsekiroGameModeBase::UpdateCurrentPortion()
 		mainUI->CurrentPortion->SetText(FText::FromString(Portion));
 	}
 }
+

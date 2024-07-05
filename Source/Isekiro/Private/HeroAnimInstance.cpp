@@ -38,6 +38,8 @@ void UHeroAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 void UHeroAnimInstance::PlayAttackMontage()
 {
+	bool bIsPlaying = Montage_IsPlaying(AttackMontage);
+	if(!bIsPlaying)
 	Montage_Play(AttackMontage, 1.0f);
 }
 

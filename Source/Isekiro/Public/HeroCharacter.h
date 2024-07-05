@@ -33,7 +33,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	//연속공격
-	void AttackStart(const FInputActionValue& value);
+	void Attack(const FInputActionValue& value);
 
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -127,11 +127,20 @@ public:
 
 	AIsekiroGameModeBase* IsekiroGameModeBase;
 
+	//데미지, 체력바
 	void ApplyDamage(float damage);
 	void ApplyPosture(float Posture);
 	void CallHPBarFunction();
 	void CallPostureBarFunction();
 	UStatusComponent* GetStatusComponent();
+
+	//타격감
+	void KnockBack(float distance);
+	void ShakeCam();
+
+	void ResetCombo();
+
+	FTimerHandle StrongAttackTimerHandle;
 protected:
 
 	virtual void BeginPlay() override;
@@ -159,7 +168,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* DashAction;
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* UseItemAction;
+	UInputAction* UseItemAction;	
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* StrongAttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GuardMontage;
@@ -177,6 +188,8 @@ protected:
 	UAnimMontage* HittedWhileGuardMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DefenseBreakMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* StrongAttackMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -185,11 +198,9 @@ protected:
 	void Run(const FInputActionValue& value);
 	void Dash(const FInputActionValue& value);
 	void UseItem(const FInputActionValue& value);
+	void StrongAttack(const FInputActionValue& value);
+	void EndStrongAttack();
 
-	
-	//타격감
-	void KnockBack(float distance);
-	void ShakeCam();
 	
 	UFUNCTION()
 	void PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
