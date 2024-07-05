@@ -189,6 +189,7 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::AttackStart);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
+		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
 	}
 	
 }
@@ -340,7 +341,11 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	HeroAnimInstance = Cast<UHeroAnimInstance>(AnimInstance);
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	UE_LOG(LogTemp, Display, TEXT("%f"), Status->GetPosture());
+	
+	bool bPostureExceeded = false; //체간이 100을 넘었을때 한대 더 맞으면 가드 브레이크
 	if (Status->GetPosture() > 100)
+		bPostureExceeded = true;
+	if (bPostureExceeded)
 	{
 		PlayerController->SetIgnoreMoveInput(true);
 		AnimInstance->Montage_Play(DefenseBreakMontage);
@@ -356,7 +361,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			if (AnimInstance)
 			{
 				ApplyDamage(10);
-				ApplyPosture(10); //그래플링하면 중간에 겹쳐서 한대 맞은 판정임;;;;
+				ApplyPosture(10); 
 				AnimInstance->Montage_Play(HittedMontage);
 				// 몽타주가 끝났을 때 호출될 델리게이트 설정
 				FOnMontageEnded MontageEndedDelegate;
@@ -520,6 +525,11 @@ void AHeroCharacter::Dash(const FInputActionValue& value)
 		//6. 쿨다운 초기화 후 마찰력 복구
 		GetWorldTimerManager().SetTimer(ResetFrictionTimerHandle, this, &AHeroCharacter::ResetGroundFriction, 1.0f, false);
 	}
+}
+
+void AHeroCharacter::UseItem(const FInputActionValue& value)
+{
+	Status->UsePortion();
 }
 
 //앞으로 대쉬 기능 함수 구현

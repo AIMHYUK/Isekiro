@@ -7,6 +7,7 @@
 #include "CharacterWidget.generated.h"
 
 class UProgressBar;
+class UTextBlock;
 /**
  * 
  */
@@ -21,6 +22,10 @@ public:
 	UProgressBar* HPBar;	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* PostureBar;
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UTextBlock* CurrentPortion;
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	UTextBlock* MaxPortion;
 
 	UFUNCTION(BlueprintCallable, Category = "UI")
     void UpdateProgressBar();

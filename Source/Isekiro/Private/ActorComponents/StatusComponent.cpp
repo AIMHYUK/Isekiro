@@ -10,6 +10,8 @@ UStatusComponent::UStatusComponent()
 	Health = 100;
 	Posture = 0;
 	MaxHealth = Health;
+	Portion = 3;
+	MaxPortion = 3;
 }
 
 
@@ -86,6 +88,16 @@ float UStatusComponent::GetPosturePercent()
 	return 0;
 		
 }
+float UStatusComponent::GetPortion() const
+{
+	return Portion;
+}
+
+float UStatusComponent::GetMaxPortion() const
+{
+	return MaxPortion;
+}
+
 void UStatusComponent::RecoverPosture()
 {
 	// 초당 회복 속도에 따라 posture 회복
@@ -101,4 +113,10 @@ void UStatusComponent::RecoverPosture()
 void UStatusComponent::SetPostureZero()
 {
 	Posture = 0;
+}
+
+void UStatusComponent::UsePortion()
+{
+	Portion--;
+	Health += 30;
 }
