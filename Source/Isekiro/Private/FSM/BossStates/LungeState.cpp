@@ -2,69 +2,60 @@
 
 
 #include "FSM/BossStates/LungeState.h"
+#include "Character/BossCharacter.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimCompositeBase.h"
 
 ULungeState::ULungeState()
 {
-	TargetOffset = 150.f;
-
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
-	MaxRunTime = 2.f;
+	MaxRunTime = .9f;
 	TotalRunTime = 0.f;
-	JumpHeight = 120.f;
-	JumpMaxTime = .5f;
-	JumpTotalTime = 0.f;
 }
 
 void ULungeState::Start()
 {
+	Super::Start();
 }
 
 EBossState ULungeState::Update(float DeltaTime)
 {
-	if (!bHasPrevLoc)
-	{
-		bHasPrevLoc = true;
-		PrevLoc = Instigator->GetActorLocation();
-	}
-	FVector lungeVector;
-	FVector jumpVector;
-	if (TotalRunTime < MaxRunTime) {
-		TotalRunTime += DeltaTime;
+	EBossState State = Super::Update(DeltaTime);
 
-		FVector ToTarget = GetTargetOffsetLocation();
-		ToTarget.Z = Instigator->GetActorLocation().Z;
-		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-
-		//if (JumpTotalTime < JumpMaxTime) {
-		//	JumpTotalTime += DeltaTime;
-
-		//	FVector jumpDest = GetActorUpVector() * JumpHeight;
-		//	jumpVector = FMath::Lerp(PrevLoc, jumpDest, EaseOutSine(JumpTotalTime / JumpMaxTime));
-		//}
-
-		Instigator->SetActorLocation(lungeVector + jumpVector);
-	}
-
-	return EBossState::NONE;
+	return State;
 }
 
 void ULungeState::Stop()
 {
 }
 
-void ULungeState::Activate()
+EBossState ULungeState::UpdateMovement(float DeltaTime)
 {
-}
-
-FVector ULungeState::GetTargetOffsetLocation() const
-{
-	if (Target)
+	if (!CanStartMovement())
 	{
-		FVector WorkingVector = Target->GetActorForwardVector();
-		WorkingVector *= TargetOffset;
-		return WorkingVector;
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
+		return EBossState::NONE;
 	}
-	return FVector();
+
+	if (!bHasPrevLoc)
+	{
+		bHasPrevLoc = true;
+		PrevLoc = Instigator->GetActorLocation();
+	}
+
+	FVector lungeVector = Instigator->GetActorLocation();
+	FVector ToTarget = Instigator->GetTargetOffsetLocation();
+	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
+	if (TotalRunTime < MaxRunTime) {
+	
+		TotalRunTime += DeltaTime / 2.f;
+
+		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+	}
+
+	Instigator->SetActorLocation(lungeVector);
+
+	return EBossState::NONE;
 }

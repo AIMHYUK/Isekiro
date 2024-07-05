@@ -4,6 +4,7 @@
 #include "FSM/FSMComponent.h"
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
+#include "Character/BossCharacter.h"
 
 UFSMComponent::UFSMComponent()
 {
@@ -15,6 +16,13 @@ UFSMComponent::UFSMComponent()
 void UFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto* Boss = Cast<ABossCharacter>(GetOwner());
+	if (Boss)
+	{
+		Target = Boss->GetTarget();
+	}
+
 	if (ensure(StateToStart != EBossState::NONE))
 	{
 		PrepNewState(StateToStart);
@@ -27,7 +35,8 @@ void UFSMComponent::BeginPlay()
 void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (CurrentState)
+
+	if (IsValid(CurrentState))
 	{
 		EBossState NewState = CurrentState->Update(DeltaTime);
 		if (NewState != EBossState::NONE)
@@ -35,6 +44,8 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 			PrepNewState(NewState);
 		}
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
 void UFSMComponent::ChangeStateTo(EBossState NewState)
@@ -42,18 +53,38 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 	PrepNewState(NewState);
 }
 
+void UFSMComponent::StartMovement()
+{
+	if (CurrentState)
+	{
+		CurrentState->StartMovement();
+	}
+}
+
+void UFSMComponent::StopMovement()
+{
+	if (CurrentState)
+	{
+		CurrentState->StopMovement();
+	}
+}
+
 void UFSMComponent::PrepNewState(EBossState NewState)
 {
 	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);
-	if (StateObjectClass)
+	if (StateObjectClass && *StateObjectClass)
 	{
 		UStateObject* NewStateObj = NewObject<UStateObject>(GetOwner(), *StateObjectClass);
 		if (NewStateObj)
 		{
-			NewStateObj->Initialize(GetOwner(), Target);
+			NewStateObj->Initialize(Cast<ABossCharacter>(GetOwner()), Target);
 			if (CurrentState) CurrentState->Stop();
 			NewStateObj->Start();
 			CurrentState = NewStateObj;
 		}
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not find State object to start."));
 	}
 }

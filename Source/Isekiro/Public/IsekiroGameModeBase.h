@@ -22,6 +22,10 @@ public:
 	
 	void UpdateHPBar();
 	void UpdatePostureBar();
+	UFUNCTION(BlueprintCallable)
+	void SetMaxPortion();
+	UFUNCTION(BlueprintCallable)
+	void UpdateCurrentPortion();
 protected:
 
 	virtual void BeginPlay() override;

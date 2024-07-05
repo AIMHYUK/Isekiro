@@ -158,6 +158,8 @@ protected:
 	UInputAction* AttackAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction* DashAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction* UseItemAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GuardMontage;
@@ -182,6 +184,8 @@ protected:
 	void Jump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
 	void Dash(const FInputActionValue& value);
+	void UseItem(const FInputActionValue& value);
+
 	
 	//타격감
 	void KnockBack(float distance);

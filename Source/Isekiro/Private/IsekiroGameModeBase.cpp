@@ -7,6 +7,7 @@
 #include "ActorComponents/StatusComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 
 
 void AIsekiroGameModeBase::BeginPlay()
@@ -49,7 +50,6 @@ void AIsekiroGameModeBase::UpdateHPBar()
 	if (mainUI)
 	{
         mainUI->HPBar->SetPercent(State->GetHPPercent());
-        UE_LOG(LogTemp, Display, TEXT("MAUI"));
 	}
 }
 
@@ -58,6 +58,25 @@ void AIsekiroGameModeBase::UpdatePostureBar()
     if (mainUI)
     {
         mainUI->PostureBar->SetPercent(State->GetPosturePercent());
-        UE_LOG(LogTemp, Display, TEXT("MAUI"));
     }
+}
+
+void AIsekiroGameModeBase::SetMaxPortion()
+{
+	FString MaxPortion;
+	MaxPortion = FString::Printf(TEXT("%d"), State->GetMaxPortion());
+	if (mainUI)
+	{
+		mainUI->CurrentPortion->SetText(FText::FromString(MaxPortion));
+	}
+}
+
+void AIsekiroGameModeBase::UpdateCurrentPortion()
+{
+	FString Portion;
+	Portion = FString::Printf(TEXT("%d"), State->GetPortion());
+	if (mainUI)
+	{
+		mainUI->CurrentPortion->SetText(FText::FromString(Portion));
+	}
 }

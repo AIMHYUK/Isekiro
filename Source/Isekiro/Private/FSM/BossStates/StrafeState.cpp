@@ -2,7 +2,7 @@
 
 
 #include "FSM/BossStates/StrafeState.h"
-#include "GameFramework/Actor.h"
+#include "Character/BossCharacter.h"
 
 UStrafeState::UStrafeState()
 {
@@ -14,12 +14,21 @@ UStrafeState::UStrafeState()
 void UStrafeState::Start()
 {
 	Super::Start();
+	StartMovement();
 }
 
 EBossState UStrafeState::Update(float DeltaTime)
 {
-	Super::Update(DeltaTime);
+	return Super::Update(DeltaTime);
+}
 
+void UStrafeState::Stop()
+{
+	Super::Stop();
+}
+
+EBossState UStrafeState::UpdateMovement(float DeltaTime)
+{
 	if (StrafeTotalTime < StrafeMaxTime)
 	{
 		StrafeTotalTime += DeltaTime;
@@ -31,17 +40,7 @@ EBossState UStrafeState::Update(float DeltaTime)
 		}
 	}
 	else {
-		return EBossState::LUNGE;
+		return EBossState::DODGE;
 	}
-
 	return EBossState::NONE;
-}
-
-void UStrafeState::Stop()
-{
-	Super::Stop();
-}
-
-void UStrafeState::Activate()
-{
 }

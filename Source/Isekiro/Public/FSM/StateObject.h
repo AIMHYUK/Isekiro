@@ -11,6 +11,19 @@
  * 
  */
 class AActor;
+class ABossCharacter;
+
+USTRUCT()
+struct FMontageState
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<UAnimMontage> Montage = nullptr;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Settings")
+	FName SectionName = "";
+};
 
 UCLASS(Blueprintable)
 class ISEKIRO_API UStateObject : public UObject
@@ -18,14 +31,31 @@ class ISEKIRO_API UStateObject : public UObject
 	GENERATED_BODY()
 	
 public:
-	void Initialize(AActor* _Instigator, AActor* _Target);
+	UStateObject();
+
+	void Initialize(ABossCharacter* _Instigator, AActor* _Target);
 	
 	virtual void Start();
 	virtual EBossState Update(float DeltaTime);
 	virtual void Stop();
 	virtual void Activate();
+
+	virtual void StartMovement();
+	void StopMovement();
+
 protected:
 	virtual UWorld* GetWorld() const override;
-	AActor* Instigator;
-	AActor* Target;
+	
+protected:
+	void PlayMontage();
+	virtual bool CanStartMovement() const;
+	virtual EBossState UpdateMovement(float DeltaTime);
+
+	TObjectPtr<ABossCharacter> Instigator;
+	TObjectPtr<AActor> Target;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	FMontageState MontageState;
+private:
+	bool bIsMoving;
 };

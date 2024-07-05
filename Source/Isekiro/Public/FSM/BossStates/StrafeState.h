@@ -19,8 +19,9 @@ public:
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
-	virtual void Activate();
 protected:
+	virtual EBossState UpdateMovement(float DeltaTime) override;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float StrafeSpeed;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
