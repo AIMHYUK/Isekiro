@@ -70,30 +70,43 @@ void ABossCharacter::Tick(float DeltaTime)
 	}
 }
 
+//void ABossCharacter::BeginAttack()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
+//
+//	FHitResult Hit;
+//	FVector Start = AttackBoxComp->GetComponentLocation();
+//	FVector End = AttackBoxComp->GetComponentLocation();
+//
+//	FCollisionObjectQueryParams ObjQueryParam;
+//	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+//
+//	FCollisionQueryParams QueryParams;
+//	QueryParams.AddIgnoredActor(this);
+//
+//	FCollisionShape Shape;
+//	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
+//	Shape.SetSphere(Radius);
+//
+//	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
+//
+//	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
+//	{
+//		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
+//	}
+//}
+
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
 
-	FHitResult Hit;
-	FVector Start = AttackBoxComp->GetComponentLocation();
-	FVector End = AttackBoxComp->GetComponentLocation();
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
 
-	FCollisionObjectQueryParams ObjQueryParam;
-	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	FCollisionShape Shape;
-	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
-	Shape.SetSphere(Radius);
-
-	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
-
-	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
-	}
+void ABossCharacter::EndAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("End Attack"));
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABossCharacter::FireArrow()

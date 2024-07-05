@@ -38,9 +38,10 @@ void UStateObject::PlayMontage()
 {
 	if (Instigator && MontageState.Montage)
 	{
-		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
-		if (!MontageState.SectionName.IsNone())
-			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+		//Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
+		Instigator->PlayAnimMontage(MontageState.Montage, 1, MontageState.SectionName);
+		//if (!MontageState.SectionName.IsNone())
+		//	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
 	}
 }
 

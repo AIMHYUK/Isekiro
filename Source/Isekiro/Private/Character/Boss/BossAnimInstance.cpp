@@ -55,6 +55,7 @@ void UBossAnimInstance::AnimNotify_Transition()
 	BossCharacter->IsWithinTargetOffsetBuffer() ? FSMComp->StartMovement() : FSMComp->StopMovement();
 
 	int val = FMath::RandRange(0, 9);
+	val = 1;
 	if (val <= 9) // if player is not dead, continue combo
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Num %d"), val);

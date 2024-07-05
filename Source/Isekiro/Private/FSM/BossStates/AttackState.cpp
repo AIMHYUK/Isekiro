@@ -16,6 +16,8 @@ void UAttackState::Start()
 	if (Instigator)
 	{
 		UAnimInstance* AnimInstance = Instigator->GetMesh()->GetAnimInstance();
+
+		//If player is within range, continue with in-place animation. Otherwise, jump to root animation
 		if (AnimInstance) 
 		{
 			FName Section = AnimInstance->Montage_GetCurrentSection();
@@ -23,8 +25,6 @@ void UAttackState::Start()
 
 			FString SectionS = Section.ToString();
 			int32 num = FCString::Atoi(*SectionS);
-			num++;
-			SectionS = FString::FromInt(num);
 
 			/*Is target within attack range*/
 			if (Instigator->IsWithinAttackRange()) // play in-place anim sequence

@@ -29,6 +29,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
 	UFUNCTION(BlueprintCallable)
+	void EndAttack();
+
+	UFUNCTION(BlueprintCallable)
 	void FireArrow();
 	UFUNCTION(BlueprintCallable)
 	void FireArrowHard();
@@ -70,8 +73,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffsetBuffer;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
-	float AttackRangeDist;
+	//UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float AttackRangeDist; // not in use
 
 	UPROPERTY(EditAnywhere, Category = "Setting|Target")
 	EDirection CurrDir;
