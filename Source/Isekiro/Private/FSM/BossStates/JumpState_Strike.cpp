@@ -27,6 +27,12 @@ void UJumpState_Strike::Stop()
 	return Super::Stop();
 }
 
+void UJumpState_Strike::StartMovement()
+{
+	Super::StartMovement();
+	PrevLoc = Instigator->GetActorLocation();
+}
+
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
 	if (!CanStartMovement())
@@ -35,23 +41,15 @@ EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 		return EBossState::NONE;
 	}
 
-	if (!bHasPrevLoc)
-	{
-		bHasPrevLoc = true;
-		PrevLoc = Instigator->GetActorLocation();
-	}
-
-	FVector lungeVector = Instigator->GetActorLocation();
 	FVector ToTarget = Instigator->GetTargetOffsetLocation();
 	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
-	if (TotalRunTime < MaxRunTime) {
-
+	if (TotalRunTime < MaxRunTime) 
+	{		
 		TotalRunTime += DeltaTime / 2.f;
 
-		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+		FVector lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+		Instigator->SetActorLocation(lungeVector);	
 	}
-
-	Instigator->SetActorLocation(lungeVector);
 
 	return EBossState::NONE;
 }

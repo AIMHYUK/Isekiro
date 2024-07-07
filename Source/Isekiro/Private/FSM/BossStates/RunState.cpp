@@ -40,7 +40,7 @@ EBossState URunState::UpdateMovement(float DeltaTime)
 {
 	if (!CanStartMovement()) return EBossState::NONE;
 
-	if (Instigator->GetDistanceToTarget() > DistanceForTransition)
+	if (Instigator->GetDistanceToTargetOffset() > DistanceForTransition)
 	{
 		FVector DirVector = Instigator->GetTargetOffsetLocation() - Instigator->GetActorLocation();
 		DirVector.Normalize();

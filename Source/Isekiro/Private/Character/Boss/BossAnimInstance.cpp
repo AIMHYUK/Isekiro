@@ -52,7 +52,7 @@ void UBossAnimInstance::AnimNotify_Transition()
 	if (!BossCharacter) return;
 	if (!FSMComp) return;
 
-	BossCharacter->IsWithinTargetOffsetBuffer() ? FSMComp->StartMovement() : FSMComp->StopMovement();
+	BossCharacter->IsWithinTarget() ? FSMComp->StartMovement() : FSMComp->StopMovement();
 
 	int val = FMath::RandRange(0, 9);
 	val = 1;
@@ -65,7 +65,7 @@ void UBossAnimInstance::AnimNotify_Transition()
 		num++;
 		SectionS = FString::FromInt(num);
 
-		if (!BossCharacter->IsWithinTargetOffsetBuffer())
+		if (!BossCharacter->IsWithinTarget())
 			SectionS.Append("_r"); // play root anim sequence
 
 		Montage_JumpToSection(FName(SectionS), GetCurrentActiveMontage());

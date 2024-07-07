@@ -18,13 +18,14 @@ public:
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
+	
+	virtual void StartMovement() override;
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;	
 	float TotalRunTime;
-	bool bHasPrevLoc;
 	FVector PrevLoc;
 	float EaseOutSine(float x) {
 		return FMath::Sin((x * PI) / 2.f);

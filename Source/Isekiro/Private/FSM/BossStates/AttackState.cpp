@@ -60,7 +60,7 @@ EBossState UAttackState::UpdateMovement(float DeltaTime)
 
 	if (!CanStartMovement()) return EBossState::NONE;
 
-	if (!Instigator->IsWithinTargetOffsetBuffer())
+	if (!Instigator->IsWithinTarget())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, FString::Printf(TEXT("Testing")));
 		FVector DirVector = Instigator->GetTargetOffsetLocation() - Instigator->GetTargetLocation();

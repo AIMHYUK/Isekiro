@@ -41,11 +41,14 @@ public:
 	FVector GetTargetOffsetLocation() const;
 
 	float GetDistanceToTargetOffset() const;
+	FVector GetDirectionVectorToTarget() const;
+	FVector GetNewMovementLocation(float DistanceToTravel) const;
 	EDirection GetCurrentDirection() const;
 
 	UFUNCTION(BlueprintCallable)
 	bool IsWithinAttackRange() const; // not in use
-	bool IsWithinTargetOffsetBuffer() const;
+	bool IsWithinTarget() const;
+	bool IsWithinTarget(FVector Location) const;
 
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);

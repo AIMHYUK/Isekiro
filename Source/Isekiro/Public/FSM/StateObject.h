@@ -58,6 +58,8 @@ protected:
 	FMontageState MontageState;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float TriggerDistance;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float TravelDistance;
 
 private:
 	bool bIsMoving;

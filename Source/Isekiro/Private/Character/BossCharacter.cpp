@@ -164,6 +164,34 @@ float ABossCharacter::GetDistanceToTargetOffset() const
 	return -1.f;
 }
 
+FVector ABossCharacter::GetDirectionVectorToTarget() const
+{
+	FVector DirVector = GetTargetOffsetLocation() - GetActorLocation();
+	DirVector.Normalize();
+	return DirVector;
+}
+
+FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
+{	
+	FVector DirVec = GetDirectionVectorToTarget();
+	DirVec *= DistanceToTravel;
+	FVector NewLoc = DirVec + GetActorLocation();
+	
+	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
+	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
+
+	if(NewDist < TargetDist)
+	{
+		if(IsWithinTarget(NewLoc)) 
+			return GetTargetOffsetLocation();
+		else return NewLoc;
+	}
+	else
+	{
+		return GetTargetOffsetLocation();
+	}
+}
+
 FVector ABossCharacter::GetTargetOffsetLocation() const
 {
 	if (Target)
@@ -212,21 +240,38 @@ bool ABossCharacter::IsWithinAttackRange() const
 	return false;
 }
 
-bool ABossCharacter::IsWithinTargetOffsetBuffer() const
+bool ABossCharacter::IsWithinTarget() const
+{
+	return IsWithinTarget(GetActorLocation());
+}
+
+bool ABossCharacter::IsWithinTarget(FVector Location) const
 {
 	if (Target) 
 	{
-		FVector DirVector = GetActorLocation() - GetTargetOffsetLocation();
-		DirVector.Normalize();
-		FVector BufferLoc = DirVector * TargetOffsetBuffer + GetTargetOffsetLocation();
+		FVector TargetTemp = Target->GetActorLocation();
+		TargetTemp.Z = HeightZ;
 
-		FVector BossDistVector = Target->GetActorLocation() - GetActorLocation();
+		FVector OffsetDir =  TargetTemp - GetTargetOffsetLocation();
+		OffsetDir .Normalize();
+		OffsetDir *= -1.f;
+		FVector BufferLoc = OffsetDir * TargetOffsetBuffer + GetTargetOffsetLocation();
 		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
+				
+		FVector LocDistVector = TargetTemp - Location;
+		FVector BossTemp = GetActorLocation();
+		BossTemp.Z = HeightZ;
+		FVector BossVector = TargetTemp - BossTemp;
+		float dotResult = FVector::DotProduct(LocDistVector, BossVector);
+		if(dotResult < 0.f)
+		{
+			LocDistVector *= -1.f;
+		}
 
 		float BufferDistSq = FVector::DotProduct(BufferDistVector, BufferDistVector);
-		float BossDistSq = FVector::DotProduct(BossDistVector, BossDistVector);
+		float LocDistSq = FVector::DotProduct(LocDistVector, LocDistVector);
 
-		return BossDistSq < BufferDistSq;
+		return LocDistSq < BufferDistSq;
 	}
 	return false;
 }

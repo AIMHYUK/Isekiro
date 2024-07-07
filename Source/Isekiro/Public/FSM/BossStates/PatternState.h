@@ -14,4 +14,25 @@ class ISEKIRO_API UPatternState : public UStateObject
 {
 	GENERATED_BODY()
 	
+public:
+	UPatternState();
+	virtual void Start() override;
+	virtual EBossState Update(float DeltaTime) override;
+	virtual void Stop() override;
+	virtual void StartMovement() override;
+
+protected:
+	virtual EBossState UpdateMovement(float DeltaTime) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float MaxRunTime;	
+	float TotalRunTime;
+	FVector PrevLoc;
+
+	int32 counter;
+
+	FVector NewLoc;
+	float EaseOutSine(float x) {
+		return FMath::Sin((x * PI) / 2.f);
+	}
 };
