@@ -19,7 +19,6 @@ enum class EBossState : uint8
 	PARRY UMETA(DisplayName = "Parry"),
 	ATTACK UMETA(DisplayName = "Attack"),
 	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),
-	COMBOATTACK UMETA(DisplayName = "ComboAttack"),
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
 	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
