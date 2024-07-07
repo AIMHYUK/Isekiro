@@ -349,6 +349,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 		if (AnimInstance && StrongAttackMontage)
 		{
 			AnimInstance->Montage_Play(StrongAttackMontage);
+			KnockBack(300);
 		}
 
 		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 2.0f, false);
@@ -372,7 +373,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	UE_LOG(LogTemp, Display, TEXT("%f"), Status->GetPosture());
 	
 
-	if (Status->GetPosture() >= 100) //체간이 100을 넘었을때 한대 더 맞으면 가드 브레이크
+	if (Status->GetPosture() >= 100 && !(AnimInstance->Montage_IsPlaying(ParryMontage))) //체간이 100을 넘기고 패링에 실패했다면 
 	{
 		PlayerController->SetIgnoreMoveInput(true);
 		AnimInstance->Montage_Play(DefenseBreakMontage);
