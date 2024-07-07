@@ -6,12 +6,11 @@
 
 UJumpState_Strike::UJumpState_Strike()
 {
-	TriggerDistance = 150.f;
-	PrevLoc = FVector::Zero();
+	StateDistance.Min = 0.f;
+	StateDistance.Max = 650.f;
 	MaxRunTime = .9f;
-	TotalRunTime = 0.f;
-
-	
+	TotalRunTime = 0.f;	
+	TravelDist = 500.f;
 }
 
 void UJumpState_Strike::Start()
@@ -21,7 +20,10 @@ void UJumpState_Strike::Start()
 
 EBossState UJumpState_Strike::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UJumpState_Strike::Stop()
@@ -29,31 +31,24 @@ void UJumpState_Strike::Stop()
 	return Super::Stop();
 }
 
+void UJumpState_Strike::StartMovement()
+{
+	Super::StartMovement();
+	PrevLoc = Instigator->GetActorLocation();
+	NewLoc = Instigator->GetNewMovementLocation(TravelDist);
+}
+
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
-		return EBossState::NONE;
+	if (!CanStartMovement()) return EBossState::NONE;
+	
+	if (TotalRunTime < MaxRunTime) 
+	{		
+		TotalRunTime += DeltaTime;
+
+		FVector MoveVec = FMath::Lerp(PrevLoc, NewLoc, TotalRunTime / MaxRunTime);
+		Instigator->SetActorLocation(MoveVec);	
 	}
-
-	if (!bHasPrevLoc)
-	{
-		bHasPrevLoc = true;
-		PrevLoc = Instigator->GetActorLocation();
-	}
-
-	FVector lungeVector = Instigator->GetActorLocation();
-	FVector ToTarget = Instigator->GetTargetOffsetLocation();
-	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
-	if (TotalRunTime < MaxRunTime) {
-
-		TotalRunTime += DeltaTime / 2.f;
-
-		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-	}
-
-	Instigator->SetActorLocation(lungeVector);
 
 	return EBossState::NONE;
 }

@@ -6,20 +6,27 @@
 
 UStrafeState::UStrafeState()
 {
-	StrafeSpeed = 100.f;
+	StrafeSpeed = 80.f;
 	StrafeMaxTime = 3.f;
 	StrafeTotalTime = 0.f;
+	StateDistance.Min = 500.f;
 }
 
 void UStrafeState::Start()
 {
 	Super::Start();
 	StartMovement();
+	StrafeMaxTime =FMath::RandRange(1.5f, StrafeMaxTime);
 }
 
 EBossState UStrafeState::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+	if(StrafeTotalTime >= StrafeMaxTime && FSMComp)
+	{
+		return FSMComp->RandomState();
+	}
+	return EBossState::NONE;
 }
 
 void UStrafeState::Stop()
@@ -40,7 +47,7 @@ EBossState UStrafeState::UpdateMovement(float DeltaTime)
 		}
 	}
 	else {
-		return EBossState::DODGE;
+		return EBossState::PARRY;
 	}
 	return EBossState::NONE;
 }

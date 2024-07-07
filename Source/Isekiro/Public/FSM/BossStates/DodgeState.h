@@ -15,6 +15,7 @@ class ISEKIRO_API UDodgeState : public UStateObject
 	GENERATED_BODY()
 
 public:
+	UDodgeState();
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;

@@ -16,23 +16,31 @@ ABossCharacter::ABossCharacter()
 
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
-	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
-	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
+	AttackBoxComp->SetRelativeLocation(FVector(110.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(100.f, 80.f, 75.f));
+	AttackBoxComp->SetCollisionProfileName("Arrow");
 
-	TargetOffset = 200.f;
+	TargetOffset = 80.0f;
+	TargetOffsetBuffer = 5.f;
+	AttackRangeDist = 210.f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
 	HardSetting.Damage = 30.f;
 	HardSetting.Speed= 2600.f;
 
-	CurrDir = EDirection::LEFT;
+	CurrDir = EDirection::BACK;
+
+	bLockOnTarget = true;
 
 	LockOnComponent = CreateDefaultSubobject<UCapsuleComponent>("LockOnComponent");
 	LockOnComponent->SetupAttachment(RootComponent);
 	LockOnComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, 88.f));
+	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 }
 
 void ABossCharacter::BeginPlay()
@@ -49,13 +57,15 @@ void ABossCharacter::BeginPlay()
 
 		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnCapsuleOverlapped);
 }
 
 void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(Target))
+	if (ensureAlways(Target) && bLockOnTarget)
 	{
 		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
 		DirVector.Normalize();
@@ -66,30 +76,43 @@ void ABossCharacter::Tick(float DeltaTime)
 	}
 }
 
+//void ABossCharacter::BeginAttack()
+//{
+//	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
+//
+//	FHitResult Hit;
+//	FVector Start = AttackBoxComp->GetComponentLocation();
+//	FVector End = AttackBoxComp->GetComponentLocation();
+//
+//	FCollisionObjectQueryParams ObjQueryParam;
+//	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+//
+//	FCollisionQueryParams QueryParams;
+//	QueryParams.AddIgnoredActor(this);
+//
+//	FCollisionShape Shape;
+//	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
+//	Shape.SetSphere(Radius);
+//
+//	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
+//
+//	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
+//	{
+//		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
+//	}
+//}
+
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
 
-	FHitResult Hit;
-	FVector Start = AttackBoxComp->GetComponentLocation();
-	FVector End = AttackBoxComp->GetComponentLocation();
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
 
-	FCollisionObjectQueryParams ObjQueryParam;
-	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-
-	FCollisionShape Shape;
-	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
-	Shape.SetSphere(Radius);
-
-	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
-
-	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
-	}
+void ABossCharacter::EndAttack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("End Attack"));
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABossCharacter::FireArrow()
@@ -115,6 +138,11 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
 }
 
+void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//if()
+}
+
 void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 {
 	if (Target && ArrowClass)
@@ -136,15 +164,45 @@ void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 	}
 }
 
-float ABossCharacter::GetDistanceToTarget() const
+float ABossCharacter::GetDistanceToTargetOffset() const
 {
 	if (Target)
 	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FVector BossLoc = GetActorLocation();
+		BossLoc.Z = HeightZ;
+		FVector DirVector = GetTargetOffsetLocation() - BossLoc;
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 
 	return -1.f;
+}
+
+FVector ABossCharacter::GetDirectionVectorToTarget() const
+{
+	FVector DirVector = GetTargetOffsetLocation() - GetActorLocation();
+	DirVector.Normalize();
+	return DirVector;
+}
+
+FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
+{	
+	FVector DirVec = GetDirectionVectorToTarget();
+	DirVec *= DistanceToTravel;
+	FVector NewLoc = DirVec + GetActorLocation();
+	
+	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
+	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
+
+	if(NewDist < TargetDist) // if new boss location is within the Target
+	{
+		if(IsWithinTarget(NewLoc)) 
+			return GetTargetOffsetLocation();
+		else return NewLoc;
+	}
+	else // if new boss location is beyond the Target
+	{
+		return GetTargetOffsetLocation();
+	}
 }
 
 FVector ABossCharacter::GetTargetOffsetLocation() const
@@ -173,9 +231,62 @@ bool ABossCharacter::IsLockedOnTarget() const
 	return true;
 }
 
+void ABossCharacter::SetLockOnTarget(bool _bLockOnTarget)
+{
+	bLockOnTarget = _bLockOnTarget;
+}
+
 EDirection ABossCharacter::GetCurrentDirection() const
 {
 	return CurrDir;
+}
+
+bool ABossCharacter::IsWithinAttackRange() const
+{
+	if (Target)
+	{
+		FVector DistVector = Target->GetActorLocation() - GetActorLocation();
+		float DistSq = FVector::DotProduct(DistVector, DistVector);
+		float Dist = FMath::Sqrt(DistSq);
+		return Dist <= AttackRangeDist;
+	}
+	return false;
+}
+
+bool ABossCharacter::IsWithinTarget() const
+{
+	return IsWithinTarget(GetActorLocation());
+}
+
+bool ABossCharacter::IsWithinTarget(FVector Location) const
+{
+	if (Target) 
+	{
+		FVector TargetTemp = Target->GetActorLocation();
+		TargetTemp.Z = HeightZ;
+
+		FVector OffsetDir =  TargetTemp - GetTargetOffsetLocation();
+		OffsetDir .Normalize();
+		OffsetDir *= -1.f;
+		FVector BufferLoc = OffsetDir * TargetOffsetBuffer + GetTargetOffsetLocation();
+		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
+				
+		FVector LocDistVector = TargetTemp - Location;
+		FVector BossTemp = GetActorLocation();
+		BossTemp.Z = HeightZ;
+		FVector BossVector = TargetTemp - BossTemp;
+		float dotResult = FVector::DotProduct(LocDistVector, BossVector);
+		if(dotResult < 0.f)
+		{
+			LocDistVector *= -1.f;
+		}
+
+		float BufferDistSq = FVector::DotProduct(BufferDistVector, BufferDistVector);
+		float LocDistSq = FVector::DotProduct(LocDistVector, LocDistVector);
+
+		return LocDistSq < BufferDistSq;
+	}
+	return false;
 }
 
 void ABossCharacter::StartParry()

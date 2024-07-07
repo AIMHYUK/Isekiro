@@ -4,6 +4,11 @@
 #include "FSM/BossStates/DodgeState.h"
 #include "Character/BossCharacter.h"
 
+UDodgeState::UDodgeState()
+{
+	StateDistance.Max = 300.f;
+}
+
 void UDodgeState::Start()
 {
 	if (Instigator)
@@ -37,8 +42,10 @@ void UDodgeState::Start()
 
 EBossState UDodgeState::Update(float DeltaTime)
 {
-	EBossState State = Super::Update(DeltaTime);
-	return State;
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UDodgeState::Stop()

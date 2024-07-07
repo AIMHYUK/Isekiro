@@ -14,7 +14,10 @@ class ISEKIRO_API UDistAttackState : public UStateObject
 {
 	GENERATED_BODY()
 public:
+	UDistAttackState();
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
+
+
 };

@@ -7,10 +7,14 @@
 UStateObject::UStateObject()
 {
 	bIsMoving = false;
+	StateDistance.Min = 0.f;
+	StateDistance.Max = 50000.f;
+	FSMState = EBossState::NONE;
 }
 
-void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
+void UStateObject::Initialize(UFSMComponent* _FSMComp, ABossCharacter* _Instigator, AActor* _Target)
 {
+	FSMComp = _FSMComp;
 	Instigator = _Instigator;
 	Target = _Target;
 }
@@ -38,9 +42,10 @@ void UStateObject::PlayMontage()
 {
 	if (Instigator && MontageState.Montage)
 	{
-		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
-		if (!MontageState.SectionName.IsNone())
-			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+		//Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
+		Instigator->PlayAnimMontage(MontageState.Montage, 1, MontageState.SectionName);
+		//if (!MontageState.SectionName.IsNone())
+		//	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
 	}
 }
 
@@ -62,6 +67,16 @@ void UStateObject::StartMovement()
 void UStateObject::StopMovement()
 {
 	bIsMoving = false;
+}
+
+EBossState UStateObject::GetFSMState() const
+{
+	return FSMState;
+}
+
+FStateDistance UStateObject::GetStateDistance() const
+{
+	return StateDistance;
 }
 
 UWorld* UStateObject::GetWorld() const

@@ -11,7 +11,10 @@ ULungeState::ULungeState()
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
-	MaxRunTime = .9f;
+	StateDistance.Min = 400.f;
+	StateDistance.Max = 800.f;
+
+	MaxRunTime = 1.35f;
 	TotalRunTime = 0.f;
 }
 
@@ -22,9 +25,10 @@ void ULungeState::Start()
 
 EBossState ULungeState::Update(float DeltaTime)
 {
-	EBossState State = Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
 
-	return State;
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void ULungeState::Stop()
@@ -50,9 +54,9 @@ EBossState ULungeState::UpdateMovement(float DeltaTime)
 	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
 	if (TotalRunTime < MaxRunTime) {
 	
-		TotalRunTime += DeltaTime / 2.f;
+		TotalRunTime += DeltaTime;
 
-		lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
+		lungeVector = FMath::Lerp(PrevLoc, ToTarget, TotalRunTime / MaxRunTime);
 	}
 
 	Instigator->SetActorLocation(lungeVector);
