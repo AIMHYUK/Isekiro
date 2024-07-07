@@ -9,8 +9,9 @@ UPatternState::UPatternState()
 	MaxRunTime = 1.2f;
 	TotalRunTime = 0.f;
 	counter = 0;
-	TravelDistance = 300.f;
-	TriggerDistance = 500.f;
+	TravelDist = 300.f;
+	StateDistance.Min = 600.f;
+	StateDistance.Max = 900.f;
 }
 
 void UPatternState::Start()
@@ -20,7 +21,10 @@ void UPatternState::Start()
 
 EBossState UPatternState::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UPatternState::Stop()
@@ -39,14 +43,14 @@ void UPatternState::StartMovement()
 	{
 	case 0: // Fire Arrow
 	{
-		NewLoc = Instigator->GetNewMovementLocation(TravelDistance);
+		NewLoc = Instigator->GetNewMovementLocation(TravelDist);
 		counter++;
 		break;
 	}
 	case 1: //Forward roll and swinging sword
 	{
-		TravelDistance = 500.f;
-		NewLoc = Instigator->GetNewMovementLocation(TravelDistance);
+		TravelDist = 500.f;
+		NewLoc = Instigator->GetNewMovementLocation(TravelDist);
 		MaxRunTime = 1.45f;
 		break;
 	}

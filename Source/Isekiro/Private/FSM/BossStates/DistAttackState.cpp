@@ -5,7 +5,7 @@
 
 UDistAttackState::UDistAttackState()
 {
-    TriggerDistance = 1000.f;
+    StateDistance.Min = 1000.f;
 }
 
 void UDistAttackState::Start()
@@ -15,7 +15,10 @@ void UDistAttackState::Start()
 
 EBossState UDistAttackState::Update(float DeltaTime)
 {
-    return EBossState();
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UDistAttackState::Stop()

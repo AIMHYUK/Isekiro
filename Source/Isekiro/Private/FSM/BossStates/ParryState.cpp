@@ -8,7 +8,8 @@ UParryState::UParryState()
 {
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
-	TravelDistance = 80.f;
+	TravelDist = 80.f;
+	StateDistance.Max = 350.f;
 }
 
 void UParryState::Start()
@@ -20,7 +21,7 @@ void UParryState::Start()
 	FVector TargetLoc = Instigator->GetTargetOffsetLocation();
 	FVector DirVector = PrevLoc - TargetLoc;
 	DirVector.Normalize();
-	NewLoc = DirVector * TravelDistance + PrevLoc;
+	NewLoc = DirVector * TravelDist + PrevLoc;
 	NewLoc.Z += FMath::RandRange(-5.f, 5.f);
 
 	int32 SectionNum = FMath::RandRange(1,4);
@@ -30,7 +31,10 @@ void UParryState::Start()
 
 EBossState UParryState::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+	
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UParryState::Stop()

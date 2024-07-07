@@ -6,9 +6,11 @@
 
 UJumpState_Strike::UJumpState_Strike()
 {
-	TriggerDistance = 150.f;
+	StateDistance.Min = 0.f;
+	StateDistance.Max = 650.f;
 	MaxRunTime = .9f;
 	TotalRunTime = 0.f;	
+	TravelDist = 500.f;
 }
 
 void UJumpState_Strike::Start()
@@ -18,7 +20,10 @@ void UJumpState_Strike::Start()
 
 EBossState UJumpState_Strike::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UJumpState_Strike::Stop()
@@ -30,16 +35,12 @@ void UJumpState_Strike::StartMovement()
 {
 	Super::StartMovement();
 	PrevLoc = Instigator->GetActorLocation();
-	NewLoc = Instigator->GetNewMovementLocation(TravelDistance);
+	NewLoc = Instigator->GetNewMovementLocation(TravelDist);
 }
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
-		return EBossState::NONE;
-	}
+	if (!CanStartMovement()) return EBossState::NONE;
 	
 	if (TotalRunTime < MaxRunTime) 
 	{		

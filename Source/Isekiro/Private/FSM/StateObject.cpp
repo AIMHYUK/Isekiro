@@ -7,10 +7,14 @@
 UStateObject::UStateObject()
 {
 	bIsMoving = false;
+	StateDistance.Min = 0.f;
+	StateDistance.Max = 50000.f;
+	FSMState = EBossState::NONE;
 }
 
-void UStateObject::Initialize(ABossCharacter* _Instigator, AActor* _Target)
+void UStateObject::Initialize(UFSMComponent* _FSMComp, ABossCharacter* _Instigator, AActor* _Target)
 {
+	FSMComp = _FSMComp;
 	Instigator = _Instigator;
 	Target = _Target;
 }
@@ -63,6 +67,16 @@ void UStateObject::StartMovement()
 void UStateObject::StopMovement()
 {
 	bIsMoving = false;
+}
+
+EBossState UStateObject::GetFSMState() const
+{
+	return FSMState;
+}
+
+FStateDistance UStateObject::GetStateDistance() const
+{
+	return StateDistance;
 }
 
 UWorld* UStateObject::GetWorld() const

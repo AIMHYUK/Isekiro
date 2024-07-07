@@ -11,9 +11,10 @@ ULungeState::ULungeState()
 	bHasPrevLoc = false;
 	PrevLoc = FVector::Zero();
 
-	TriggerDistance = 900.f;
+	StateDistance.Min = 400.f;
+	StateDistance.Max = 800.f;
 
-	MaxRunTime = .9f;
+	MaxRunTime = 1.35f;
 	TotalRunTime = 0.f;
 }
 
@@ -24,9 +25,10 @@ void ULungeState::Start()
 
 EBossState ULungeState::Update(float DeltaTime)
 {
-	EBossState State = Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
 
-	return State;
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void ULungeState::Stop()

@@ -21,7 +21,10 @@ public:
 	virtual void Stop() override;
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
-
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TArray<EBossState> TransitionStates;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float StrafeSpeed;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")

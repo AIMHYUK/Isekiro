@@ -16,8 +16,8 @@ ABossCharacter::ABossCharacter()
 
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
-	AttackBoxComp->SetRelativeLocation(FVector(80.f, 0.f, 0.f));
-	AttackBoxComp->SetBoxExtent(FVector(90.f, 80.f, 75.f));
+	AttackBoxComp->SetRelativeLocation(FVector(110.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(100.f, 80.f, 75.f));
 	
 	TargetOffset = 120.0f;
 	TargetOffsetBuffer = 50.f;
@@ -28,7 +28,7 @@ ABossCharacter::ABossCharacter()
 	HardSetting.Damage = 30.f;
 	HardSetting.Speed= 2600.f;
 
-	CurrDir = EDirection::LEFT;
+	CurrDir = EDirection::BACK;
 
 	bLockOnTarget = true;
 
@@ -160,7 +160,9 @@ float ABossCharacter::GetDistanceToTargetOffset() const
 {
 	if (Target)
 	{
-		FVector DirVector = GetTargetOffsetLocation() - GetActorLocation();
+		FVector BossLoc = GetActorLocation();
+		BossLoc.Z = HeightZ;
+		FVector DirVector = GetTargetOffsetLocation() - BossLoc;
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 

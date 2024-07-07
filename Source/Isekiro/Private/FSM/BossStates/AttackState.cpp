@@ -7,6 +7,7 @@
 UAttackState::UAttackState()
 {
 	MoveSpeed = 70.f;
+	StateDistance.Max = 300.f;
 }
 
 void UAttackState::Start()
@@ -46,7 +47,10 @@ void UAttackState::Start()
 
 EBossState UAttackState::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UAttackState::Stop()

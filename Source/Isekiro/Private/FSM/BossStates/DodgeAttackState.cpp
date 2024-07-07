@@ -5,6 +5,7 @@
 
 UDodgeAttackState::UDodgeAttackState()
 {
+	StateDistance.Max = 200.f;
 }
 
 void UDodgeAttackState::Start()
@@ -14,9 +15,13 @@ void UDodgeAttackState::Start()
 
 EBossState UDodgeAttackState::Update(float DeltaTime)
 {
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
 	return EBossState::NONE;
 }
 
 void UDodgeAttackState::Stop()
 {
+	Super::Stop();
 }

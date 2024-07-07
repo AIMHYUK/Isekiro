@@ -22,11 +22,13 @@ public:
 	virtual void Stop() override;
 	
 	virtual EBossState UpdateMovement(float DeltaTime) override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	TArray<EBossState> StatesToTransition;
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float DistanceForTransition;
+	TArray<EBossState> TransitionStates;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float RunSpeed;
+
+private:
+	EBossState SelectedState;
 };

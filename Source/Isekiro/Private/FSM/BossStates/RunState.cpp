@@ -7,26 +7,30 @@
 
 URunState::URunState()
 {
-	TriggerDistance = 700.f;
-	DistanceForTransition = 1000.f;
-	RunSpeed = 300.f;
+	StateDistance.Min = 1200.f;
+	RunSpeed = 500.f;
 }
 
 void URunState::Start()
 {
 	Super::Start();
 	StartMovement();
+
+	int32 index = FMath::RandRange(0, TransitionStates.Num() - 1);
+	if (ensure(TransitionStates.IsValidIndex(index)))
+		SelectedState = TransitionStates[index];
+	else SelectedState = EBossState::NONE;
 }
 
 EBossState URunState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
 
-	if (Instigator->GetDistanceToTargetOffset() <= DistanceForTransition)
+	float DistToTarget = Instigator->GetDistanceToTargetOffset();
+	if (FSMComp && FSMComp->CanChangeStateTo(SelectedState))
 	{
 		StopMovement();
-		if (ensure(StatesToTransition.IsValidIndex(0)))
-			return StatesToTransition[0];
+		return SelectedState;
 	}
 	return EBossState::NONE;
 }
@@ -40,14 +44,13 @@ EBossState URunState::UpdateMovement(float DeltaTime)
 {
 	if (!CanStartMovement()) return EBossState::NONE;
 
-	if (Instigator->GetDistanceToTargetOffset() > DistanceForTransition)
-	{
-		FVector DirVector = Instigator->GetTargetOffsetLocation() - Instigator->GetActorLocation();
-		DirVector.Normalize();
+	float DistToTarget = Instigator->GetDistanceToTargetOffset();
 
-		FVector NewLoc = DirVector * DeltaTime * RunSpeed + Instigator->GetActorLocation();
-		Instigator->SetActorLocation(NewLoc);
-	}
+	FVector DirVector = Instigator->GetTargetOffsetLocation() - Instigator->GetActorLocation();
+	DirVector.Normalize();
+
+	FVector NewLoc = DirVector * DeltaTime * RunSpeed + Instigator->GetActorLocation();
+	Instigator->SetActorLocation(NewLoc);
 
 	return EBossState::NONE;
 }

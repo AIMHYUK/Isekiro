@@ -9,7 +9,8 @@ UThrustState::UThrustState()
 	MaxRunTime = .4f;
 	TotalRunTime = .0f;
 
-	TriggerDistance = 600.f;
+	StateDistance.Min = 400.f;
+	StateDistance.Max = 600.f;
 	bIsWithinRange = true;
 	Speed = 300.f;
 }
@@ -21,7 +22,10 @@ void UThrustState::Start()
 
 EBossState UThrustState::Update(float DeltaTime)
 {
-	return Super::Update(DeltaTime);
+	Super::Update(DeltaTime);
+
+	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	return EBossState::NONE;
 }
 
 void UThrustState::Stop()
@@ -45,7 +49,7 @@ void UThrustState::StartMovement()
 		Dir.Normalize();
 
 		float Dist = FVector::Distance(StartLoc, EndLoc);
-		bIsWithinRange = Dist <= TriggerDistance;
+		bIsWithinRange = Dist <= StateDistance.Max;
 	}
 }
 

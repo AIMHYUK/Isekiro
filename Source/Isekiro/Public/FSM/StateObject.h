@@ -12,6 +12,7 @@
  */
 class AActor;
 class ABossCharacter;
+class UFSMComponent;
 
 USTRUCT()
 struct FMontageState
@@ -33,7 +34,7 @@ class ISEKIRO_API UStateObject : public UObject
 public:
 	UStateObject();
 
-	void Initialize(ABossCharacter* _Instigator, AActor* _Target);
+	void Initialize(UFSMComponent* FSMComp, ABossCharacter* _Instigator, AActor* _Target);
 	
 	virtual void Start();
 	virtual EBossState Update(float DeltaTime);
@@ -42,7 +43,8 @@ public:
 
 	virtual void StartMovement();
 	void StopMovement();
-
+	EBossState GetFSMState() const;
+	FStateDistance GetStateDistance() const;
 protected:
 	virtual UWorld* GetWorld() const override;
 	
@@ -53,13 +55,18 @@ protected:
 
 	TObjectPtr<ABossCharacter> Instigator;
 	TObjectPtr<AActor> Target;
+	TObjectPtr<UFSMComponent> FSMComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	FMontageState MontageState;
+	//Distances at which states are triggered
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float TriggerDistance;
+	FStateDistance StateDistance;
+	// How far entity moves
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	float TravelDistance;
+	float TravelDist; 
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	EBossState FSMState;
 
 private:
 	bool bIsMoving;

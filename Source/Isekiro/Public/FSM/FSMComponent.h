@@ -7,6 +7,18 @@
 #include "FSMComponent.generated.h"
 
 class UStateObject;
+class ABossCharacter;
+
+USTRUCT()
+struct FStateDistance
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Distance")
+	float Min;
+	UPROPERTY(EditDefaultsOnly, Category = "Distance")
+	float Max;
+};
 
 UENUM(Blueprintable)
 enum class EBossState : uint8
@@ -23,7 +35,8 @@ enum class EBossState : uint8
 	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
 	JUMPATTACK UMETA(DisplayName = "JumpAttack"),
-	LUNGEATTACK UMETA(DisplayName = "LungeAttack")
+	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),
+	MAX UMETA(DisplayName = "Max")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -36,17 +49,22 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	EBossState RandomState();
+	
+	bool IsCurrentStateActive() const;
+
+	bool CanChangeStateTo(EBossState StateToTest);
 	UFUNCTION(BlueprintCallable)
 	void ChangeStateTo(EBossState NewState);
+	
 	void StartMovement();
 	void StopMovement();
+	
 	EBossState GetCurrentStateE() const;
 
 protected:
 	virtual void BeginPlay() override;
 	
-	TObjectPtr<AActor> Target;
-
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	EBossState CurrentStateE;
 
@@ -55,6 +73,10 @@ protected:
 
 private:
 	bool PrepNewState(EBossState NewState);
+	void SetFSMState(EBossState _CurrentStateE);
 	UPROPERTY()
 	TObjectPtr<UStateObject> CurrentState;
+
+	TObjectPtr<AActor> Target;
+	TObjectPtr<ABossCharacter> BossCharacter;
 };
