@@ -40,7 +40,7 @@ public:
 	//Following Target location
 	FVector GetTargetOffsetLocation() const;
 
-	float GetDistanceToTarget() const;
+	float GetDistanceToTargetOffset() const;
 	EDirection GetCurrentDirection() const;
 
 	UFUNCTION(BlueprintCallable)

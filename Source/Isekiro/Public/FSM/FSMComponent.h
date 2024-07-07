@@ -13,16 +13,17 @@ enum class EBossState : uint8
 {
 	NONE UMETA(DisplayName = "None"),
 	STRAFE UMETA(DisplayName = "Strafe"),
-	LUNGE UMETA(DisplayName = "Lunge"),
 	RUN UMETA(DisplayName = "Run"),
-	RUSH UMETA(DisplayName = "Rush"),
 	DODGE UMETA(DisplayName = "Dodge"),
-	JUMP UMETA(DisplayName = "Jump"),
+	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),
+	JUMPATTACK UMETA(DisplayName = "JumpAttack"),
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
 	PARRY UMETA(DisplayName = "Parry"),
 	THRUST UMETA(DisplayName = "Thrust"),
-	ATTACK UMETA(DisplayName = "Attack")
+	PATTERN UMETA(DisplayName = "Pattern"),
+	COMBOATTACK UMETA(DisplayName = "ComboAttack"),
+	ATTACK UMETA(DisplayName = "Attack")	
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

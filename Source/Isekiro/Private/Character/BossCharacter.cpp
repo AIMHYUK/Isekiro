@@ -153,11 +153,11 @@ void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 	}
 }
 
-float ABossCharacter::GetDistanceToTarget() const
+float ABossCharacter::GetDistanceToTargetOffset() const
 {
 	if (Target)
 	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+		FVector DirVector = GetTargetOffsetLocation() - GetActorLocation();
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 
