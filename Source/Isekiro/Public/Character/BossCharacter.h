@@ -29,6 +29,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
 	UFUNCTION(BlueprintCallable)
+	void EndAttack();
+
+	UFUNCTION(BlueprintCallable)
 	void FireArrow();
 	UFUNCTION(BlueprintCallable)
 	void FireArrowHard();
@@ -37,22 +40,34 @@ public:
 	//Following Target location
 	FVector GetTargetOffsetLocation() const;
 
-	float GetDistanceToTarget() const;
-	bool IsLockedOnTarget() const;
+	float GetDistanceToTargetOffset() const;
+	FVector GetDirectionVectorToTarget() const;
+	FVector GetNewMovementLocation(float DistanceToTravel) const;
 	EDirection GetCurrentDirection() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsWithinAttackRange() const; // not in use
+	bool IsWithinTarget() const;
+	bool IsWithinTarget(FVector Location) const;
+
+	bool IsLockedOnTarget() const;
+	void SetLockOnTarget(bool _bLockOnTarget);
 
 	UFUNCTION(BlueprintCallable)
 	void StartParry();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
+	UFUNCTION()
+	void OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UCapsuleComponent> LockOnComponent;
 
@@ -61,6 +76,12 @@ protected:
 	TObjectPtr<AActor> Target;
 	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffset;
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float TargetOffsetBuffer;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float AttackRangeDist; // not in use
+
 	UPROPERTY(EditAnywhere, Category = "Setting|Target")
 	EDirection CurrDir;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
@@ -71,5 +92,6 @@ protected:
 	FArrowSetting HardSetting;
 private:
 	float HeightZ;
+	bool bLockOnTarget;
 	void SetupFireArrow(FArrowSetting Setting);
 };

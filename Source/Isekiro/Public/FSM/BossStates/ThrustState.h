@@ -24,12 +24,19 @@ public:
 
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;
 
-private:
-	FVector Direction;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float Speed;
+
+private:
+	float TotalRunTime;
+	FVector StartLoc;
+	FVector EndLoc;
+	
+	bool bIsWithinRange;
+	FVector Dir;
 
 	float EaseOutSine(float x) {
 		return FMath::Sin((x * PI) / 2.f);

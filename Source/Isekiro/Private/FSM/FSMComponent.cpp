@@ -9,7 +9,8 @@
 UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	StateToStart = EBossState::STRAFE;
+	CurrentStateE = EBossState::STRAFE;
+	count = -1;
 }
 
 
@@ -21,11 +22,12 @@ void UFSMComponent::BeginPlay()
 	if (Boss)
 	{
 		Target = Boss->GetTarget();
+		BossCharacter = Boss;
 	}
 
-	if (ensure(StateToStart != EBossState::NONE))
+	if (ensure(CurrentStateE != EBossState::NONE))
 	{
-		PrepNewState(StateToStart);
+		ChangeStateTo(CurrentStateE);
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("Starting State has not been set. Boss will not perform any actions."));
@@ -41,16 +43,67 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		EBossState NewState = CurrentState->Update(DeltaTime);
 		if (NewState != EBossState::NONE)
 		{
-			PrepNewState(NewState);
+			ChangeStateTo(NewState);
 		}
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
+EBossState UFSMComponent::RandomState()
+{
+	int32 size = (int32)EBossState::MAX;
+	int index;
+	do
+	{
+		index = FMath::RandRange(0, size - 1);
+		count++;
+	} while (!CanChangeStateTo((EBossState)index) && count < 50);
+	
+	if(count >= 50) 
+	{
+		count = -1;
+		return EBossState::DODGE;
+	}
+
+	count = -1;
+	return EBossState(index);
+}
+
+bool UFSMComponent::IsCurrentStateActive() const
+{
+	return BossCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying();
+}
+
+void UFSMComponent::SetFSMState(EBossState _CurrentStateE)
+{
+	CurrentStateE = _CurrentStateE;
+}
+
+bool UFSMComponent::CanChangeStateTo(EBossState StateToTest)
+{
+	if (StateToTest == EBossState::NONE) return false;
+
+	if (StateToTest == CurrentStateE) return false;
+
+	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(StateToTest);
+	if (StateObjectClass && *StateObjectClass)
+	{
+		TSubclassOf<UStateObject> StateObjClass = *StateObjectClass;
+		FStateDistance StateDist = StateObjClass->GetDefaultObject<UStateObject>()->GetStateDistance();
+
+		if (BossCharacter)
+		{
+			float DistToTarget = BossCharacter->GetDistanceToTargetOffset();
+			return DistToTarget >= StateDist.Min && DistToTarget <= StateDist.Max;
+		}
+	}
+	return false;
+}
+
 void UFSMComponent::ChangeStateTo(EBossState NewState)
 {
-	PrepNewState(NewState);
+	PrepNewState(NewState) ? CurrentStateE = NewState : CurrentStateE = EBossState::NONE;
 }
 
 void UFSMComponent::StartMovement()
@@ -69,7 +122,12 @@ void UFSMComponent::StopMovement()
 	}
 }
 
-void UFSMComponent::PrepNewState(EBossState NewState)
+EBossState UFSMComponent::GetCurrentStateE() const
+{
+	return CurrentStateE;
+}
+
+bool UFSMComponent::PrepNewState(EBossState NewState)
 {
 	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);
 	if (StateObjectClass && *StateObjectClass)
@@ -77,14 +135,20 @@ void UFSMComponent::PrepNewState(EBossState NewState)
 		UStateObject* NewStateObj = NewObject<UStateObject>(GetOwner(), *StateObjectClass);
 		if (NewStateObj)
 		{
-			NewStateObj->Initialize(Cast<ABossCharacter>(GetOwner()), Target);
+			NewStateObj->Initialize(this, Cast<ABossCharacter>(GetOwner()), Target);
 			if (CurrentState) CurrentState->Stop();
 			NewStateObj->Start();
 			CurrentState = NewStateObj;
+			EBossState NewStateE = NewStateObj->GetFSMState();
+			if (ensure(NewStateE != EBossState::NONE && NewStateE != EBossState::MAX))
+			{
+				SetFSMState(NewStateObj->GetFSMState());
+				return true;
+			}
 		}
+		else UE_LOG(LogTemp, Warning, TEXT("Could not Instantiate new boss State object."));
 	}
-	else 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Could not find State object to start."));
-	}
+	else UE_LOG(LogTemp, Warning, TEXT("Could not find Boss State in BossStateMap."));
+
+	return false;
 }
