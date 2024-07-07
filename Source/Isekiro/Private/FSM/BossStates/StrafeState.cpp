@@ -40,7 +40,7 @@ EBossState UStrafeState::UpdateMovement(float DeltaTime)
 		}
 	}
 	else {
-		return EBossState::ATTACK;
+		return EBossState::PARRY;
 	}
 	return EBossState::NONE;
 }

@@ -7,7 +7,6 @@
 UJumpState_Strike::UJumpState_Strike()
 {
 	TriggerDistance = 150.f;
-	PrevLoc = FVector::Zero();
 	MaxRunTime = .9f;
 	TotalRunTime = 0.f;	
 }
@@ -31,6 +30,7 @@ void UJumpState_Strike::StartMovement()
 {
 	Super::StartMovement();
 	PrevLoc = Instigator->GetActorLocation();
+	NewLoc = Instigator->GetNewMovementLocation(TravelDistance);
 }
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
@@ -40,15 +40,13 @@ EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
 		return EBossState::NONE;
 	}
-
-	FVector ToTarget = Instigator->GetTargetOffsetLocation();
-	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
+	
 	if (TotalRunTime < MaxRunTime) 
 	{		
-		TotalRunTime += DeltaTime / 2.f;
+		TotalRunTime += DeltaTime;
 
-		FVector lungeVector = FMath::Lerp(PrevLoc, ToTarget, EaseOutSine(TotalRunTime / MaxRunTime));
-		Instigator->SetActorLocation(lungeVector);	
+		FVector MoveVec = FMath::Lerp(PrevLoc, NewLoc, TotalRunTime / MaxRunTime);
+		Instigator->SetActorLocation(MoveVec);	
 	}
 
 	return EBossState::NONE;

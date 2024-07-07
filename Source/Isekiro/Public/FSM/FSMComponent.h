@@ -15,15 +15,16 @@ enum class EBossState : uint8
 	STRAFE UMETA(DisplayName = "Strafe"),
 	RUN UMETA(DisplayName = "Run"),
 	DODGE UMETA(DisplayName = "Dodge"),
-	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),
-	JUMPATTACK UMETA(DisplayName = "JumpAttack"),
-	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
-	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
+	HIT UMETA(DisplayName = "Hit"),
 	PARRY UMETA(DisplayName = "Parry"),
-	THRUST UMETA(DisplayName = "Thrust"),
-	PATTERN UMETA(DisplayName = "Pattern"),
+	ATTACK UMETA(DisplayName = "Attack"),
+	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),
 	COMBOATTACK UMETA(DisplayName = "ComboAttack"),
-	ATTACK UMETA(DisplayName = "Attack")	
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
+	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),
+	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),
+	JUMPATTACK UMETA(DisplayName = "JumpAttack"),
+	LUNGEATTACK UMETA(DisplayName = "LungeAttack")
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -36,9 +37,11 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	UFUNCTION(BlueprintCallable)
 	void ChangeStateTo(EBossState NewState);
 	void StartMovement();
 	void StopMovement();
+	EBossState GetCurrentStateE() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,13 +49,13 @@ protected:
 	TObjectPtr<AActor> Target;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
-	EBossState StateToStart;
+	EBossState CurrentStateE;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 
 private:
-	void PrepNewState(EBossState NewState);
+	bool PrepNewState(EBossState NewState);
 	UPROPERTY()
 	TObjectPtr<UStateObject> CurrentState;
 };

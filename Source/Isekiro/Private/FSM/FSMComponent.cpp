@@ -9,7 +9,7 @@
 UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	StateToStart = EBossState::STRAFE;
+	CurrentStateE = EBossState::STRAFE;
 }
 
 
@@ -23,9 +23,9 @@ void UFSMComponent::BeginPlay()
 		Target = Boss->GetTarget();
 	}
 
-	if (ensure(StateToStart != EBossState::NONE))
+	if (ensure(CurrentStateE != EBossState::NONE))
 	{
-		PrepNewState(StateToStart);
+		ChangeStateTo(CurrentStateE);
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("Starting State has not been set. Boss will not perform any actions."));
@@ -41,7 +41,7 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		EBossState NewState = CurrentState->Update(DeltaTime);
 		if (NewState != EBossState::NONE)
 		{
-			PrepNewState(NewState);
+			ChangeStateTo(NewState);
 		}
 	}
 
@@ -50,7 +50,7 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 
 void UFSMComponent::ChangeStateTo(EBossState NewState)
 {
-	PrepNewState(NewState);
+	PrepNewState(NewState) ? CurrentStateE = NewState : CurrentStateE = EBossState::NONE;
 }
 
 void UFSMComponent::StartMovement()
@@ -69,7 +69,12 @@ void UFSMComponent::StopMovement()
 	}
 }
 
-void UFSMComponent::PrepNewState(EBossState NewState)
+EBossState UFSMComponent::GetCurrentStateE() const
+{
+	return CurrentStateE;
+}
+
+bool UFSMComponent::PrepNewState(EBossState NewState)
 {
 	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(NewState);
 	if (StateObjectClass && *StateObjectClass)
@@ -81,10 +86,11 @@ void UFSMComponent::PrepNewState(EBossState NewState)
 			if (CurrentState) CurrentState->Stop();
 			NewStateObj->Start();
 			CurrentState = NewStateObj;
+			return true;
 		}
+		else UE_LOG(LogTemp, Warning, TEXT("Could not Instantiate new boss State object."));
 	}
-	else 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Could not find State object to start."));
-	}
+	else UE_LOG(LogTemp, Warning, TEXT("Could not find Boss State in BossStateMap."));
+
+	return false;
 }

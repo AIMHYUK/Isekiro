@@ -57,7 +57,7 @@ public:
 	void StartParry();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;

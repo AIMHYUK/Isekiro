@@ -10,7 +10,6 @@ UThrustState::UThrustState()
 	TotalRunTime = .0f;
 
 	TriggerDistance = 600.f;
-
 	bIsWithinRange = true;
 	Speed = 300.f;
 }

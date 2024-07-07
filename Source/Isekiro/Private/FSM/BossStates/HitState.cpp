@@ -1,17 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "FSM/BossStates/ParryState.h"
+#include "FSM/BossStates/HitState.h"
 #include "Character/BossCharacter.h"
 
-UParryState::UParryState()
+UHitState::UHitState()
 {
-	MaxRunTime = .5f;
+	MaxRunTime = .6f;
 	TotalRunTime = 0.f;
-	TravelDistance = 80.f;
+	TravelDistance = 50.f;
 }
 
-void UParryState::Start()
+void UHitState::Start()
 {
 	Super::Start();
 
@@ -23,26 +23,26 @@ void UParryState::Start()
 	NewLoc = DirVector * TravelDistance + PrevLoc;
 	NewLoc.Z += FMath::RandRange(-5.f, 5.f);
 
-	int32 SectionNum = FMath::RandRange(1,4);
+	int32 SectionNum = FMath::RandRange(1, 4);
 	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
 		FName(FString::FromInt(SectionNum)), MontageState.Montage);
 }
 
-EBossState UParryState::Update(float DeltaTime)
+EBossState UHitState::Update(float DeltaTime)
 {
 	return Super::Update(DeltaTime);
 }
 
-void UParryState::Stop()
+void UHitState::Stop()
 {
 	Super::Stop();
 }
 
-EBossState UParryState::UpdateMovement(float DeltaTime)
+EBossState UHitState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
 
-	if(!CanStartMovement()) return EBossState::NONE;
+	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (TotalRunTime <= MaxRunTime)
 	{

@@ -16,9 +16,9 @@ ABossCharacter::ABossCharacter()
 
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
-	AttackBoxComp->SetRelativeLocation(FVector(100.f, 0.f, 0.f));
-	AttackBoxComp->SetBoxExtent(FVector(75.f, 50.f, 75.f));
-
+	AttackBoxComp->SetRelativeLocation(FVector(80.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(90.f, 80.f, 75.f));
+	
 	TargetOffset = 120.0f;
 	TargetOffsetBuffer = 50.f;
 	AttackRangeDist = 210.f;
@@ -37,6 +37,9 @@ ABossCharacter::ABossCharacter()
 	LockOnComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, 88.f));
+	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 }
 
 void ABossCharacter::BeginPlay()
@@ -180,13 +183,13 @@ FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
 	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
 	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
 
-	if(NewDist < TargetDist)
+	if(NewDist < TargetDist) // if new boss location is within the Target
 	{
 		if(IsWithinTarget(NewLoc)) 
 			return GetTargetOffsetLocation();
 		else return NewLoc;
 	}
-	else
+	else // if new boss location is beyond the Target
 	{
 		return GetTargetOffsetLocation();
 	}
