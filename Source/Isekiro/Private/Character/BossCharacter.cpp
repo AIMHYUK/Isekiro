@@ -9,6 +9,7 @@
 #include "Arrow.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
+#include "ActorComponents/StatusComponent.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -76,37 +77,16 @@ void ABossCharacter::Tick(float DeltaTime)
 	}
 }
 
-//void ABossCharacter::BeginAttack()
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-//
-//	FHitResult Hit;
-//	FVector Start = AttackBoxComp->GetComponentLocation();
-//	FVector End = AttackBoxComp->GetComponentLocation();
-//
-//	FCollisionObjectQueryParams ObjQueryParam;
-//	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-//
-//	FCollisionQueryParams QueryParams;
-//	QueryParams.AddIgnoredActor(this);
-//
-//	FCollisionShape Shape;
-//	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
-//	Shape.SetSphere(Radius);
-//
-//	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
-//
-//	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
-//	}
-//}
-
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
 
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	if (StatusComponent)
+	{
+		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
+	}
 }
 
 void ABossCharacter::EndAttack()
@@ -141,6 +121,17 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//if()
+}
+
+void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
+{
+	if (StatusComponent)
+	{
+		if (FSMComponent->CanParry())
+		{
+
+		}
+	}
 }
 
 void ABossCharacter::SetupFireArrow(FArrowSetting Setting)

@@ -62,6 +62,8 @@ public:
 	
 	EBossState GetCurrentStateE() const;
 
+	bool CanParry() const;
+
 protected:
 	virtual void BeginPlay() override;
 	
