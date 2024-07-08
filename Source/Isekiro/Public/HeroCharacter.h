@@ -141,6 +141,8 @@ public:
 	void ResetCombo();
 
 	FTimerHandle StrongAttackTimerHandle;
+
+	void OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 protected:
 
 	virtual void BeginPlay() override;
@@ -208,6 +210,7 @@ protected:
 
 	bool bIsAttacking = false;
 	bool bContinueAttack = false;
+	bool bIsAttacked = false;
 
 private:
 	ECharacterGuardState GuardState = ECharacterGuardState::ECGS_UnGuarded;

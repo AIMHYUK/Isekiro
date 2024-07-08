@@ -70,8 +70,8 @@ void URealParryBox::ParryStarted()
 	{
 		return; //패링 쿨다운 중이면 패링시작하지 않음
 
-	}
-	bIsParryWindow = true;
+	} 
+	bIsParryWindow = true; //패리 상태
 	SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());

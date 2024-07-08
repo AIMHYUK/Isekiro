@@ -405,6 +405,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			if (AnimInstance)
 			{
 				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
 				if (GuardMontageSections.Num() > 0)
 				{
 					ApplyDamage(4);
@@ -422,7 +423,13 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	//CallHPBarFunction();
 	//CallPostureBarFunction();
 }
-
+void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == HittedWhileGuardMontage)
+	{
+		PlayGuardMontage();
+	}
+}
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -498,6 +505,9 @@ void AHeroCharacter::AttackEndComboState()
 
 void AHeroCharacter::DealDamage()
 {
+	// 이미 데미지를 입은 액터들을 추적하기 위한 맵
+	static TMap<AActor*, bool> DamagedActors;
+
 	if (ParryCheck)
 	{
 		FVector SphereLocation = ParryCheck->GetComponentLocation();
@@ -521,7 +531,7 @@ void AHeroCharacter::DealDamage()
 
 		for (AActor* OverlappedActor : OutActors)
 		{
-			if (OverlappedActor) // 액터 유효성 확인
+			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
 			{
 				// State 컴포넌트를 가져옴
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
@@ -530,11 +540,18 @@ void AHeroCharacter::DealDamage()
 					ActorStatus->ApplyHealthDamage(10);
 					ActorStatus->ApplyPostureDamage(10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
+
+					// 액터를 이미 데미지를 입은 것으로 표시
+					DamagedActors.Add(OverlappedActor, true);
 				}
 			}
 		}
+
+		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
+		DamagedActors.Empty();
 	}
 }
+
 	
 
 //대쉬 이벤트처리 함수 구현
