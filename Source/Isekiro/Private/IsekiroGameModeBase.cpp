@@ -45,6 +45,7 @@ void AIsekiroGameModeBase::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
     }
+<<<<<<< Updated upstream
 	bIsPlayerBossFight = true;
 	if (bIsPlayerBossFight)
 	{
@@ -74,6 +75,16 @@ void AIsekiroGameModeBase::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("BossCharacter is null in AIsekiroGameModeBase::BeginPlay"));
+=======
+
+	if (State->GetPosture() == 0)
+	{
+		mainUI->PostureBar->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	else
+	{
+		mainUI->PostureBar->SetVisibility(ESlateVisibility::Visible);
+>>>>>>> Stashed changes
 	}
 }
 
