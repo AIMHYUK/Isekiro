@@ -138,12 +138,12 @@ void AHeroCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
-	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
-	}
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
+	//if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
+	//}
+	//else
+	//	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
 
 }
 

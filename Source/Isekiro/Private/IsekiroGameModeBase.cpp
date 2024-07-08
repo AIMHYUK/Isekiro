@@ -15,16 +15,16 @@
 
 void AIsekiroGameModeBase::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    if (MainWidget != nullptr)
-    {
-        mainUI = CreateWidget<UCharacterWidget>(GetWorld(), MainWidget);
+	if (MainWidget != nullptr)
+	{
+		mainUI = CreateWidget<UCharacterWidget>(GetWorld(), MainWidget);
 
-        if (mainUI != nullptr)
-            mainUI->AddToViewport();
-    }
-    APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (mainUI != nullptr)
+			mainUI->AddToViewport();
+	}
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController)
 	{
 		APawn* PlayerPawn = PlayerController->GetPawn();
@@ -44,8 +44,7 @@ void AIsekiroGameModeBase::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
-    }
-<<<<<<< Updated upstream
+	}
 	bIsPlayerBossFight = true;
 	if (bIsPlayerBossFight)
 	{
@@ -75,16 +74,16 @@ void AIsekiroGameModeBase::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("BossCharacter is null in AIsekiroGameModeBase::BeginPlay"));
-=======
 
-	if (State->GetPosture() == 0)
-	{
-		mainUI->PostureBar->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	else
-	{
-		mainUI->PostureBar->SetVisibility(ESlateVisibility::Visible);
->>>>>>> Stashed changes
+		if (State->GetPosture() == 0)
+		{
+			mainUI->PostureBar->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		else
+		{
+			mainUI->PostureBar->SetVisibility(ESlateVisibility::Visible);
+
+		}
 	}
 }
 
