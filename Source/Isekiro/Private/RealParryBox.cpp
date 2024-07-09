@@ -9,6 +9,7 @@
 #include "IsekiroGameModeBase.h"
 #include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
+#include "CharacterTypes.h"
 
 // Sets default values for this component's properties
 URealParryBox::URealParryBox()
@@ -43,14 +44,16 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 {
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	if (MyCharacter && bIsParryWindow)
-	{
+	{		
+		MyCharacter->SetActionStateParrySuccess();
 		MyCharacter->PlayParryMontage();
-		UGameplayStatics::SetGlobalTimeDilation(this, 0.8f);
+		UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
 		UStatusComponent* State = MyCharacter->GetStatusComponent();
 		State->ApplyPostureDamage(5);
 		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
+		MyCharacter->SetActionStateDifferentWithParry();
 	}
 }
 

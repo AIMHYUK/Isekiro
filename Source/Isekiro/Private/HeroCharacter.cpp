@@ -57,6 +57,21 @@ AHeroCharacter::AHeroCharacter()
 }
 
 
+EActionState AHeroCharacter::GetActionState()
+{
+	return ActionState;
+}
+
+void AHeroCharacter::SetActionStateParrySuccess()
+{
+	ActionState = EActionState::EAS_ParrySuccess;
+}
+
+void AHeroCharacter::SetActionStateDifferentWithParry()
+{
+	ActionState = EActionState::EAS_Attacking;
+}
+
 void AHeroCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -138,13 +153,12 @@ void AHeroCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
-	//if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
-	//}
-	//else
-	//	GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
-
+	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
 }
 
 
@@ -404,9 +418,9 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
 			{
-				AnimInstance->Montage_Play(HittedWhileGuardMontage);
 				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
-				if (GuardMontageSections.Num() > 0)
+				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
 					ApplyDamage(4);
 					ApplyPosture(10);
@@ -428,6 +442,7 @@ void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool 
 	if (Montage == HittedWhileGuardMontage)
 	{
 		PlayGuardMontage();
+
 	}
 }
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
