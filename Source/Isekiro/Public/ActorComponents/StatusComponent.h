@@ -12,7 +12,7 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UStatusComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
+	friend class ABossCharacter;
 public:	
 	UStatusComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -55,7 +55,6 @@ private:
 	float Portion;
 	float MaxPortion;
 		
-
-	
-
+	void SetPosture(float Value);
+	void SetHealth(float Value);
 };

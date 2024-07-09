@@ -11,6 +11,7 @@ UFSMComponent::UFSMComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
 	count = -1;
+	bCanStun = true;
 }
 
 
@@ -125,6 +126,16 @@ void UFSMComponent::StopMovement()
 EBossState UFSMComponent::GetCurrentStateE() const
 {
 	return CurrentStateE;
+}
+
+bool UFSMComponent::CanStun() const
+{
+	return bCanStun;
+}
+
+void UFSMComponent::EnableStun(bool bStun)
+{
+	bCanStun = bStun;
 }
 
 bool UFSMComponent::CanParry() const

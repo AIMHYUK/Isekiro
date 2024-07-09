@@ -127,9 +127,13 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 {
 	if (StatusComponent)
 	{
-		if (FSMComponent->CanParry())
+		if (FSMComponent->CanStun())
 		{
-
+			if(FSMComponent->CanParry())
+			{
+				FSMComponent->ChangeStateTo(EBossState::PARRY);
+			}
+			else FSMComponent->ChangeStateTo(EBossState::HIT);
 		}
 	}
 }
@@ -278,9 +282,4 @@ bool ABossCharacter::IsWithinTarget(FVector Location) const
 		return LocDistSq < BufferDistSq;
 	}
 	return false;
-}
-
-void ABossCharacter::StartParry()
-{
-	FSMComponent->ChangeStateTo(EBossState::PARRY);
 }

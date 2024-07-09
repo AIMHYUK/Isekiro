@@ -20,6 +20,16 @@ void UStatusComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UStatusComponent::SetPosture(float Value)
+{
+	Posture = Value;
+}
+
+void UStatusComponent::SetHealth(float Value)
+{
+	Health = Value;
+}
+
 void UStatusComponent::StopPostureRecovery()
 {
 	GetWorld()->GetTimerManager().ClearTimer(PostureRecoveryTimerHandle);

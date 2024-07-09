@@ -62,6 +62,9 @@ public:
 	
 	EBossState GetCurrentStateE() const;
 
+	bool CanStun() const;
+	void EnableStun(bool bStun);
+
 	bool CanParry() const;
 
 protected:
@@ -82,4 +85,6 @@ private:
 	TObjectPtr<AActor> Target;
 	TObjectPtr<ABossCharacter> BossCharacter;
 	int32 count;
+
+	bool bCanStun;
 };

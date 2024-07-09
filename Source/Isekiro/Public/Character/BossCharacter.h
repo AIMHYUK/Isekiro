@@ -53,9 +53,6 @@ public:
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
 
-	UFUNCTION(BlueprintCallable)
-	void StartParry();
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
