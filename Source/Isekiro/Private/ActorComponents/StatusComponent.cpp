@@ -52,7 +52,6 @@ bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
 	{
 		if (!FSM->CanTakeDamage())
 		{
-			FSM->RespondToDamageTakenFailed();
 			return false;
 		}
 	}

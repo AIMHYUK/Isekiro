@@ -77,8 +77,6 @@ public:
 	EBossState GetCurrentStateE() const;
 
 	bool CanTakeDamage();
-	void RespondToDamageTakenFailed();
-	bool HandleDodgeProbability();
 
 	//Can player stop boss's active attacks by forcing boss to respond to player attacks?
 	bool CanStun() const;
@@ -93,6 +91,9 @@ protected:
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 
 private:
+	bool HandleDodgeProbability();
+	void RespondToDamageTakenFailed();
+
 	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
 	EBossState CurrentStateE;
 	EFightingSpace FightSpace;

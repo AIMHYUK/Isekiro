@@ -61,6 +61,16 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	}
 	else GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("No Can't Stun")));
 
+	switch(FightSpace)
+	{
+	case EFightingSpace::FAR:
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("FAR")));
+		break;
+	case EFightingSpace::NEAR:
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("NEAR")));
+		break;
+	}
+
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
@@ -156,19 +166,20 @@ EBossState UFSMComponent::GetCurrentStateE() const
 
 bool UFSMComponent::CanTakeDamage()
 {
-	float prob = FMath::RandRange(0.f, 1.f);
-	if (prob <= .05f) 
+	if(HandleDodgeProbability())
 	{
-		DodgeProbTotal = 0.f;
-		return false;
+		return true;
 	}
-
-	return HandleDodgeProbability();
+	else
+	{
+		RespondToDamageTakenFailed();
+		return false;
+	}	
 }
 
 bool UFSMComponent::HandleDodgeProbability()
 {
-	if (FMath::RandRange(0.f, 1.f) >= DodgeProbTotal / DodgeMaxProb) // if has to take damage
+	if (FMath::RandRange(0.f, 1.f) >= DodgeProbTotal / DodgeMaxProb) // Take Damage
 	{
 		FightSpace = EFightingSpace::NEAR;
 		DodgeProbTotal += DodgeProbRate;
