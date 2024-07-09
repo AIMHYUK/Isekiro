@@ -35,7 +35,7 @@ ABossCharacter::ABossCharacter()
 	bLockOnTarget = true;
 
 	LockOnComponent = CreateDefaultSubobject<UCapsuleComponent>("LockOnComponent");
-	LockOnComponent->SetupAttachment(RootComponent);
+	LockOnComponent->SetupAttachment(GetMesh());
 	LockOnComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
@@ -80,13 +80,11 @@ void ABossCharacter::Tick(float DeltaTime)
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-
-	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
 	if (StatusComponent)
 	{
 		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
 	}
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void ABossCharacter::EndAttack()

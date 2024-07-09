@@ -5,5 +5,5 @@
 #include "Components/ProgressBar.h"
 void UBossWidget::NativeConstruct()
 {
-	Super::NativeConstruct();
+	/*Super::NativeConstruct();*/
 }

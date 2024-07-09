@@ -57,6 +57,21 @@ AHeroCharacter::AHeroCharacter()
 }
 
 
+EActionState AHeroCharacter::GetActionState()
+{
+	return ActionState;
+}
+
+void AHeroCharacter::SetActionStateParrySuccess()
+{
+	ActionState = EActionState::EAS_ParrySuccess;
+}
+
+void AHeroCharacter::SetActionStateDifferentWithParry()
+{
+	ActionState = EActionState::EAS_Attacking;
+}
+
 void AHeroCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -144,7 +159,6 @@ void AHeroCharacter::Tick(float DeltaTime)
 	}
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
-
 }
 
 
@@ -349,6 +363,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 		if (AnimInstance && StrongAttackMontage)
 		{
 			AnimInstance->Montage_Play(StrongAttackMontage);
+			KnockBack(300);
 		}
 
 		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 2.0f, false);
@@ -372,7 +387,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	UE_LOG(LogTemp, Display, TEXT("%f"), Status->GetPosture());
 	
 
-	if (Status->GetPosture() >= 100) //체간이 100을 넘었을때 한대 더 맞으면 가드 브레이크
+	if (Status->GetPosture() >= 100 && !(AnimInstance->Montage_IsPlaying(ParryMontage))) //체간이 100을 넘기고 패링에 실패했다면 
 	{
 		PlayerController->SetIgnoreMoveInput(true);
 		AnimInstance->Montage_Play(DefenseBreakMontage);
@@ -403,8 +418,9 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
 			{
+				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
 				AnimInstance->Montage_Play(HittedWhileGuardMontage);
-				if (GuardMontageSections.Num() > 0)
+				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
 					ApplyDamage(4);
 					ApplyPosture(10);
@@ -421,7 +437,14 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	//CallHPBarFunction();
 	//CallPostureBarFunction();
 }
+void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == HittedWhileGuardMontage)
+	{
+		PlayGuardMontage();
 
+	}
+}
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -497,6 +520,9 @@ void AHeroCharacter::AttackEndComboState()
 
 void AHeroCharacter::DealDamage()
 {
+	// 이미 데미지를 입은 액터들을 추적하기 위한 맵
+	static TMap<AActor*, bool> DamagedActors;
+
 	if (ParryCheck)
 	{
 		FVector SphereLocation = ParryCheck->GetComponentLocation();
@@ -520,7 +546,7 @@ void AHeroCharacter::DealDamage()
 
 		for (AActor* OverlappedActor : OutActors)
 		{
-			if (OverlappedActor) // 액터 유효성 확인
+			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
 			{
 				// State 컴포넌트를 가져옴
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
@@ -529,11 +555,18 @@ void AHeroCharacter::DealDamage()
 					ActorStatus->ApplyHealthDamage(10);
 					ActorStatus->ApplyPostureDamage(10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
+
+					// 액터를 이미 데미지를 입은 것으로 표시
+					DamagedActors.Add(OverlappedActor, true);
 				}
 			}
 		}
+
+		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
+		DamagedActors.Empty();
 	}
 }
+
 	
 
 //대쉬 이벤트처리 함수 구현

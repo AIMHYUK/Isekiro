@@ -51,7 +51,6 @@ EBossState ULungeState::UpdateMovement(float DeltaTime)
 
 	FVector lungeVector = Instigator->GetActorLocation();
 	FVector ToTarget = Instigator->GetTargetOffsetLocation();
-	DrawDebugSphere(GetWorld(), ToTarget, 5.f, 12, FColor::Blue, true);
 	if (TotalRunTime < MaxRunTime) {
 	
 		TotalRunTime += DeltaTime;
