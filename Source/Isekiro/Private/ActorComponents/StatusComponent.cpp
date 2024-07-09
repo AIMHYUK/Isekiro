@@ -20,6 +20,16 @@ void UStatusComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+void UStatusComponent::SetPosture(float Value)
+{
+	Posture = Value;
+}
+
+void UStatusComponent::SetHealth(float Value)
+{
+	Health = Value;
+}
+
 void UStatusComponent::StopPostureRecovery()
 {
 	GetWorld()->GetTimerManager().ClearTimer(PostureRecoveryTimerHandle);
@@ -28,15 +38,15 @@ void UStatusComponent::StopPostureRecovery()
 void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 }
 
 void UStatusComponent::ApplyPostureDamage(float Damage)
 {
 	if (ensureAlways(Damage > 0.f)) 
 	{
+		float OldPosture = Posture;
 		Posture += Damage;
-		OnStatusChanged.Broadcast(Health, Posture);
+		OnStatusChanged.Broadcast(Health, OldPosture, Health, Posture);
 	}
 }
 
@@ -44,8 +54,9 @@ void UStatusComponent::ApplyHealthDamage(float Damage)
 {
 	if (ensureAlways(Damage > 0.f))
 	{
+		float OldHealth = Health;
 		Health -= Damage;
-		OnStatusChanged.Broadcast(Health, Posture);
+		OnStatusChanged.Broadcast(OldHealth, Posture, Health, Posture);
 	}
 }
 

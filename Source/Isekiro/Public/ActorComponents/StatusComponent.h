@@ -6,18 +6,19 @@
 #include "Components/ActorComponent.h"
 #include "StatusComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FStatusChangedDelegate, float, Health, float, Posture);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FStatusChangedDelegate, float, OldHealth, float, OldPosture, float, NewHealth, float, NewPosture);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UStatusComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
+	friend class ABossCharacter;
 public:	
 	UStatusComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void ApplyPostureDamage(float Damage);
+	
 	void ApplyHealthDamage(float Damage);
 
 	float GetHealth() const;
@@ -54,7 +55,6 @@ private:
 	float Portion;
 	float MaxPortion;
 		
-
-	
-
+	void SetPosture(float Value);
+	void SetHealth(float Value);
 };

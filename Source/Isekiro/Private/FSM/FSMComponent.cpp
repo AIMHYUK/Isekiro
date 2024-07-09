@@ -11,6 +11,7 @@ UFSMComponent::UFSMComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
 	count = -1;
+	bCanStun = true;
 }
 
 
@@ -58,7 +59,7 @@ EBossState UFSMComponent::RandomState()
 	{
 		index = FMath::RandRange(0, size - 1);
 		count++;
-	} while (!CanChangeStateTo((EBossState)index) && count < 50);
+	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) &&  count < 50);
 	
 	if(count >= 50) 
 	{
@@ -129,6 +130,22 @@ void UFSMComponent::StopMovement()
 EBossState UFSMComponent::GetCurrentStateE() const
 {
 	return CurrentStateE;
+}
+
+bool UFSMComponent::CanStun() const
+{
+	return bCanStun;
+}
+
+void UFSMComponent::EnableStun(bool bStun)
+{
+	bCanStun = bStun;
+}
+
+bool UFSMComponent::CanParry() const
+{
+	int32 value = FMath::RandRange(1, 10);
+	return value <= 3;
 }
 
 bool UFSMComponent::PrepNewState(EBossState NewState)

@@ -16,6 +16,9 @@ void UParryState::Start()
 {
 	Super::Start();
 
+	//Block particle effects
+	//Block sound
+
 	PrevLoc = Instigator->GetActorLocation();
 
 	FVector TargetLoc = Instigator->GetTargetOffsetLocation();

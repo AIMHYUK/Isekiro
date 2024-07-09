@@ -9,6 +9,7 @@
 #include "Arrow.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
+#include "ActorComponents/StatusComponent.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -76,36 +77,13 @@ void ABossCharacter::Tick(float DeltaTime)
 	}
 }
 
-//void ABossCharacter::BeginAttack()
-//{
-//	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-//
-//	FHitResult Hit;
-//	FVector Start = AttackBoxComp->GetComponentLocation();
-//	FVector End = AttackBoxComp->GetComponentLocation();
-//
-//	FCollisionObjectQueryParams ObjQueryParam;
-//	ObjQueryParam.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
-//
-//	FCollisionQueryParams QueryParams;
-//	QueryParams.AddIgnoredActor(this);
-//
-//	FCollisionShape Shape;
-//	float Radius = AttackBoxComp->GetScaledBoxExtent().Z;
-//	Shape.SetSphere(Radius);
-//
-//	DrawDebugSphere(GetWorld(), Start, Radius, 32, FColor::Black, true);
-//
-//	if (GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjQueryParam, Shape, QueryParams))
-//	{
-//		UE_LOG(LogTemp, Warning, TEXT("what did we hit? %s"), *Hit.GetActor()->GetName());
-//	}
-//}
-
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-
+	if (StatusComponent)
+	{
+		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
+	}
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
@@ -141,6 +119,21 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//if()
+}
+
+void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
+{
+	if (StatusComponent)
+	{
+		if (FSMComponent->CanStun())
+		{
+			if(FSMComponent->CanParry())
+			{
+				FSMComponent->ChangeStateTo(EBossState::PARRY);
+			}
+			else FSMComponent->ChangeStateTo(EBossState::HIT);
+		}
+	}
 }
 
 void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
@@ -287,9 +280,4 @@ bool ABossCharacter::IsWithinTarget(FVector Location) const
 		return LocDistSq < BufferDistSq;
 	}
 	return false;
-}
-
-void ABossCharacter::StartParry()
-{
-	FSMComponent->ChangeStateTo(EBossState::PARRY);
 }

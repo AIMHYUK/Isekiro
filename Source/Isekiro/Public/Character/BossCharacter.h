@@ -53,21 +53,21 @@ public:
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
 
-	UFUNCTION(BlueprintCallable)
-	void StartParry();
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;
+	
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	
+	UFUNCTION()
+	void OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UCapsuleComponent> LockOnComponent;
 
