@@ -8,6 +8,8 @@
 #include "CharacterTypes.h"
 #include "HeroCharacter.generated.h"
 
+enum class EBossState : uint8;
+
 class UInputMappingContext;
 class UCapsuleComponent;
 class UInputAction;
@@ -145,6 +147,8 @@ public:
 	EActionState GetActionState();
 	void SetActionStateParrySuccess();
 	void SetActionStateDifferentWithParry();
+
+	EBossState BossState;
 protected:
 
 	virtual void BeginPlay() override;
