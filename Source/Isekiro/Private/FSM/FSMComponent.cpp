@@ -111,6 +111,10 @@ void UFSMComponent::StartMovement()
 	if (CurrentState)
 	{
 		CurrentState->StartMovement();
+
+
+
+		}
 	}
 }
 
