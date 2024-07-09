@@ -62,10 +62,11 @@ public:
 	
 	EBossState GetCurrentStateE() const;
 
+	//Does boss have to perform parry or block?
 	bool CanStun() const;
-	void EnableStun(bool bStun);
-
+	//if parry fails, boss starts hit state.
 	bool CanParry() const;
+	void EnableStun(bool bStun);
 
 protected:
 	virtual void BeginPlay() override;
@@ -75,6 +76,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
+	
+	UPROPERTY(EditAnywhere, Category = "Settings|Stun")
+	float StunMaxTax;
+	UPROPERTY(EditAnywhere, Category = "Settings|Stun")
+	float StunTaxRate;
 
 private:
 	bool PrepNewState(EBossState NewState);
@@ -84,7 +90,9 @@ private:
 
 	TObjectPtr<AActor> Target;
 	TObjectPtr<ABossCharacter> BossCharacter;
-	int32 count;
+	int32 RandomStateCount;
 
 	bool bCanStun;
+
+	float StunTaxTotal;
 };

@@ -46,6 +46,9 @@ public:
 protected:
 	virtual void BeginPlay() override; // BeginPlay에서 자연 회복 시작
 
+	UPROPERTY(EditAnywhere, Category="Settings")
+	float MaxPosture;
+
 private:	
 	float Health; 
 	float Posture;

@@ -9,6 +9,7 @@ UStatusComponent::UStatusComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	Health = 100;
 	Posture = 0;
+	MaxPosture = 100;
 	MaxHealth = Health;
 	Portion = 3;
 	MaxPortion = 3;
@@ -50,7 +51,7 @@ void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 		Posture += PostureDmg;
 		Health -= HealthDmg;
 
-		OnStatusChanged.Broadcast(Health, OldPosture, Health, Posture);
+		OnStatusChanged.Broadcast(OldHealth, OldPosture, Health, Posture);
 	}
 }
 
@@ -80,7 +81,7 @@ float UStatusComponent::GetPosturePercent()
 
 	if (Posture != 0)
 	{
-		return Posture / 100; //나중에 수정
+		return Posture / MaxPosture; //나중에 수정
 	}
 	return 0;
 		

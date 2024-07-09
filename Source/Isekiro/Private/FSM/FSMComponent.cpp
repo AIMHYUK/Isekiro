@@ -5,13 +5,19 @@
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
 #include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
-	count = -1;
+	RandomStateCount = -1;
+	
 	bCanStun = true;
+
+	StunMaxTax = 10.f;
+	StunTaxRate = 2.f;
+	StunTaxTotal = 0.f;
 }
 
 
@@ -58,16 +64,16 @@ EBossState UFSMComponent::RandomState()
 	do
 	{
 		index = FMath::RandRange(0, size - 1);
-		count++;
-	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) &&  count < 50);
-	
-	if(count >= 50) 
+		RandomStateCount++;
+	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) && RandomStateCount < 50);
+
+	if (RandomStateCount >= 50)
 	{
-		count = -1;
+		RandomStateCount = -1;
 		return EBossState::DODGE;
 	}
 
-	count = -1;
+	RandomStateCount = -1;
 	return EBossState(index);
 }
 
@@ -140,8 +146,47 @@ void UFSMComponent::EnableStun(bool bStun)
 
 bool UFSMComponent::CanParry() const
 {
-	int32 value = FMath::RandRange(1, 10);
-	return value <= 3;
+	int value = 0;
+	switch (CurrentStateE)
+	{
+	case EBossState::NONE:
+		return false;
+	case EBossState::STRAFE:
+		return true;
+	case EBossState::RUN:
+		value = FMath::RandRange(1, 10);
+		return value <= 8; // 80% chance to block while running.
+
+	/*add another case for Boss normal attack state
+	if (BossCharacter)
+	{
+		auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
+		if (StatusComp)
+		{
+			value = FMath::RandRange(1, 10);
+			if (StatusComp->GetPosturePercent() >= .7f)
+				return value <= 5;
+			else return value <= 7;
+		}
+	}*/
+
+	default:
+	{
+		if (BossCharacter)
+		{
+			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
+			if (StatusComp)
+			{
+				value = FMath::RandRange(1.f, 10.f);
+				if (StatusComp->GetPosturePercent() >= .7f) 
+					return value <= 1.0f;
+				else return value <= 2.5f;
+			}
+		}
+	}
+	}
+
+	return false;
 }
 
 bool UFSMComponent::PrepNewState(EBossState NewState)
