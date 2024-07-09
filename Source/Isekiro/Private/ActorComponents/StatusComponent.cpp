@@ -40,23 +40,17 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UStatusComponent::ApplyPostureDamage(float Damage)
+void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 {
-	if (ensureAlways(Damage > 0.f)) 
+	if (ensureAlways(PostureDmg >= 0.f && HealthDmg >= 0.f))
 	{
 		float OldPosture = Posture;
-		Posture += Damage;
-		OnStatusChanged.Broadcast(Health, OldPosture, Health, Posture);
-	}
-}
-
-void UStatusComponent::ApplyHealthDamage(float Damage)
-{
-	if (ensureAlways(Damage > 0.f))
-	{
 		float OldHealth = Health;
-		Health -= Damage;
-		OnStatusChanged.Broadcast(OldHealth, Posture, Health, Posture);
+
+		Posture += PostureDmg;
+		Health -= HealthDmg;
+
+		OnStatusChanged.Broadcast(Health, OldPosture, Health, Posture);
 	}
 }
 
