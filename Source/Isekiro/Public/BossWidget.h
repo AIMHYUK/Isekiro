@@ -16,6 +16,7 @@ class ISEKIRO_API UBossWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeConstruct() override;
+
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* BossHPBar;	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))

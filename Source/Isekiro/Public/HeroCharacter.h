@@ -141,6 +141,10 @@ public:
 	void ResetCombo();
 
 	FTimerHandle StrongAttackTimerHandle;
+
+	EActionState GetActionState();
+	void SetActionStateParrySuccess();
+	void SetActionStateDifferentWithParry();
 protected:
 
 	virtual void BeginPlay() override;
@@ -206,8 +210,12 @@ protected:
 	void PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	void OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	UFUNCTION()
+	void OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	bool bIsAttacking = false;
 	bool bContinueAttack = false;
+	bool bIsAttacked = false;
 
 private:
 	ECharacterGuardState GuardState = ECharacterGuardState::ECGS_UnGuarded;
