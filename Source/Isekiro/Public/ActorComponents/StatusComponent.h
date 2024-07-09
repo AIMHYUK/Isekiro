@@ -17,9 +17,7 @@ public:
 	UStatusComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void ApplyPostureDamage(float Damage);
-	
-	void ApplyHealthDamage(float Damage);
+	void ApplyDamage(float PostureDmg, float HealthDmg);
 
 	float GetHealth() const;
 	float GetPosture() const;
