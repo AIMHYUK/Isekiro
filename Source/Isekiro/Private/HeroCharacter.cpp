@@ -165,12 +165,12 @@ void AHeroCharacter::Tick(float DeltaTime)
 
 void AHeroCharacter::ApplyDamage(float damage)
 {
-	Status->ApplyDamage(0, damage);
+	Status->TryApplyDamage(0, damage);
 }
 
 void AHeroCharacter::ApplyPosture(float posture)
 {
-	Status->ApplyDamage(posture, 0);
+	Status->TryApplyDamage(posture, 0);
 }
 
 void AHeroCharacter::CallHPBarFunction()
@@ -567,7 +567,7 @@ void AHeroCharacter::DealDamage()
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
 				{
-					ActorStatus->ApplyDamage(10, 10);
+					ActorStatus->TryApplyDamage(10, 10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 
 					// 액터를 이미 데미지를 입은 것으로 표시

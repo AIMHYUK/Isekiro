@@ -3,6 +3,8 @@
 
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
+#include "Character/IDamageInterface.h"
+#include "FSM/FSMComponent.h"
 
 UStatusComponent::UStatusComponent()
 {
@@ -39,6 +41,25 @@ void UStatusComponent::StopPostureRecovery()
 void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
+{
+	if (!GetOwner()) return false;
+
+	auto FSM = GetOwner()->GetComponentByClass<UFSMComponent>();
+	if (FSM && FSM->CanStun())
+	{
+		if (!FSM->CanTakeDamage())
+		{
+			FSM->RespondToDamageTakenFailed();
+			return false;
+		}
+	}
+
+	ApplyDamage(PostureDmg, HealthDmg);
+
+	return true;
 }
 
 void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
@@ -84,7 +105,7 @@ float UStatusComponent::GetPosturePercent()
 		return Posture / MaxPosture; //나중에 수정
 	}
 	return 0;
-		
+
 }
 float UStatusComponent::GetPortion() const
 {

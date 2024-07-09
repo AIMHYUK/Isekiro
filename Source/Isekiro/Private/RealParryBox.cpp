@@ -49,7 +49,7 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		MyCharacter->PlayParryMontage();
 		UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
 		UStatusComponent* State = MyCharacter->GetStatusComponent();
-		State->ApplyDamage(5, 0);
+		State->TryApplyDamage(5, 0);
 		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);

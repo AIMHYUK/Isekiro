@@ -28,7 +28,7 @@ ABossCharacter::ABossCharacter()
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
 	HardSetting.Damage = 30.f;
-	HardSetting.Speed= 2600.f;
+	HardSetting.Speed = 2600.f;
 
 	CurrDir = EDirection::BACK;
 
@@ -59,6 +59,11 @@ void ABossCharacter::BeginPlay()
 		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+	if (StatusComponent)
+	{
+		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
+	}
+
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnCapsuleOverlapped);
 }
 
@@ -80,10 +85,6 @@ void ABossCharacter::Tick(float DeltaTime)
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-	if (StatusComponent)
-	{
-		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
-	}
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
@@ -127,7 +128,7 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 	{
 		if (FSMComponent->CanStun())
 		{
-			if(FSMComponent->CanParry())
+			if (FSMComponent->CanParry())
 			{
 				StatusComponent->SetHealth(OldHealth);
 				FSMComponent->ChangeStateTo(EBossState::PARRY);
@@ -179,17 +180,17 @@ FVector ABossCharacter::GetDirectionVectorToTarget() const
 }
 
 FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
-{	
+{
 	FVector DirVec = GetDirectionVectorToTarget();
 	DirVec *= DistanceToTravel;
 	FVector NewLoc = DirVec + GetActorLocation();
-	
+
 	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
 	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
 
-	if(NewDist < TargetDist) // if new boss location is within the Target
+	if (NewDist < TargetDist) // if new boss location is within the Target
 	{
-		if(IsWithinTarget(NewLoc)) 
+		if (IsWithinTarget(NewLoc))
 			return GetTargetOffsetLocation();
 		else return NewLoc;
 	}
@@ -204,7 +205,7 @@ FVector ABossCharacter::GetTargetOffsetLocation() const
 	if (Target)
 	{
 		FVector End;
-		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();		
+		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();
 		FVector Start = GetActorLocation();
 		End.Z = HeightZ;
 		Start.Z = HeightZ;
@@ -254,23 +255,23 @@ bool ABossCharacter::IsWithinTarget() const
 
 bool ABossCharacter::IsWithinTarget(FVector Location) const
 {
-	if (Target) 
+	if (Target)
 	{
 		FVector TargetTemp = Target->GetActorLocation();
 		TargetTemp.Z = HeightZ;
 
-		FVector OffsetDir =  TargetTemp - GetTargetOffsetLocation();
-		OffsetDir .Normalize();
+		FVector OffsetDir = TargetTemp - GetTargetOffsetLocation();
+		OffsetDir.Normalize();
 		OffsetDir *= -1.f;
 		FVector BufferLoc = OffsetDir * TargetOffsetBuffer + GetTargetOffsetLocation();
 		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
-				
+
 		FVector LocDistVector = TargetTemp - Location;
 		FVector BossTemp = GetActorLocation();
 		BossTemp.Z = HeightZ;
 		FVector BossVector = TargetTemp - BossTemp;
 		float dotResult = FVector::DotProduct(LocDistVector, BossVector);
-		if(dotResult < 0.f)
+		if (dotResult < 0.f)
 		{
 			LocDistVector *= -1.f;
 		}

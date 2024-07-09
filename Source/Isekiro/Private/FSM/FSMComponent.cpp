@@ -11,13 +11,14 @@ UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
-	RandomStateCount = -1;
-	
+
 	bCanStun = true;
 
-	StunMaxTax = 10.f;
-	StunTaxRate = 2.f;
-	StunTaxTotal = 0.f;
+	DodgeMaxProb = 100.f;
+	DodgeProbRate = 3.f;
+	DodgeProbTotal = 0.f;
+
+	FightSpace = EFightingSpace::FAR;
 }
 
 
@@ -54,26 +55,45 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
+	if (CanStun())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Yes Can Stun")));
+	}
+	else GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("No Can't Stun")));
+
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
 EBossState UFSMComponent::RandomState()
 {
-	int32 size = (int32)EBossState::MAX;
 	int index;
+	int32 min = 0;
+	int32 max = 0;
+
+	switch (FightSpace)
+	{
+	case EFightingSpace::NEAR:
+		min = (int32)EBossState::ATTACK;
+		max = (int32)EBossState::THRUSTATTACK;
+		break;
+	case EFightingSpace::FAR:
+		min = (int32)EBossState::ATTACK;
+		max = (int32)EBossState::LUNGEATTACK;
+		break;
+	}
+
+	int32 RandomStateCount = 0;
 	do
 	{
-		index = FMath::RandRange(0, size - 1);
+		index = FMath::RandRange(min, max);
 		RandomStateCount++;
 	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) && RandomStateCount < 50);
 
 	if (RandomStateCount >= 50)
 	{
-		RandomStateCount = -1;
 		return EBossState::DODGE;
 	}
 
-	RandomStateCount = -1;
 	return EBossState(index);
 }
 
@@ -134,6 +154,49 @@ EBossState UFSMComponent::GetCurrentStateE() const
 	return CurrentStateE;
 }
 
+bool UFSMComponent::CanTakeDamage()
+{
+	float prob = FMath::RandRange(0.f, 1.f);
+	if (prob <= .05f) 
+	{
+		DodgeProbTotal = 0.f;
+		return false;
+	}
+
+	return HandleDodgeProbability();
+}
+
+bool UFSMComponent::HandleDodgeProbability()
+{
+	if (FMath::RandRange(0.f, 1.f) >= DodgeProbTotal / DodgeMaxProb) // if has to take damage
+	{
+		FightSpace = EFightingSpace::NEAR;
+		DodgeProbTotal += DodgeProbRate;
+		return true;
+	}
+	else
+	{
+		FightSpace = EFightingSpace::FAR;
+		DodgeProbTotal = 0.f;
+		return false;
+	}
+}
+
+void UFSMComponent::RespondToDamageTakenFailed()
+{
+	switch (FMath::RandRange(0, 1))
+	{
+	case 0:
+	{
+		ChangeStateTo(EBossState::DODGEATTACK);
+		break;
+	}
+	case 1:
+		ChangeStateTo(EBossState::DODGE);
+		break;
+	}
+}
+
 bool UFSMComponent::CanStun() const
 {
 	return bCanStun;
@@ -146,7 +209,7 @@ void UFSMComponent::EnableStun(bool bStun)
 
 bool UFSMComponent::CanParry() const
 {
-	int value = 0;
+	float value = 0.f;
 	switch (CurrentStateE)
 	{
 	case EBossState::NONE:
@@ -154,21 +217,21 @@ bool UFSMComponent::CanParry() const
 	case EBossState::STRAFE:
 		return true;
 	case EBossState::RUN:
-		value = FMath::RandRange(1, 10);
-		return value <= 8; // 80% chance to block while running.
+		value = FMath::RandRange(0.f, 1.f);
+		return value <= .8f; // 80% chance to block while running.
 
-	/*add another case for Boss normal attack state
-	if (BossCharacter)
-	{
-		auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
-		if (StatusComp)
+		/*add another case for Boss normal attack state
+		if (BossCharacter)
 		{
-			value = FMath::RandRange(1, 10);
-			if (StatusComp->GetPosturePercent() >= .7f)
-				return value <= 5;
-			else return value <= 7;
-		}
-	}*/
+			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
+			if (StatusComp)
+			{
+				value = FMath::RandRange(1, 10);
+				if (StatusComp->GetPosturePercent() >= .7f)
+					return value <= 5;
+				else return value <= 7;
+			}
+		}*/
 
 	default:
 	{
@@ -177,10 +240,10 @@ bool UFSMComponent::CanParry() const
 			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
 			if (StatusComp)
 			{
-				value = FMath::RandRange(1.f, 10.f);
-				if (StatusComp->GetPosturePercent() >= .7f) 
-					return value <= 1.0f;
-				else return value <= 2.5f;
+				value = FMath::RandRange(0.f, 1.f);
+				if (StatusComp->GetPosturePercent() >= .7f)
+					return value <= .6f;
+				else return value <= .6f;
 			}
 		}
 	}

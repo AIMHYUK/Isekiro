@@ -6,6 +6,7 @@
 #include "Character/BaseCharacter.h"
 #include "FSM/GlobalTypes.h"
 #include "Arrow.h"
+#include "IDamageInterface.h"
 #include "BossCharacter.generated.h"
 
 /**
@@ -26,6 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 
+public:
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
 	UFUNCTION(BlueprintCallable)

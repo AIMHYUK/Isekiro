@@ -31,7 +31,14 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
-
+	/*if(Instigator)
+	{
+		auto AnimInstance = Instigator->GetMesh()->GetAnimInstance();
+		if(AnimInstance && AnimInstance->IsAnyMontagePlaying())
+		{
+			AnimInstance->Montage_Stop(.1f, AnimInstance->GetCurrentActiveMontage());
+		}
+	}*/
 }
 
 void UStateObject::Activate()
