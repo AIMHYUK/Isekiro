@@ -25,7 +25,8 @@
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "FSM/FSMComponent.h"
+#include "Character/BossCharacter.h"
 
 // Sets default values
 AHeroCharacter::AHeroCharacter()
@@ -420,6 +421,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			{
 				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
 				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
 				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
 					ApplyDamage(4);
@@ -428,7 +430,21 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
 					FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
 					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
-					KnockBack(300);
+					switch (BossState)
+					{
+						case EBossState::LUNGEATTACK:
+							KnockBack(3000);
+							break;
+						case EBossState::JUMPATTACK:
+							KnockBack(3000);
+							break;
+						case EBossState::THRUSTATTACK:
+							KnockBack(3000);
+							break;
+						default:
+							KnockBack(800);
+							break;
+					}
 					ResetCombo();
 				}
 			}
@@ -561,14 +577,10 @@ void AHeroCharacter::DealDamage()
 				}
 			}
 		}
-
 		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
 		DamagedActors.Empty();
 	}
 }
-
-	
-
 //대쉬 이벤트처리 함수 구현
 void AHeroCharacter::Dash(const FInputActionValue& value)
 {
@@ -591,7 +603,6 @@ void AHeroCharacter::Dash(const FInputActionValue& value)
 		GetWorldTimerManager().SetTimer(ResetFrictionTimerHandle, this, &AHeroCharacter::ResetGroundFriction, 1.0f, false);
 	}
 }
-
 void AHeroCharacter::UseItem(const FInputActionValue& value)
 {
 	Status->UsePortion();
