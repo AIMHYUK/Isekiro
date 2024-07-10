@@ -36,6 +36,13 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_Transition();
+	UFUNCTION()
+	void AnimNotify_RemoveALifePoint();
+
+	UFUNCTION()
+	void AnimNotify_RestorePosture();
+	UFUNCTION()
+	void AnimNotify_RestoreHealth();
 
 private:
 	TObjectPtr<UFSMComponent> FSMComp;

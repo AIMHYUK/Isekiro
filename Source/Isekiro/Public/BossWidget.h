@@ -7,6 +7,7 @@
 #include "BossWidget.generated.h"
 
 class UProgressBar;
+class UImage;
 /**
  * 
  */
@@ -22,4 +23,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* BossPostureBar;
 
+	void DisplayPostureBroken(bool bDisplay);
+
+protected:
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	TObjectPtr<UImage> Image_PostureBreak;
 };

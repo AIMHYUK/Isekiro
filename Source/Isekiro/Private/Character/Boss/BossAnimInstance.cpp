@@ -4,6 +4,7 @@
 #include "Character/Boss/BossAnimInstance.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 void UBossAnimInstance::NativeBeginPlay()
 {
@@ -69,5 +70,33 @@ void UBossAnimInstance::AnimNotify_Transition()
 			SectionS.Append("_r"); // play root anim sequence
 
 		Montage_JumpToSection(FName(SectionS), GetCurrentActiveMontage());
+	}
+}
+
+void UBossAnimInstance::AnimNotify_RemoveALifePoint()
+{
+	auto Status =GetOwningActor()->GetComponentByClass<UStatusComponent>();
+	if (Status)
+	{
+		Status->RemoveOneLifePoint();
+		Status->SetHealth(0.f);
+	}
+}
+
+void UBossAnimInstance::AnimNotify_RestorePosture()
+{
+	auto Status = GetOwningActor()->GetComponentByClass<UStatusComponent>();
+	if (Status)
+	{
+		Status->SetPosture(.4f);
+	}
+}
+
+void UBossAnimInstance::AnimNotify_RestoreHealth()
+{
+	auto Status = GetOwningActor()->GetComponentByClass<UStatusComponent>();
+	if (Status)
+	{
+		Status->SetHealth(Status->MaxHealth);
 	}
 }

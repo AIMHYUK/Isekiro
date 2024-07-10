@@ -28,7 +28,7 @@ void UAttackState::Start()
 			int32 num = FCString::Atoi(*SectionS);
 
 			/*Is target within attack range*/
-			if (Instigator->IsWithinAttackRange()) // play in-place anim sequence
+			if (Instigator->IsWithinTarget()) // play in-place anim sequence
 			{
 				//Start Movement in FSM
 				StartMovement();

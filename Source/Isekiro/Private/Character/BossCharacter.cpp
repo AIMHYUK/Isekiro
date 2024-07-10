@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "ActorComponents/StatusComponent.h"
+#include "BossWidget.h"
+#include "IsekiroGameModeBase.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -23,12 +25,12 @@ ABossCharacter::ABossCharacter()
 
 	TargetOffset = 80.0f;
 	TargetOffsetBuffer = 5.f;
-	AttackRangeDist = 210.f;
+	NearSpaceBuffer = 200.f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
 	HardSetting.Damage = 30.f;
-	HardSetting.Speed= 2600.f;
+	HardSetting.Speed = 2600.f;
 
 	CurrDir = EDirection::BACK;
 
@@ -40,8 +42,12 @@ ABossCharacter::ABossCharacter()
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
 
-	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, 88.f));
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -88.f));
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	Tags.Add(FName("LockOnPossible"));
 }
 
 void ABossCharacter::BeginPlay()
@@ -59,7 +65,19 @@ void ABossCharacter::BeginPlay()
 		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+	if (StatusComponent)
+	{
+		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
+	}
+
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnCapsuleOverlapped);
+
+
+	auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+	if (GM && GM->BossUI)
+	{
+		BossUI = GM->BossUI;
+	}
 }
 
 void ABossCharacter::Tick(float DeltaTime)
@@ -77,13 +95,14 @@ void ABossCharacter::Tick(float DeltaTime)
 	}
 }
 
+UBossWidget* ABossCharacter::GetBossUI() const
+{
+	return BossUI;
+}
+
 void ABossCharacter::BeginAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Begin Attack"));
-	if (StatusComponent)
-	{
-		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
-	}
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
@@ -123,15 +142,26 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 
 void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
-	if (StatusComponent)
+	if (StatusComponent && FSMComponent)
 	{
-		if (FSMComponent->CanStun())
+		if (StatusComponent->IsPostureBroken() || !StatusComponent->HasHealth() || !StatusComponent->IsAlive())
 		{
-			if(FSMComponent->CanParry())
+			if (FSMComponent && FSMComponent->GetCurrentStateE() != EBossState::DEATH)
 			{
-				FSMComponent->ChangeStateTo(EBossState::PARRY);
+				FSMComponent->ChangeStateTo(EBossState::DEATH);
 			}
-			else FSMComponent->ChangeStateTo(EBossState::HIT);
+		}
+		else
+		{
+			if (FSMComponent->CanStun())
+			{
+				if (FSMComponent->CanParry())
+				{
+					StatusComponent->SetHealth(OldHealth);
+					FSMComponent->ChangeStateTo(EBossState::PARRY);
+				}
+				else FSMComponent->ChangeStateTo(EBossState::HIT);
+			}			
 		}
 	}
 }
@@ -178,17 +208,17 @@ FVector ABossCharacter::GetDirectionVectorToTarget() const
 }
 
 FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
-{	
+{
 	FVector DirVec = GetDirectionVectorToTarget();
 	DirVec *= DistanceToTravel;
 	FVector NewLoc = DirVec + GetActorLocation();
-	
+
 	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
 	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
 
-	if(NewDist < TargetDist) // if new boss location is within the Target
+	if (NewDist < TargetDist) // if new boss location is within the Target
 	{
-		if(IsWithinTarget(NewLoc)) 
+		if (IsWithinTarget(NewLoc, TargetOffsetBuffer))
 			return GetTargetOffsetLocation();
 		else return NewLoc;
 	}
@@ -203,7 +233,7 @@ FVector ABossCharacter::GetTargetOffsetLocation() const
 	if (Target)
 	{
 		FVector End;
-		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();		
+		End = IsLockedOnTarget() ? End = Target->GetActorLocation() : /*Set End as infront of boss*/ End = FVector::Zero();
 		FVector Start = GetActorLocation();
 		End.Z = HeightZ;
 		Start.Z = HeightZ;
@@ -234,42 +264,35 @@ EDirection ABossCharacter::GetCurrentDirection() const
 	return CurrDir;
 }
 
-bool ABossCharacter::IsWithinAttackRange() const
+bool ABossCharacter::IsWithinNearRange() const
 {
-	if (Target)
-	{
-		FVector DistVector = Target->GetActorLocation() - GetActorLocation();
-		float DistSq = FVector::DotProduct(DistVector, DistVector);
-		float Dist = FMath::Sqrt(DistSq);
-		return Dist <= AttackRangeDist;
-	}
-	return false;
+	return IsWithinTarget(GetActorLocation(), NearSpaceBuffer);
 }
 
 bool ABossCharacter::IsWithinTarget() const
 {
-	return IsWithinTarget(GetActorLocation());
+	return IsWithinTarget(GetActorLocation(), TargetOffsetBuffer);
 }
 
-bool ABossCharacter::IsWithinTarget(FVector Location) const
+bool ABossCharacter::IsWithinTarget(FVector Location, float Offset) const
 {
-	if (Target) 
+	if (Target)
 	{
 		FVector TargetTemp = Target->GetActorLocation();
 		TargetTemp.Z = HeightZ;
 
-		FVector OffsetDir =  TargetTemp - GetTargetOffsetLocation();
-		OffsetDir .Normalize();
+		FVector OffsetDir = TargetTemp - GetTargetOffsetLocation();
+		OffsetDir.Normalize();
 		OffsetDir *= -1.f;
-		FVector BufferLoc = OffsetDir * TargetOffsetBuffer + GetTargetOffsetLocation();
-		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
-				
+		FVector BufferLoc = OffsetDir * Offset + GetTargetOffsetLocation(); // if boss is within this distance, EFightingSpace is NEAR. Else EFightingSpace is FAR.
+		FVector BufferDistVector = TargetTemp - BufferLoc;
+
 		FVector LocDistVector = TargetTemp - Location;
 		FVector BossTemp = GetActorLocation();
 		BossTemp.Z = HeightZ;
 		FVector BossVector = TargetTemp - BossTemp;
 		float dotResult = FVector::DotProduct(LocDistVector, BossVector);
-		if(dotResult < 0.f)
+		if (dotResult < 0.f)
 		{
 			LocDistVector *= -1.f;
 		}

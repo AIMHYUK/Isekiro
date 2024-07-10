@@ -3,6 +3,7 @@
 
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
+#include "Animation/AnimInstance.h"
 
 UStateObject::UStateObject()
 {
@@ -31,21 +32,30 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
-
 }
 
 void UStateObject::Activate()
 {
 }
 
+void UStateObject::JumpToSection(FName SectionName)
+{
+	if (Instigator)
+	{
+		auto Anim = Instigator->GetMesh()->GetAnimInstance();
+		{
+			if (Anim) Anim->Montage_JumpToSection(SectionName, MontageState.Montage);
+		}
+	}
+}
+
 void UStateObject::PlayMontage()
 {
 	if (Instigator && MontageState.Montage)
 	{
-		//Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
-		Instigator->PlayAnimMontage(MontageState.Montage, 1, MontageState.SectionName);
-		//if (!MontageState.SectionName.IsNone())
-		//	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
+		if (!MontageState.SectionName.IsNone())
+			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
 	}
 }
 
@@ -78,6 +88,11 @@ FStateDistance UStateObject::GetStateDistance() const
 {
 	return StateDistance;
 }
+
+void UStateObject::RespondToInput()
+{
+}
+
 
 UWorld* UStateObject::GetWorld() const
 {

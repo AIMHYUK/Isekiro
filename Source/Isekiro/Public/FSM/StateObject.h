@@ -45,10 +45,16 @@ public:
 	void StopMovement();
 	EBossState GetFSMState() const;
 	FStateDistance GetStateDistance() const;
+
+	virtual void RespondToInput();
+
+
 protected:
 	virtual UWorld* GetWorld() const override;
 	
+
 protected:
+	void JumpToSection(FName SectionName);
 	void PlayMontage();
 	virtual bool CanStartMovement() const;
 	virtual EBossState UpdateMovement(float DeltaTime);
