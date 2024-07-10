@@ -86,8 +86,11 @@ public:
 	void StopMovement();
 	void RespondToState();
 	
+	UFUNCTION(BlueprintCallable)
+	virtual void RespondToInput();
+
 	EBossState GetCurrentStateE() const;
-	EPostureState GetPostureState() const;
+	bool IsPostureBroken() const;
 	void SetPostureState(EPostureState _PostureState);
 	bool CanTakeDamage();
 

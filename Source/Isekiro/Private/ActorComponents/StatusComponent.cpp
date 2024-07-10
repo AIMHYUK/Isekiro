@@ -48,11 +48,20 @@ bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
 {
 	if (!GetOwner()) return false;
 
-	auto FSM = GetOwner()->GetComponentByClass<UFSMComponent>();
-	
-	if (FSM->GetCurrentStateE() != EBossState::DEATH)
+	auto Status = GetOwner()->GetComponentByClass<UStatusComponent>();
+	if (Status && !Status->HasHealth())
 	{
-		if (FSM && FSM->CanStun())
+		return false;
+	}
+
+	auto FSM = GetOwner()->GetComponentByClass<UFSMComponent>();
+	if (FSM)
+	{
+		if (FSM->GetCurrentStateE() == EBossState::DEATH)
+		{
+			return false;
+		}
+		else if(FSM->CanStun())
 		{
 			if (!FSM->CanTakeDamage())
 			{
@@ -108,6 +117,11 @@ float UStatusComponent::GetPosture() const
 int UStatusComponent::GetLifePoints() const
 {
 	return LifePoints;
+}
+
+void UStatusComponent::RemoveOneLifePoint()
+{
+	--LifePoints;
 }
 
 float UStatusComponent::GetHPPercent()

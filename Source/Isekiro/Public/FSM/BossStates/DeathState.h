@@ -19,4 +19,10 @@ public:
 	virtual EBossState Update(float DeltaTime) override;
 	virtual void Stop() override;
 protected:
+	virtual void RespondToInput() override;
+
+private:
+	UFUNCTION()
+	void Execute();
+	bool bHasExecuted;
 };

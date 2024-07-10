@@ -14,7 +14,7 @@ class ISEKIRO_API UStatusComponent : public UActorComponent
 	GENERATED_BODY()
 	friend class ABossCharacter;
 	friend class UDeathState;
-	friend class UNSBossDeath;
+	friend class UBossAnimInstance;
 public:	
 	UStatusComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -30,6 +30,7 @@ public:
 	float GetHealth() const;
 	float GetPosture() const;
 	int GetLifePoints() const;
+	void RemoveOneLifePoint();
 	FStatusChangedDelegate OnStatusChanged; 
 
 	UFUNCTION(BlueprintCallable)

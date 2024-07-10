@@ -153,6 +153,14 @@ void UFSMComponent::RespondToState()
 	}
 }
 
+void UFSMComponent::RespondToInput()
+{
+	if (CurrentState)
+	{
+		CurrentState->RespondToInput();
+	}
+}
+
 void UFSMComponent::StartMovement()
 {
 	if (CurrentState)
@@ -174,9 +182,9 @@ EBossState UFSMComponent::GetCurrentStateE() const
 	return CurrentStateE;
 }
 
-EPostureState UFSMComponent::GetPostureState() const
+bool UFSMComponent::IsPostureBroken() const
 {
-	return PostureState;
+	return PostureState == EPostureState::BROKEN;
 }
 
 void UFSMComponent::SetPostureState(EPostureState _PostureState)

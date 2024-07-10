@@ -3,6 +3,7 @@
 
 #include "FSM/StateObject.h"
 #include "Character/BossCharacter.h"
+#include "Animation/AnimInstance.h"
 
 UStateObject::UStateObject()
 {
@@ -35,6 +36,17 @@ void UStateObject::Stop()
 
 void UStateObject::Activate()
 {
+}
+
+void UStateObject::JumpToSection(FName SectionName)
+{
+	if (Instigator)
+	{
+		auto Anim = Instigator->GetMesh()->GetAnimInstance();
+		{
+			if (Anim) Anim->Montage_JumpToSection(SectionName, MontageState.Montage);
+		}
+	}
 }
 
 void UStateObject::PlayMontage()

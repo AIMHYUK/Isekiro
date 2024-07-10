@@ -42,8 +42,12 @@ ABossCharacter::ABossCharacter()
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
 
-	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, 88.f));
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -88.f));
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	Tags.Add(FName("LockOnPossible"));
 }
 
 void ABossCharacter::BeginPlay()
@@ -93,7 +97,7 @@ void ABossCharacter::Tick(float DeltaTime)
 
 UBossWidget* ABossCharacter::GetBossUI() const
 {
-	return UBossWidget;
+	return BossUI;
 }
 
 void ABossCharacter::BeginAttack()
@@ -140,7 +144,7 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 {
 	if (StatusComponent && FSMComponent)
 	{
-		if (StatusComponent->IsPostureBroken() || StatusComponent->HasHealth() || StatusComponent->IsAlive())
+		if (StatusComponent->IsPostureBroken() || !StatusComponent->HasHealth() || !StatusComponent->IsAlive())
 		{
 			if (FSMComponent && FSMComponent->GetCurrentStateE() != EBossState::DEATH)
 			{
@@ -149,7 +153,6 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 		}
 		else
 		{
-
 			if (FSMComponent->CanStun())
 			{
 				if (FSMComponent->CanParry())
