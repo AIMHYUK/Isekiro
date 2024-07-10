@@ -145,6 +145,14 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 	PrepNewState(NewState) ? CurrentStateE = NewState : CurrentStateE = EBossState::NONE;
 }
 
+void UFSMComponent::RespondToState()
+{
+	if (CurrentState)
+	{
+		CurrentState->RespondToInput();
+	}
+}
+
 void UFSMComponent::StartMovement()
 {
 	if (CurrentState)
@@ -164,6 +172,11 @@ void UFSMComponent::StopMovement()
 EBossState UFSMComponent::GetCurrentStateE() const
 {
 	return CurrentStateE;
+}
+
+EPostureState UFSMComponent::GetPostureState() const
+{
+	return PostureState;
 }
 
 bool UFSMComponent::CanTakeDamage()

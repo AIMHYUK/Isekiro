@@ -31,14 +31,6 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
-	/*if(Instigator)
-	{
-		auto AnimInstance = Instigator->GetMesh()->GetAnimInstance();
-		if(AnimInstance && AnimInstance->IsAnyMontagePlaying())
-		{
-			AnimInstance->Montage_Stop(.1f, AnimInstance->GetCurrentActiveMontage());
-		}
-	}*/
 }
 
 void UStateObject::Activate()
@@ -49,10 +41,9 @@ void UStateObject::PlayMontage()
 {
 	if (Instigator && MontageState.Montage)
 	{
-		//Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
-		Instigator->PlayAnimMontage(MontageState.Montage, 1, MontageState.SectionName);
-		//if (!MontageState.SectionName.IsNone())
-		//	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
+		if (!MontageState.SectionName.IsNone())
+			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
 	}
 }
 
@@ -85,6 +76,11 @@ FStateDistance UStateObject::GetStateDistance() const
 {
 	return StateDistance;
 }
+
+void UStateObject::RespondToInput()
+{
+}
+
 
 UWorld* UStateObject::GetWorld() const
 {

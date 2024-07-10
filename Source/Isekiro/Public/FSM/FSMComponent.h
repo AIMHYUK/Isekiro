@@ -6,9 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "FSMComponent.generated.h"
 
-class UStateObject;
-class ABossCharacter;
-
 USTRUCT()
 struct FStateDistance
 {
@@ -53,29 +50,42 @@ enum class EFightingSpace : uint8
 	FAR UMETA(DisplayName = "Far")
 };
 
+UENUM()
+enum class EPostureState : uint8
+{
+	STABLE,
+	BROKEN
+};
+
+DECLARE_MULTICAST_DELEGATE(FStateResponseDelegate);
+
+class UStateObject;
+class ABossCharacter;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
+	friend class UDeathState;
 public:	
 	UFSMComponent();
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
-	EBossState RandomState();
-	
-	bool IsCurrentStateActive() const;
 
+	FStateResponseDelegate OnStateResponse;
+
+	EBossState RandomState();
+	bool IsCurrentStateActive() const;
 	bool CanChangeStateTo(EBossState StateToTest);
 	UFUNCTION(BlueprintCallable)
 	void ChangeStateTo(EBossState NewState);
-	
+
 	void StartMovement();
 	void StopMovement();
+	void RespondToState();
 	
 	EBossState GetCurrentStateE() const;
-
+	EPostureState GetPostureState() const;
 	bool CanTakeDamage();
 
 	//Can player stop boss's active attacks by forcing boss to respond to player attacks?
@@ -97,6 +107,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
 	EBossState CurrentStateE;
 	EFightingSpace FightSpace;
+	EPostureState PostureState;
 
 	bool PrepNewState(EBossState NewState);
 	void SetFSMState(EBossState _CurrentStateE);
