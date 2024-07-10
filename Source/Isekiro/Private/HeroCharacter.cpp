@@ -166,6 +166,11 @@ void AHeroCharacter::Tick(float DeltaTime)
 void AHeroCharacter::ApplyDamage(float damage)
 {
 	Status->ApplyDamage(0, damage);
+	if (IsDead())
+	{
+		DetachFromControllerPendingDestroy();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }
 
 void AHeroCharacter::ApplyPosture(float posture)
@@ -186,6 +191,11 @@ void AHeroCharacter::CallPostureBarFunction()
 UStatusComponent* AHeroCharacter::GetStatusComponent()
 {
 	return Status;
+}
+
+bool AHeroCharacter::IsDead() const
+{
+	return (Status->GetHealth()) <= 0;
 }
 
 // Called to bind functionality to input
@@ -363,7 +373,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 		if (AnimInstance && StrongAttackMontage)
 		{
 			AnimInstance->Montage_Play(StrongAttackMontage);
-			KnockBack(300);
+			
 		}
 
 		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 2.0f, false);
@@ -375,7 +385,9 @@ void AHeroCharacter::EndStrongAttack()
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
 	{
+		DealDamage();
 		PlayerController->SetIgnoreMoveInput(false);
+
 	}
 }
 

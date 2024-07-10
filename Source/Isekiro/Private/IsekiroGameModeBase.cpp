@@ -56,37 +56,13 @@ void AIsekiroGameModeBase::BeginPlay()
 				BossUI->AddToViewport();
 		}
 	}
-	// Boss initialization
-	ABossCharacter* BossCharacter = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ABossCharacter::StaticClass()));
-	if (BossCharacter)
-	{
-		BossState = BossCharacter->FindComponentByClass<UStatusComponent>();
-		if (BossState == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("BossStateComponent is null in AIsekiroGameModeBase::BeginPlay"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("BossStateComponent is not null in AIsekiroGameModeBase::BeginPlay"));
-		}
-
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("BossCharacter is null in AIsekiroGameModeBase::BeginPlay"));
-
-		if (State->GetPosture() == 0)
-		{
-			mainUI->PostureBar->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		else
-		{
-			mainUI->PostureBar->SetVisibility(ESlateVisibility::Visible);
-
-		}
-	}
 }
 
+void AIsekiroGameModeBase::GameHasEnded()
+{
+
+
+}
 
 
 

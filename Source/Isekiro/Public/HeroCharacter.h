@@ -135,6 +135,8 @@ public:
 	void CallHPBarFunction();
 	void CallPostureBarFunction();
 	UStatusComponent* GetStatusComponent();
+	UFUNCTION(BlueprintPure)
+	bool IsDead() const;
 
 	//타격감
 	void KnockBack(float distance);

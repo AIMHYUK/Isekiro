@@ -34,9 +34,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateCurrentPortion();
 
-	
-
 	bool bIsPlayerBossFight = false;
+
+	void GameHasEnded();
+
 protected:
 
 	virtual void BeginPlay() override;

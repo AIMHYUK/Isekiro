@@ -13,5 +13,4 @@ UCLASS()
 class ISEKIRO_API AHeroPlayerController : public APlayerController	
 {
 	GENERATED_BODY()
-
 };
