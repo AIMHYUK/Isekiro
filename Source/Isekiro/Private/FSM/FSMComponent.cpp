@@ -80,6 +80,8 @@ EBossState UFSMComponent::RandomState()
 	int32 min = 0;
 	int32 max = 0;
 
+	if (BossCharacter && !BossCharacter->IsWithinNearRange()) FightSpace = EFightingSpace::FAR;
+
 	switch (FightSpace)
 	{
 	case EFightingSpace::NEAR:

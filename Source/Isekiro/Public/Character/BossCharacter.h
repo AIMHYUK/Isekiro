@@ -48,9 +48,9 @@ public:
 	EDirection GetCurrentDirection() const;
 
 	UFUNCTION(BlueprintCallable)
-	bool IsWithinAttackRange() const; // not in use
+	bool IsWithinNearRange() const;
 	bool IsWithinTarget() const;
-	bool IsWithinTarget(FVector Location) const;
+	bool IsWithinTarget(FVector Location, float Offset) const;
 
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
@@ -80,12 +80,11 @@ protected:
 	float TargetOffset;
 	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffsetBuffer;
-
-	//UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
-	float AttackRangeDist; // not in use
-
 	UPROPERTY(EditAnywhere, Category = "Setting|Target")
 	EDirection CurrDir;
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float NearSpaceBuffer;
+	
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
 	TSubclassOf<AArrow> ArrowClass;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")

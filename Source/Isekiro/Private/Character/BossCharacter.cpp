@@ -23,7 +23,7 @@ ABossCharacter::ABossCharacter()
 
 	TargetOffset = 80.0f;
 	TargetOffsetBuffer = 5.f;
-	AttackRangeDist = 210.f;
+	NearSpaceBuffer = 200.f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 1800.f;
@@ -190,7 +190,7 @@ FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
 
 	if (NewDist < TargetDist) // if new boss location is within the Target
 	{
-		if (IsWithinTarget(NewLoc))
+		if (IsWithinTarget(NewLoc, TargetOffsetBuffer))
 			return GetTargetOffsetLocation();
 		else return NewLoc;
 	}
@@ -236,24 +236,17 @@ EDirection ABossCharacter::GetCurrentDirection() const
 	return CurrDir;
 }
 
-bool ABossCharacter::IsWithinAttackRange() const
+bool ABossCharacter::IsWithinNearRange() const
 {
-	if (Target)
-	{
-		FVector DistVector = Target->GetActorLocation() - GetActorLocation();
-		float DistSq = FVector::DotProduct(DistVector, DistVector);
-		float Dist = FMath::Sqrt(DistSq);
-		return Dist <= AttackRangeDist;
-	}
-	return false;
+	return IsWithinTarget(GetActorLocation(), NearSpaceBuffer);
 }
 
 bool ABossCharacter::IsWithinTarget() const
 {
-	return IsWithinTarget(GetActorLocation());
+	return IsWithinTarget(GetActorLocation(), TargetOffsetBuffer);
 }
 
-bool ABossCharacter::IsWithinTarget(FVector Location) const
+bool ABossCharacter::IsWithinTarget(FVector Location, float Offset) const
 {
 	if (Target)
 	{
@@ -263,8 +256,8 @@ bool ABossCharacter::IsWithinTarget(FVector Location) const
 		FVector OffsetDir = TargetTemp - GetTargetOffsetLocation();
 		OffsetDir.Normalize();
 		OffsetDir *= -1.f;
-		FVector BufferLoc = OffsetDir * TargetOffsetBuffer + GetTargetOffsetLocation();
-		FVector BufferDistVector = Target->GetActorLocation() - BufferLoc;
+		FVector BufferLoc = OffsetDir * Offset + GetTargetOffsetLocation(); // if boss is within this distance, EFightingSpace is NEAR. Else EFightingSpace is FAR.
+		FVector BufferDistVector = TargetTemp - BufferLoc;
 
 		FVector LocDistVector = TargetTemp - Location;
 		FVector BossTemp = GetActorLocation();
