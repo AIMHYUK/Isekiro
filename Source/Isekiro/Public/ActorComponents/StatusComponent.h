@@ -13,6 +13,8 @@ class ISEKIRO_API UStatusComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	friend class ABossCharacter;
+	friend class UDeathState;
+	friend class UNSBossDeath;
 public:	
 	UStatusComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -21,8 +23,13 @@ public:
 	bool TryApplyDamage(float PostureDmg, float HealthDmg);
 	void ApplyDamage(float PostureDmg, float HealthDmg);
 
+	bool IsPostureBroken() const;
+	bool HasHealth() const;
+	bool IsAlive() const;
+
 	float GetHealth() const;
 	float GetPosture() const;
+	int GetLifePoints() const;
 	FStatusChangedDelegate OnStatusChanged; 
 
 	UFUNCTION(BlueprintCallable)
@@ -51,12 +58,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Settings")
 	float MaxPosture;
 
-private:	
+private:
 	float Health; 
 	float Posture;
 	float MaxHealth;
 	float Portion;
 	float MaxPortion;
+	int LifePoints;
 		
 	void SetPosture(float Value);
 	void SetHealth(float Value);

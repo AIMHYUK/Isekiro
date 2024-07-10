@@ -90,6 +90,18 @@ void AIsekiroGameModeBase::BeginPlay()
 
 
 
+void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	if (BossWidget != nullptr)
+	{
+		BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
+
+		if (BossUI != nullptr)
+			BossUI->AddToViewport();
+	}
+}
+
 void AIsekiroGameModeBase::UpdateHPBar()
 {
 	if (mainUI)

@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "ActorComponents/StatusComponent.h"
+#include "BossWidget.h"
+#include "IsekiroGameModeBase.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -65,6 +67,13 @@ void ABossCharacter::BeginPlay()
 	}
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnCapsuleOverlapped);
+
+
+	auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+	if (GM && GM->BossUI)
+	{
+		BossUI = GM->BossUI;
+	}
 }
 
 void ABossCharacter::Tick(float DeltaTime)
@@ -80,6 +89,11 @@ void ABossCharacter::Tick(float DeltaTime)
 		newRotation.Roll = 0.f;
 		SetActorRotation(newRotation.Quaternion());
 	}
+}
+
+UBossWidget* ABossCharacter::GetBossUI() const
+{
+	return UBossWidget;
 }
 
 void ABossCharacter::BeginAttack()
@@ -124,16 +138,27 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 
 void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
-	if (StatusComponent)
+	if (StatusComponent && FSMComponent)
 	{
-		if (FSMComponent->CanStun())
+		if (StatusComponent->IsPostureBroken() || StatusComponent->HasHealth() || StatusComponent->IsAlive())
 		{
-			if (FSMComponent->CanParry())
+			if (FSMComponent && FSMComponent->GetCurrentStateE() != EBossState::DEATH)
 			{
-				StatusComponent->SetHealth(OldHealth);
-				FSMComponent->ChangeStateTo(EBossState::PARRY);
+				FSMComponent->ChangeStateTo(EBossState::DEATH);
 			}
-			else FSMComponent->ChangeStateTo(EBossState::HIT);
+		}
+		else
+		{
+
+			if (FSMComponent->CanStun())
+			{
+				if (FSMComponent->CanParry())
+				{
+					StatusComponent->SetHealth(OldHealth);
+					FSMComponent->ChangeStateTo(EBossState::PARRY);
+				}
+				else FSMComponent->ChangeStateTo(EBossState::HIT);
+			}			
 		}
 	}
 }

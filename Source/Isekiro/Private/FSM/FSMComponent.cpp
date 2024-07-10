@@ -179,6 +179,11 @@ EPostureState UFSMComponent::GetPostureState() const
 	return PostureState;
 }
 
+void UFSMComponent::SetPostureState(EPostureState _PostureState)
+{
+	PostureState = _PostureState;
+}
+
 bool UFSMComponent::CanTakeDamage()
 {
 	if(HandleDodgeProbability())

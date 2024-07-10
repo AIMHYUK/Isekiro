@@ -15,6 +15,7 @@ UStatusComponent::UStatusComponent()
 	MaxHealth = Health;
 	Portion = 3;
 	MaxPortion = 3;
+	LifePoints = 2;
 }
 
 
@@ -48,11 +49,15 @@ bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
 	if (!GetOwner()) return false;
 
 	auto FSM = GetOwner()->GetComponentByClass<UFSMComponent>();
-	if (FSM && FSM->CanStun())
+	
+	if (FSM->GetCurrentStateE() != EBossState::DEATH)
 	{
-		if (!FSM->CanTakeDamage())
+		if (FSM && FSM->CanStun())
 		{
-			return false;
+			if (!FSM->CanTakeDamage())
+			{
+				return false;
+			}
 		}
 	}
 
@@ -75,6 +80,21 @@ void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 	}
 }
 
+bool UStatusComponent::IsPostureBroken() const
+{
+	return Posture >= MaxPosture;
+}
+
+bool UStatusComponent::HasHealth() const
+{
+	return Health > 0.f;
+}
+
+bool UStatusComponent::IsAlive() const
+{
+	return LifePoints > 0;
+}
+
 float UStatusComponent::GetHealth() const
 {
 	return Health;
@@ -83,6 +103,11 @@ float UStatusComponent::GetHealth() const
 float UStatusComponent::GetPosture() const
 {
 	return Posture;
+}
+
+int UStatusComponent::GetLifePoints() const
+{
+	return LifePoints;
 }
 
 float UStatusComponent::GetHPPercent()

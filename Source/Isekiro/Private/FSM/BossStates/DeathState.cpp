@@ -12,6 +12,14 @@ UDeathState::UDeathState()
 void UDeathState::Start()
 {
 	Super::Start();
+
+	if (Instigator)
+	{
+		if (FSMComp)
+		{
+			FSMComp->EnableStun(false);
+		}
+	}
 }
 
 EBossState UDeathState::Update(float DeltaTime)
@@ -27,4 +35,5 @@ EBossState UDeathState::Update(float DeltaTime)
 void UDeathState::Stop()
 {
 	Super::Stop();
+	FSMComp->EnableStun(true);
 }

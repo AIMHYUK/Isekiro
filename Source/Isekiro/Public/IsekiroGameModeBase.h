@@ -15,7 +15,9 @@ UCLASS()
 class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
+	friend class ABossCharacter;
 public:
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UCharacterWidget> MainWidget;

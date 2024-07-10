@@ -40,6 +40,8 @@ enum class EBossState : uint8
 	DODGE UMETA(DisplayName = "Dodge"),						//Transition
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),			//Transition
 
+	DEATH UMETA(DisplayName = "Death"),						//Death
+
 	MAX UMETA(DisplayName = "Max")
 };
 
@@ -86,6 +88,7 @@ public:
 	
 	EBossState GetCurrentStateE() const;
 	EPostureState GetPostureState() const;
+	void SetPostureState(EPostureState _PostureState);
 	bool CanTakeDamage();
 
 	//Can player stop boss's active attacks by forcing boss to respond to player attacks?

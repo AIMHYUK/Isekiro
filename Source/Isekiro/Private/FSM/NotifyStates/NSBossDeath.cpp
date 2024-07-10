@@ -2,11 +2,18 @@
 
 
 #include "FSM/NotifyStates/NSBossDeath.h"
+#include "FSM/FSMComponent.h"
 
 void UNSBossDeath::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	//display execution UI
+	auto FSM = MeshComp->GetOwner()->
+
+	if (FSMComp)
+	{
+		FSMComp->SetPostureState(EPostureState::BROKEN);
+	}
+
 	//change posture state to BROKEN
 }
 
@@ -18,7 +25,11 @@ void UNSBossDeath::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
 void UNSBossDeath::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	//Hide Execution UI
-	//change posture state to STABLE
-	//Recover portion of Posture
+	if (Instigator)
+	{
+		if (FSMComp)
+		{
+			FSMComp->SetPostureState(EPostureState::STABLE);
+		}
+	}
 }

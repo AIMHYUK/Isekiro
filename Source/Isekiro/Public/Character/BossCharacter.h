@@ -17,6 +17,7 @@ class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
 class UCapsuleComponent;
+class UBossWidget;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -28,6 +29,8 @@ public:
 	virtual void BeginPlay() override;
 
 public:
+	UBossWidget* GetBossUI() const;
+
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
 	UFUNCTION(BlueprintCallable)
@@ -95,4 +98,6 @@ private:
 	float HeightZ;
 	bool bLockOnTarget;
 	void SetupFireArrow(FArrowSetting Setting);
+
+	TObjectPtr<UBossWidget> BossUI;
 };

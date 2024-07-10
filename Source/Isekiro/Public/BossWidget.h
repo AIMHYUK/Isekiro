@@ -21,5 +21,4 @@ public:
 	UProgressBar* BossHPBar;	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* BossPostureBar;
-
 };
