@@ -16,6 +16,7 @@ UStatusComponent::UStatusComponent()
 	Portion = 3;
 	MaxPortion = 3;
 	LifePoints = 2;
+	bIsDead = false;
 }
 
 
@@ -122,6 +123,16 @@ int UStatusComponent::GetLifePoints() const
 void UStatusComponent::RemoveOneLifePoint()
 {
 	--LifePoints;
+}
+
+void UStatusComponent::OfficiallyDeclareDead()
+{
+	bIsDead = true;
+}
+
+bool UStatusComponent::IsOfficiallyDead() const
+{
+	return bIsDead;
 }
 
 float UStatusComponent::GetHPPercent()

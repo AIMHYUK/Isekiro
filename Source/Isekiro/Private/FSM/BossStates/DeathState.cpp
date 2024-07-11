@@ -22,6 +22,8 @@ void UDeathState::Start()
 
 	if (Instigator)
 	{
+		Instigator->SetLockOnTarget(false);
+
 		auto Status = Instigator->GetComponentByClass<UStatusComponent>();
 		if (Status)
 		{
@@ -45,8 +47,14 @@ EBossState UDeathState::Update(float DeltaTime)
 	{
 		auto Status = Instigator->GetComponentByClass<UStatusComponent>();
 		if (Status && Status->IsAlive())
+		{
+			Instigator->SetLockOnTarget(true);
 			return FSMComp->RandomState();
-		else EBossState::NONE;
+		}
+		else
+		{
+			Status->OfficiallyDeclareDead();
+		}
 	}
 	return EBossState::NONE;
 }

@@ -22,12 +22,19 @@ EBossState UJumpState_Strike::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
 
-	if(FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
+	if (FSMComp && !FSMComp->IsCurrentStateActive())
+	{
+		return FSMComp->RandomState();
+	}
 	return EBossState::NONE;
 }
 
 void UJumpState_Strike::Stop()
 {
+	if (Instigator)
+	{
+		Instigator->SetLockOnTarget(true);
+	}
 	return Super::Stop();
 }
 

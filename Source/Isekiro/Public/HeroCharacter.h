@@ -147,6 +147,8 @@ public:
 	FTimerHandle StrongAttackTimerHandle;
 
 	EActionState GetActionState();
+	void SetActionStateHazardBegin();
+	void SetActionStateHazardEnd();
 	void SetActionStateParrySuccess();
 	void SetActionStateDifferentWithParry();
 

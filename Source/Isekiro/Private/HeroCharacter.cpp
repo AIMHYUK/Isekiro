@@ -63,6 +63,16 @@ EActionState AHeroCharacter::GetActionState()
 	return ActionState;
 }
 
+void AHeroCharacter::SetActionStateHazardBegin()
+{
+	ActionState = EActionState::EAS_Hazard;
+}
+
+void AHeroCharacter::SetActionStateHazardEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
 void AHeroCharacter::SetActionStateParrySuccess()
 {
 	ActionState = EActionState::EAS_ParrySuccess;
@@ -152,6 +162,19 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	switch (ActionState)
+	{
+	case EActionState::EAS_Attacking:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Attacking")));
+		break;
+	case EActionState::EAS_ParrySuccess:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("ParrySuccess")));
+		break;
+	case EActionState::EAS_Hazard:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Hazard")));
+		break;
+	}
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
 	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))

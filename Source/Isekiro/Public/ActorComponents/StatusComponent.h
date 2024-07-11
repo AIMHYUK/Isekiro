@@ -31,6 +31,9 @@ public:
 	float GetPosture() const;
 	int GetLifePoints() const;
 	void RemoveOneLifePoint();
+	void OfficiallyDeclareDead();
+	bool IsOfficiallyDead() const;
+
 	FStatusChangedDelegate OnStatusChanged; 
 
 	UFUNCTION(BlueprintCallable)
@@ -69,4 +72,6 @@ private:
 		
 	void SetPosture(float Value);
 	void SetHealth(float Value);
+
+	bool bIsDead;
 };

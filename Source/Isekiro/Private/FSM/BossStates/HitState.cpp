@@ -16,6 +16,11 @@ void UHitState::Start()
 {
 	Super::Start();
 
+	if (Instigator)
+	{
+		Instigator->SetLockOnTarget(true);
+	}
+
 	PrevLoc = Instigator->GetActorLocation();
 	FVector TargetLoc = Instigator->GetTargetLoc();
 
