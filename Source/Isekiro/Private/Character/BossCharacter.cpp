@@ -37,7 +37,8 @@ ABossCharacter::ABossCharacter()
 	bLockOnTarget = true;
 
 	LockOnComponent = CreateDefaultSubobject<UCapsuleComponent>("LockOnComponent");
-	LockOnComponent->SetupAttachment(GetMesh());
+	LockOnComponent->SetupAttachment(RootComponent);
+	LockOnComponent->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
 	LockOnComponent->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	LockOnComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	LockOnComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
@@ -93,6 +94,21 @@ void ABossCharacter::Tick(float DeltaTime)
 		newRotation.Roll = 0.f;
 		SetActorRotation(newRotation.Quaternion());
 	}
+	if (CanRecoverPosture())
+	{
+		StatusComponent->RecoverPosture(3.f);
+	}
+}
+
+bool ABossCharacter::CanRecoverPosture() const
+{
+	if (StatusComponent && FSMComponent)
+	{
+		EBossState CurrState = FSMComponent->GetCurrentStateE();
+		return FSMComponent->CanStun() && CurrState != EBossState::DEATH && CurrState != EBossState::PARRY && CurrState != EBossState::HIT;
+	}
+
+	return false;
 }
 
 UBossWidget* ABossCharacter::GetBossUI() const
@@ -161,7 +177,7 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 					FSMComponent->ChangeStateTo(EBossState::PARRY);
 				}
 				else FSMComponent->ChangeStateTo(EBossState::HIT);
-			}			
+			}
 		}
 	}
 }

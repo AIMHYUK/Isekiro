@@ -5,10 +5,11 @@
 #include "Character/BossCharacter.h"
 #include "ActorComponents/StatusComponent.h"
 #include "BossWidget.h"
+#include "IsekiroGameModeBase.h"
 
 UDeathState::UDeathState()
 {
-	bHasExecuted = false;
+	bHasAlreadyResponded = false;
 }
 
 void UDeathState::Start()
@@ -23,20 +24,7 @@ void UDeathState::Start()
 	if (Instigator)
 	{
 		Instigator->SetLockOnTarget(false);
-
-		auto Status = Instigator->GetComponentByClass<UStatusComponent>();
-		if (Status)
-		{
-			if (!Status->HasHealth())
-			{
-				Status->RemoveOneLifePoint();
-				Status->IsAlive() ? JumpToSection("NoHealth") : JumpToSection("Death");
-			}
-			else if (Status->IsPostureBroken())
-			{
-				if (Instigator->GetBossUI()) Instigator->GetBossUI()->DisplayPostureBroken(true);
-			}
-		}
+		if (Instigator->GetBossUI()) Instigator->GetBossUI()->DisplayPostureBroken(true);
 	}
 }
 
@@ -48,12 +36,17 @@ EBossState UDeathState::Update(float DeltaTime)
 		auto Status = Instigator->GetComponentByClass<UStatusComponent>();
 		if (Status && Status->IsAlive())
 		{
-			Instigator->SetLockOnTarget(true);
+			if (Instigator)
+				Instigator->SetLockOnTarget(true);
+			FSMComp->SetPostureState(EPostureState::STABLE);
 			return FSMComp->RandomState();
 		}
 		else
 		{
 			Status->OfficiallyDeclareDead();
+			auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+			if (GM)
+				GM->GameHasEnded();
 		}
 	}
 	return EBossState::NONE;
@@ -68,10 +61,9 @@ void UDeathState::Stop()
 void UDeathState::RespondToInput()
 {
 	if (!FSMComp) return;
-	if (!FSMComp->IsPostureBroken()) return;
-	if (bHasExecuted) return;
+	if (bHasAlreadyResponded) return;
 
-	bHasExecuted = true;
+	bHasAlreadyResponded = true;
 
 	if (Instigator->GetBossUI()) Instigator->GetBossUI()->DisplayPostureBroken(false);
 

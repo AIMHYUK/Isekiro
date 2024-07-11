@@ -102,4 +102,5 @@ private:
 	void SetupFireArrow(FArrowSetting Setting);
 
 	TObjectPtr<UBossWidget> BossUI;
+	bool CanRecoverPosture() const;
 };

@@ -24,5 +24,5 @@ protected:
 private:
 	UFUNCTION()
 	void Execute();
-	bool bHasExecuted;
+	bool bHasAlreadyResponded;
 };

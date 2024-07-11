@@ -110,5 +110,6 @@ void UBossAnimInstance::AnimNotify_RestoreHealth()
 	if (Status)
 	{
 		Status->SetHealth(Status->MaxHealth);
+		Status->SetPosture(0.f);
 	}
 }

@@ -60,8 +60,7 @@ void AIsekiroGameModeBase::BeginPlay()
 
 void AIsekiroGameModeBase::GameHasEnded()
 {
-
-
+	BossUI->RemoveFromViewport();
 }
 
 

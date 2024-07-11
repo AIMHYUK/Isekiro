@@ -281,8 +281,8 @@ bool UFSMComponent::CanParry() const
 			{
 				value = FMath::RandRange(0.f, 1.f);
 				if (StatusComp->GetPosturePercent() >= .7f)
-					return value <= .0f;
-				else return value <= .0f;
+					return value <= 1.f;
+				else return value <= 1.f;
 			}
 		}
 	}
