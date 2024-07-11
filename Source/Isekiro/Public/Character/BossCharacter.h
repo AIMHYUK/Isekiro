@@ -44,6 +44,8 @@ public:
 	AActor* GetTarget() const; 
 	//Following Target location
 	FVector GetTargetOffsetLocation() const;
+	FVector GetTargetLoc() const;
+	float GetTargetOffset() const;
 
 	float GetDistanceToTargetOffset() const;
 	FVector GetDirectionVectorToTarget() const;

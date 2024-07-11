@@ -249,6 +249,18 @@ FVector ABossCharacter::GetTargetOffsetLocation() const
 	return FVector();
 }
 
+FVector ABossCharacter::GetTargetLoc() const
+{
+	FVector Loc = Target->GetActorLocation();
+	Loc.Z = HeightZ;
+	return Loc;
+}
+
+float ABossCharacter::GetTargetOffset() const
+{
+	return TargetOffset;
+}
+
 bool ABossCharacter::IsLockedOnTarget() const
 {
 	return true;
