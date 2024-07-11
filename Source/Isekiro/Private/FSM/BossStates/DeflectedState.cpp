@@ -1,17 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "FSM/BossStates/ParryState.h"
+#include "FSM/BossStates/DeflectedState.h"
 #include "Character/BossCharacter.h"
 
-UParryState::UParryState()
+UDeflectedState::UDeflectedState()
 {
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
 	StateDistance.Max = 350.f;
 }
 
-void UParryState::Start()
+void UDeflectedState::Start()
 {
 	Super::Start();
 
@@ -27,22 +27,26 @@ void UParryState::Start()
 	FVector DirVec = PrevLoc - TargetLoc;
 	DirVec.Normalize();
 
-	if(Distance < Instigator->GetTargetOffset())
+	if (Distance < Instigator->GetTargetOffset())
 		NewLoc = Instigator->GetTargetOffset() * DirVec + TargetLoc;
-	else 
+	else
 		NewLoc = Distance * DirVec + TargetLoc;
 
 	NewLoc = 200.f * DirVec + TargetLoc;
 
-	int32 SectionNum = FMath::RandRange(1,4);
-	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
-		FName(FString::FromInt(SectionNum)), MontageState.Montage);
+	int32 SectionNum = FMath::RandRange(1, 2);
+	FString Section = FString::FromInt(SectionNum);
+	if (FMath::RandRange(0, 1) > 0)
+	{
+		Section += "_t";
+	}
+	JumpToSection(FName(Section));
 }
 
-EBossState UParryState::Update(float DeltaTime)
+EBossState UDeflectedState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
-	
+
 	if (FMath::RandRange(1, 10) <= 8)
 	{
 		if (FMath::RandRange(1, 10) <= 7)
@@ -59,16 +63,16 @@ EBossState UParryState::Update(float DeltaTime)
 	return EBossState::NONE;
 }
 
-void UParryState::Stop()
+void UDeflectedState::Stop()
 {
 	Super::Stop();
 }
 
-EBossState UParryState::UpdateMovement(float DeltaTime)
+EBossState UDeflectedState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
 
-	if(!CanStartMovement()) return EBossState::NONE;
+	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (TotalRunTime <= MaxRunTime)
 	{

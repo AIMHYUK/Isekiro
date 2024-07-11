@@ -19,6 +19,8 @@ UFSMComponent::UFSMComponent()
 	DodgeProbTotal = 0.f;
 
 	FightSpace = EFightingSpace::FAR;
+
+	ParryProbability = .8f;
 }
 
 
@@ -85,11 +87,11 @@ EBossState UFSMComponent::RandomState()
 	switch (FightSpace)
 	{
 	case EFightingSpace::NEAR:
-		min = (int32)EBossState::ATTACK;
-		max = (int32)EBossState::THRUSTATTACK;
+		min = (int32)EBossState::NORMALATTACK;
+		max = (int32)EBossState::STRAFE;
 		break;
 	case EFightingSpace::FAR:
-		min = (int32)EBossState::ATTACK;
+		min = (int32)EBossState::STRAFE;
 		max = (int32)EBossState::LUNGEATTACK;
 		break;
 	}
@@ -271,7 +273,9 @@ bool UFSMComponent::CanParry() const
 				else return value <= 7;
 			}
 		}*/
-
+	case EBossState::DEFLECTED:
+		value = FMath::RandRange(0.f, 1.f);
+		return value <= .1f; // 10% chance to block when Deflected.
 	default:
 	{
 		if (BossCharacter)
@@ -279,10 +283,8 @@ bool UFSMComponent::CanParry() const
 			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
 			if (StatusComp)
 			{
-				value = FMath::RandRange(0.f, 1.f);
-				if (StatusComp->GetPosturePercent() >= .7f)
-					return value <= 0.f;
-				else return value <= 0.f;
+				if (StatusComp->GetPosturePercent() >= .7f) return value <= ParryProbability;
+				else return value <= ParryProbability;
 			}
 		}
 	}

@@ -24,14 +24,15 @@ enum class EBossState : uint8
 	
 	HIT UMETA(DisplayName = "Hit"),							//Stun
 	PARRY UMETA(DisplayName = "Parry"),						//Stun
+	DEFLECTED UMETA(DisplayName = "Deflected"),					//Stun
 	
-	// add normal attack state								//Near
+	NORMALATTACK UMETA(DisplayName = "NormalAttack"),		//Near
+	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),		//Near
+	JUMPATTACK UMETA(DisplayName = "JumpAttack"),			//Near
+	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		//Near
 
-	ATTACK UMETA(DisplayName = "Attack"),					//Both
-	JUMPATTACK UMETA(DisplayName = "JumpAttack"),			//Both
-	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		//Both
+	STRAFE UMETA(DisplayName = "Strafe"),					//Both
 
-	STRAFE UMETA(DisplayName = "Strafe"),					//Far
 	RUN UMETA(DisplayName = "Run"),							//Far
 	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),		//Far
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	//Far
@@ -105,6 +106,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
+
+	UPROPERTY(EditAnywhere, Category = "Settings", meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
+	float ParryProbability;
 
 private:
 	bool HandleDodgeProbability();
