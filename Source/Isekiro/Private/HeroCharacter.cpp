@@ -183,6 +183,17 @@ void AHeroCharacter::Tick(float DeltaTime)
 	}
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
+
+	if (GetActionState() == EActionState::EAS_Hazard)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("HAZARD")));;
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("NO HAZARD")));;
+	}
+
+	
 }
 
 

@@ -4,6 +4,8 @@
 #include "Arrow.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "ActorComponents/StatusComponent.h"
+#include "HeroCharacter.h"
 
 AArrow::AArrow()
 {
@@ -24,6 +26,7 @@ AArrow::AArrow()
 	Rotate.Yaw = -90.f;
 	SMComp->SetRelativeRotation(Rotate.Quaternion());
 	SMComp->SetCollisionProfileName("NoCollision");
+	bHasHit = false;
 
 }
 
@@ -66,9 +69,7 @@ void AArrow::Tick(float DeltaTime)
 void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Black, FString::Printf(TEXT("Arrow hit %s"), *GetNameSafe(OtherActor)));
-	}
+	if (bHasHit) return;
+	bHasHit = true;
 }
 

@@ -43,7 +43,7 @@ protected:
 	void AnimNotify_RemoveALifePoint();
 
 	UFUNCTION()
-	void AnimNotify_RestorePosture();
+	void AnimNotify_Restore();
 	UFUNCTION()
 	void AnimNotify_RestoreHealth();
 

@@ -95,12 +95,15 @@ void UBossAnimInstance::AnimNotify_RemoveALifePoint()
 	}
 }
 
-void UBossAnimInstance::AnimNotify_RestorePosture()
+void UBossAnimInstance::AnimNotify_Restore()
 {
 	auto Status = GetOwningActor()->GetComponentByClass<UStatusComponent>();
 	if (Status)
 	{
-		Status->SetPosture(.4f);
+		if (Status->GetPosture() >= Status->MaxPosture)
+			Status->SetPosture(Status->MaxPosture * .4);
+		else if(Status->GetHealth() <= 0.f)
+			Status->SetHealth(.01f);
 	}
 }
 
