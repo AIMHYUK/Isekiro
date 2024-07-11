@@ -63,6 +63,16 @@ EActionState AHeroCharacter::GetActionState()
 	return ActionState;
 }
 
+void AHeroCharacter::SetActionStateHazardBegin()
+{
+	ActionState = EActionState::EAS_Hazard;
+}
+
+void AHeroCharacter::SetActionStateHazardEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
 void AHeroCharacter::SetActionStateParrySuccess()
 {
 	ActionState = EActionState::EAS_ParrySuccess;
@@ -153,6 +163,19 @@ void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	switch (ActionState)
+	{
+	case EActionState::EAS_Attacking:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Attacking")));
+		break;
+	case EActionState::EAS_ParrySuccess:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("ParrySuccess")));
+		break;
+	case EActionState::EAS_Hazard:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Hazard")));
+		break;
+	}
+
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
 	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
 	{
@@ -160,12 +183,23 @@ void AHeroCharacter::Tick(float DeltaTime)
 	}
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
+
+	if (GetActionState() == EActionState::EAS_Hazard)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("HAZARD")));;
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("NO HAZARD")));;
+	}
+
+	
 }
 
 
 void AHeroCharacter::ApplyDamage(float damage)
 {
-	Status->ApplyDamage(0, damage);
+	Status->TryApplyDamage(0, damage);
 	if (IsDead())
 	{
 		DetachFromControllerPendingDestroy();
@@ -175,7 +209,7 @@ void AHeroCharacter::ApplyDamage(float damage)
 
 void AHeroCharacter::ApplyPosture(float posture)
 {
-	Status->ApplyDamage(posture, 0);
+	Status->TryApplyDamage(posture, 0);
 }
 
 void AHeroCharacter::CallHPBarFunction()
@@ -579,7 +613,7 @@ void AHeroCharacter::DealDamage()
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
 				{
-					ActorStatus->ApplyDamage(10, 10);
+					ActorStatus->TryApplyDamage(10, 10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 
 					// 액터를 이미 데미지를 입은 것으로 표시

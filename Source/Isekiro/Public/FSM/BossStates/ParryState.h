@@ -24,6 +24,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;
+
 	float TotalRunTime;
 	FVector PrevLoc;
 

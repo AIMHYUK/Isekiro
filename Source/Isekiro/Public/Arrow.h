@@ -49,4 +49,5 @@ private:
 	TObjectPtr<AActor> Target;
 	FVector Dir;
 	FArrowSetting ArrowSetting;
+	bool bHasHit;
 };

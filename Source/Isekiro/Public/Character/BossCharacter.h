@@ -6,6 +6,7 @@
 #include "Character/BaseCharacter.h"
 #include "FSM/GlobalTypes.h"
 #include "Arrow.h"
+#include "IDamageInterface.h"
 #include "BossCharacter.generated.h"
 
 /**
@@ -16,6 +17,7 @@ class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
 class UCapsuleComponent;
+class UBossWidget;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -25,6 +27,9 @@ public:
 	ABossCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
+
+public:
+	UBossWidget* GetBossUI() const;
 
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
@@ -39,6 +44,8 @@ public:
 	AActor* GetTarget() const; 
 	//Following Target location
 	FVector GetTargetOffsetLocation() const;
+	FVector GetTargetLoc() const;
+	float GetTargetOffset() const;
 
 	float GetDistanceToTargetOffset() const;
 	FVector GetDirectionVectorToTarget() const;
@@ -46,9 +53,9 @@ public:
 	EDirection GetCurrentDirection() const;
 
 	UFUNCTION(BlueprintCallable)
-	bool IsWithinAttackRange() const; // not in use
+	bool IsWithinNearRange() const;
 	bool IsWithinTarget() const;
-	bool IsWithinTarget(FVector Location) const;
+	bool IsWithinTarget(FVector Location, float Offset) const;
 
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
@@ -78,12 +85,11 @@ protected:
 	float TargetOffset;
 	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
 	float TargetOffsetBuffer;
-
-	//UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
-	float AttackRangeDist; // not in use
-
 	UPROPERTY(EditAnywhere, Category = "Setting|Target")
 	EDirection CurrDir;
+	UPROPERTY(EditDefaultsOnly, Category = "Setting|Target")
+	float NearSpaceBuffer;
+	
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
 	TSubclassOf<AArrow> ArrowClass;
 	UPROPERTY(EditAnywhere, Category = "Setting|Arrow")
@@ -94,4 +100,7 @@ private:
 	float HeightZ;
 	bool bLockOnTarget;
 	void SetupFireArrow(FArrowSetting Setting);
+
+	TObjectPtr<UBossWidget> BossUI;
+	bool CanRecoverPosture() const;
 };

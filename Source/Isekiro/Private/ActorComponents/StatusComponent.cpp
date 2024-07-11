@@ -3,15 +3,20 @@
 
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
+#include "Character/IDamageInterface.h"
+#include "FSM/FSMComponent.h"
 
 UStatusComponent::UStatusComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	Health = 100;
 	Posture = 0;
+	MaxPosture = 100;
 	MaxHealth = Health;
 	Portion = 3;
 	MaxPortion = 3;
+	LifePoints = 2;
+	bIsDead = false;
 }
 
 
@@ -40,6 +45,37 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
+{
+	if (!GetOwner()) return false;
+
+	auto Status = GetOwner()->GetComponentByClass<UStatusComponent>();
+	if (Status && !Status->HasHealth())
+	{
+		return false;
+	}
+
+	auto FSM = GetOwner()->GetComponentByClass<UFSMComponent>();
+	if (FSM)
+	{
+		if (FSM->GetCurrentStateE() == EBossState::DEATH)
+		{
+			return false;
+		}
+		else if(FSM->CanStun())
+		{
+			if (!FSM->CanTakeDamage())
+			{
+				return false;
+			}
+		}
+	}
+
+	ApplyDamage(PostureDmg, HealthDmg);
+
+	return true;
+}
+
 void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 {
 	if (ensureAlways(PostureDmg >= 0.f && HealthDmg >= 0.f))
@@ -50,8 +86,23 @@ void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 		Posture += PostureDmg;
 		Health -= HealthDmg;
 
-		OnStatusChanged.Broadcast(Health, OldPosture, Health, Posture);
+		OnStatusChanged.Broadcast(OldHealth, OldPosture, Health, Posture);
 	}
+}
+
+bool UStatusComponent::IsPostureBroken() const
+{
+	return Posture >= MaxPosture;
+}
+
+bool UStatusComponent::HasHealth() const
+{
+	return Health > 0.f;
+}
+
+bool UStatusComponent::IsAlive() const
+{
+	return LifePoints > 0;
 }
 
 float UStatusComponent::GetHealth() const
@@ -62,6 +113,26 @@ float UStatusComponent::GetHealth() const
 float UStatusComponent::GetPosture() const
 {
 	return Posture;
+}
+
+int UStatusComponent::GetLifePoints() const
+{
+	return LifePoints;
+}
+
+void UStatusComponent::RemoveOneLifePoint()
+{
+	--LifePoints;
+}
+
+void UStatusComponent::OfficiallyDeclareDead()
+{
+	bIsDead = true;
+}
+
+bool UStatusComponent::IsOfficiallyDead() const
+{
+	return bIsDead;
 }
 
 float UStatusComponent::GetHPPercent()
@@ -80,10 +151,10 @@ float UStatusComponent::GetPosturePercent()
 
 	if (Posture != 0)
 	{
-		return Posture / 100; //나중에 수정
+		return Posture / MaxPosture; //나중에 수정
 	}
 	return 0;
-		
+
 }
 float UStatusComponent::GetPortion() const
 {

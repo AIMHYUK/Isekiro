@@ -5,13 +5,20 @@
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
 #include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
-	count = -1;
+
 	bCanStun = true;
+
+	DodgeMaxProb = 100.f;
+	DodgeProbRate = 3.f;
+	DodgeProbTotal = 0.f;
+
+	FightSpace = EFightingSpace::FAR;
 }
 
 
@@ -48,26 +55,57 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
+	if (CanStun())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Yes Can Stun")));
+	}
+	else GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("No Can't Stun")));
+
+	switch(FightSpace)
+	{
+	case EFightingSpace::FAR:
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("FAR")));
+		break;
+	case EFightingSpace::NEAR:
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("NEAR")));
+		break;
+	}
+
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
 EBossState UFSMComponent::RandomState()
 {
-	int32 size = (int32)EBossState::MAX;
 	int index;
+	int32 min = 0;
+	int32 max = 0;
+
+	if (BossCharacter && !BossCharacter->IsWithinNearRange()) FightSpace = EFightingSpace::FAR;
+
+	switch (FightSpace)
+	{
+	case EFightingSpace::NEAR:
+		min = (int32)EBossState::ATTACK;
+		max = (int32)EBossState::THRUSTATTACK;
+		break;
+	case EFightingSpace::FAR:
+		min = (int32)EBossState::ATTACK;
+		max = (int32)EBossState::LUNGEATTACK;
+		break;
+	}
+
+	int32 RandomStateCount = 0;
 	do
 	{
-		index = FMath::RandRange(0, size - 1);
-		count++;
-	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) &&  count < 50);
-	
-	if(count >= 50) 
+		index = FMath::RandRange(min, max);
+		RandomStateCount++;
+	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) && RandomStateCount < 50);
+
+	if (RandomStateCount >= 50)
 	{
-		count = -1;
 		return EBossState::DODGE;
 	}
 
-	count = -1;
 	return EBossState(index);
 }
 
@@ -107,6 +145,22 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 	PrepNewState(NewState) ? CurrentStateE = NewState : CurrentStateE = EBossState::NONE;
 }
 
+void UFSMComponent::RespondToState()
+{
+	if (CurrentState)
+	{
+		CurrentState->RespondToInput();
+	}
+}
+
+void UFSMComponent::RespondToInput()
+{
+	if (CurrentState)
+	{
+		CurrentState->RespondToInput();
+	}
+}
+
 void UFSMComponent::StartMovement()
 {
 	if (CurrentState)
@@ -128,6 +182,60 @@ EBossState UFSMComponent::GetCurrentStateE() const
 	return CurrentStateE;
 }
 
+bool UFSMComponent::IsPostureBroken() const
+{
+	return PostureState == EPostureState::BROKEN;
+}
+
+void UFSMComponent::SetPostureState(EPostureState _PostureState)
+{
+	PostureState = _PostureState;
+}
+
+bool UFSMComponent::CanTakeDamage()
+{
+	if(HandleDodgeProbability())
+	{
+		return true;
+	}
+	else
+	{
+		RespondToDamageTakenFailed();
+		return false;
+	}	
+}
+
+bool UFSMComponent::HandleDodgeProbability()
+{
+	if (FMath::RandRange(0.f, 1.f) >= DodgeProbTotal / DodgeMaxProb) // Take Damage
+	{
+		FightSpace = EFightingSpace::NEAR;
+		DodgeProbTotal += DodgeProbRate;
+		return true;
+	}
+	else
+	{
+		FightSpace = EFightingSpace::FAR;
+		DodgeProbTotal = 0.f;
+		return false;
+	}
+}
+
+void UFSMComponent::RespondToDamageTakenFailed()
+{
+	switch (FMath::RandRange(0, 1))
+	{
+	case 0:
+	{
+		ChangeStateTo(EBossState::DODGEATTACK);
+		break;
+	}
+	case 1:
+		ChangeStateTo(EBossState::DODGE);
+		break;
+	}
+}
+
 bool UFSMComponent::CanStun() const
 {
 	return bCanStun;
@@ -140,8 +248,47 @@ void UFSMComponent::EnableStun(bool bStun)
 
 bool UFSMComponent::CanParry() const
 {
-	int32 value = FMath::RandRange(1, 10);
-	return value <= 3;
+	float value = 0.f;
+	switch (CurrentStateE)
+	{
+	case EBossState::NONE:
+		return false;
+	case EBossState::STRAFE:
+		return true;
+	case EBossState::RUN:
+		value = FMath::RandRange(0.f, 1.f);
+		return value <= .8f; // 80% chance to block while running.
+
+		/*add another case for Boss normal attack state
+		if (BossCharacter)
+		{
+			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
+			if (StatusComp)
+			{
+				value = FMath::RandRange(1, 10);
+				if (StatusComp->GetPosturePercent() >= .7f)
+					return value <= 5;
+				else return value <= 7;
+			}
+		}*/
+
+	default:
+	{
+		if (BossCharacter)
+		{
+			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
+			if (StatusComp)
+			{
+				value = FMath::RandRange(0.f, 1.f);
+				if (StatusComp->GetPosturePercent() >= .7f)
+					return value <= 0.f;
+				else return value <= 0.f;
+			}
+		}
+	}
+	}
+
+	return false;
 }
 
 bool UFSMComponent::PrepNewState(EBossState NewState)

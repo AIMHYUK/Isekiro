@@ -8,7 +8,6 @@ UParryState::UParryState()
 {
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
-	TravelDist = 80.f;
 	StateDistance.Max = 350.f;
 }
 
@@ -16,16 +15,24 @@ void UParryState::Start()
 {
 	Super::Start();
 
-	//Block particle effects
-	//Block sound
+	if (Instigator)
+	{
+		Instigator->SetLockOnTarget(true);
+	}
 
 	PrevLoc = Instigator->GetActorLocation();
+	FVector TargetLoc = Instigator->GetTargetLoc();
 
-	FVector TargetLoc = Instigator->GetTargetOffsetLocation();
-	FVector DirVector = PrevLoc - TargetLoc;
-	DirVector.Normalize();
-	NewLoc = DirVector * TravelDist + PrevLoc;
-	NewLoc.Z += FMath::RandRange(-5.f, 5.f);
+	float Distance = FVector::Distance(PrevLoc, TargetLoc);
+	FVector DirVec = PrevLoc - TargetLoc;
+	DirVec.Normalize();
+
+	if(Distance < Instigator->GetTargetOffset())
+		NewLoc = Instigator->GetTargetOffset() * DirVec + TargetLoc;
+	else 
+		NewLoc = Distance * DirVec + TargetLoc;
+
+	NewLoc = 200.f * DirVec + TargetLoc;
 
 	int32 SectionNum = FMath::RandRange(1,4);
 	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
