@@ -410,7 +410,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 			
 		}
 
-		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 2.0f, false);
+		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.2f, false);
 	}
 }
 
@@ -436,15 +436,18 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 	if (Status->GetPosture() >= 100 && !(AnimInstance->Montage_IsPlaying(ParryMontage))) //체간이 100을 넘기고 패링에 실패했다면 
 	{
 		PlayerController->SetIgnoreMoveInput(true);
+		PlayerController->SetIgnoreLookInput(true);
 		AnimInstance->Montage_Play(DefenseBreakMontage);
 		Status->SetPostureZero();
-		PlayerController->SetIgnoreMoveInput(false);
+		//PlayerController->SetIgnoreMoveInput(false);
+		//PlayerController->SetIgnoreLookInput(false);
 	}
 	else
 	{
 		if (GuardState == ECharacterGuardState::ECGS_UnGuarded && !HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //가드를 내리고 있고 패링 몽타주가 실행되고 있지 않다면
 		{
-			PlayerController->SetIgnoreMoveInput(true); //못 움직이게 하고 맞는 판정
+			PlayerController->SetIgnoreMoveInput(true);
+			PlayerController->SetIgnoreLookInput(true); //못 움직이게 하고 맞는 판정
 			
 			if (AnimInstance)
 			{
@@ -456,10 +459,9 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 				MontageEndedDelegate.BindUObject(this, &AHeroCharacter::OnHittedMontageEnded);
 				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, HittedMontage);
 				ResetCombo();
-				UE_LOG(LogTemp, Display, TEXT("HP : %f"), Status->GetHealth())
 			}
 		}
-		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)) //패링이 실패했다면 그냥 가드 모션 띄우기
+		else if (!AnimInstance->Montage_IsPlaying(ParryMontage) && !(AnimInstance->Montage_IsPlaying(DefenseBreakMontage))) //패링이 실패했다면 그냥 가드 모션 띄우기
 		{
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
@@ -534,6 +536,25 @@ void AHeroCharacter::Run(const FInputActionValue& value)
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
 {
+	if (IsBossPostureBroken()) //체간이 무너지면
+	{
+		//시간을 느리게 함
+		//입력을 받으면 시간이 다시 빨라짐
+		//입력은 bool값으로 구분 
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (bIsDilated)
+		{
+			if (bCanExecution)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Slow"));
+				Camera->SetFieldOfView(45.f); 
+				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
+				ResetTimeDilation();
+				AnimInstance->Montage_Play(ExecutionMontage);
+			}
+		}
+		Camera->SetFieldOfView(90.f);
+	}
 	if (IsAttacking)
 	{
 		if (CanNextCombo)
@@ -543,16 +564,16 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	}
 	else
 	{ //근데 가드 몽타주면 실행가능   = 가드중이거나 다른 몽타주를 실행중이지 않다면 
-			DealDamage();
+						
 			AttackStartComboState();
-
-			bool bIsPlaying =HeroAnim->Montage_IsPlaying(AttackMontage);
-			if (!bIsPlaying)
+			bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
+			if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
 			{
+				DealDamage();
 				HeroAnim->PlayAttackMontage();
 				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 				IsAttacking = true;
-				KnockBack(-300);
+
 			}
 	}
 }
@@ -615,15 +636,48 @@ void AHeroCharacter::DealDamage()
 				{
 					ActorStatus->TryApplyDamage(10, 10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
-
-					// 액터를 이미 데미지를 입은 것으로 표시
+					// 액터를 이미 데미지를 입은 것으로 표시			
 					DamagedActors.Add(OverlappedActor, true);
+					if (IsBossPostureBroken()) //체간이 무너지면
+					{
+						MakeSlowTimeDilation();
+					}
 				}
 			}
 		}
 		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
 		DamagedActors.Empty();
+
 	}
+}
+
+
+void AHeroCharacter::ResetTimeDilation()
+{
+	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
+	bIsDilated = false;
+	bCanExecution = false;
+}
+
+void AHeroCharacter::MakeSlowTimeDilation()
+{
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.05f);
+	GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &AHeroCharacter::ResetTimeDilation, 2.f, false);
+	bIsDilated = true;
+	bCanExecution = true;
+}
+bool AHeroCharacter::IsBossPostureBroken()
+{
+	ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+	if (Boss)
+	{
+		UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
+		if (FSMComponent)
+		{
+			return FSMComponent->IsPostureBroken();
+		}
+	}
+	return false;
 }
 //대쉬 이벤트처리 함수 구현
 void AHeroCharacter::Dash(const FInputActionValue& value)

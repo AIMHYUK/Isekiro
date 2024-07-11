@@ -47,7 +47,7 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 	{		
 		MyCharacter->SetActionStateParrySuccess();
 		MyCharacter->PlayParryMontage();
-		UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
+		UGameplayStatics::SetGlobalTimeDilation(this, 0.85f);
 		UStatusComponent* State = MyCharacter->GetStatusComponent();
 		State->TryApplyDamage(5, 0);
 		MyCharacter->KnockBack(500);

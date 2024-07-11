@@ -153,6 +153,14 @@ public:
 	void SetActionStateDifferentWithParry();
 
 	EBossState BossState;
+
+	FTimerHandle TimeDilationHandle;
+	void ResetTimeDilation();
+	void MakeSlowTimeDilation();
+	bool bIsDilated = false;
+	bool bCanExecution = false;
+
+	FTimerHandle DealDamageTimerHandl;
 protected:
 
 	virtual void BeginPlay() override;
@@ -201,7 +209,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* DefenseBreakMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* StrongAttackMontage;
+	UAnimMontage* StrongAttackMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ExecutionMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -235,6 +245,7 @@ private:
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	void GetHPPercent();
+	bool IsBossPostureBroken();
 };
 
 
