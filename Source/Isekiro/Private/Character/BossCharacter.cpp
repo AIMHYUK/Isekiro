@@ -12,6 +12,7 @@
 #include "ActorComponents/StatusComponent.h"
 #include "BossWidget.h"
 #include "IsekiroGameModeBase.h"
+#include "Components/WidgetComponent.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -49,11 +50,21 @@ ABossCharacter::ABossCharacter()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	Tags.Add(FName("LockOnPossible"));
+
+	TargetWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("TargetWidgetComponent");
+	TargetWidgetComponent->SetupAttachment(GetMesh());
+	TargetWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 }
 
 void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto Widget = TargetWidgetComponent->GetWidget();
+	if (Widget)
+	{
+		Widget->SetVisibility(ESlateVisibility::Hidden);
+	}
 
 	HeightZ = GetActorLocation().Z;
 
@@ -172,10 +183,10 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 		{
 			if (FSMComponent->CanStun())
 			{
-				if (FSMComponent->CanParry())
+				if (FSMComponent->CanDefend())
 				{
 					StatusComponent->SetHealth(OldHealth);
-					FSMComponent->ChangeStateTo(EBossState::PARRY);
+					FSMComponent->StartParryOrBlock();
 				}
 				else FSMComponent->ChangeStateTo(EBossState::HIT);
 			}

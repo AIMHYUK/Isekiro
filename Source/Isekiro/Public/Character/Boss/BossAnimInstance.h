@@ -47,6 +47,9 @@ protected:
 	UFUNCTION()
 	void AnimNotify_RestoreHealth();
 
+	UFUNCTION()
+	void AnimNotify_Respond();
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead;

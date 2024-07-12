@@ -18,6 +18,7 @@ class UStateObject;
 class UBoxComponent;
 class UCapsuleComponent;
 class UBossWidget;
+class UWidgetComponent;
 
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
@@ -77,6 +78,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UCapsuleComponent> LockOnComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Setting|Components")
+	TObjectPtr<UWidgetComponent> TargetWidgetComponent;
 
 protected:
 	UPROPERTY(EditInstanceOnly, Category = "Setting|Target")

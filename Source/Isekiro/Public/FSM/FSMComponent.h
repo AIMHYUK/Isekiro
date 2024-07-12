@@ -21,26 +21,44 @@ UENUM(Blueprintable)
 enum class EBossState : uint8
 {
 	NONE UMETA(DisplayName = "None"),
-	
-	HIT UMETA(DisplayName = "Hit"),							//Stun
-	PARRY UMETA(DisplayName = "Parry"),						//Stun
-	
-	// add normal attack state								//Near
 
-	ATTACK UMETA(DisplayName = "Attack"),					//Both
-	JUMPATTACK UMETA(DisplayName = "JumpAttack"),			//Both
-	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		//Both
+	//Stun
+	HIT UMETA(DisplayName = "Hit"),							
+	//Stun
+	BLOCK UMETA(DisplayName = "Block"),						
+	//Stun
+	PARRY UMETA(DisplayName = "Parry"),						
+	//Stun
+	DEFLECTED UMETA(DisplayName = "Deflected"),				
+	
+	//Near
+	NORMALATTACK UMETA(DisplayName = "NormalAttack"),		
+	//Near
+	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),		
+	//Near
+	JUMPATTACK UMETA(DisplayName = "JumpAttack"),			
+	//Near
+	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		
 
-	STRAFE UMETA(DisplayName = "Strafe"),					//Far
-	RUN UMETA(DisplayName = "Run"),							//Far
-	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),		//Far
-	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	//Far
-	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),			//Far
+	//Both
+	STRAFE UMETA(DisplayName = "Strafe"),					
+
+	//Far
+	RUN UMETA(DisplayName = "Run"),							
+	//Far
+	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),		
+	//Far
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	
+	//Far
+	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),			
 		
-	DODGE UMETA(DisplayName = "Dodge"),						//Transition
-	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),			//Transition
+	//Transition
+	DODGE UMETA(DisplayName = "Dodge"),						
+	//Transition
+	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),			
 
-	DEATH UMETA(DisplayName = "Death"),						//Death
+	//Death
+	DEATH UMETA(DisplayName = "Death"),						
 
 	MAX UMETA(DisplayName = "Max")
 };
@@ -69,6 +87,7 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	friend class UDeathState;
+	friend class UParryState;
 public:	
 	UFSMComponent();
 
@@ -78,14 +97,12 @@ public:
 
 	EBossState RandomState();
 	bool IsCurrentStateActive() const;
-	bool CanChangeStateTo(EBossState StateToTest);
+	bool TargetWithinRangeFor(EBossState BossState);
 	UFUNCTION(BlueprintCallable)
 	void ChangeStateTo(EBossState NewState);
 
 	void StartMovement();
 	void StopMovement();
-	void RespondToState();
-	
 	UFUNCTION(BlueprintCallable)
 	virtual void RespondToInput();
 
@@ -97,21 +114,25 @@ public:
 	//Can player stop boss's active attacks by forcing boss to respond to player attacks?
 	bool CanStun() const;
 	//if parry fails, boss starts hit state.
-	bool CanParry() const;
+	bool CanDefend() const;
 	void EnableStun(bool bStun);
+	void StartParryOrBlock();
+
+	void EnableDefense(bool bEnabled);
 
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
-
+	
 private:
 	bool HandleDodgeProbability();
-	void RespondToDamageTakenFailed();
+	void PerformDodge();
 
 	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
 	EBossState CurrentStateE;
+	EBossState PrevStateE;
 	EFightingSpace FightSpace;
 	EPostureState PostureState;
 
@@ -124,9 +145,19 @@ private:
 	TObjectPtr<ABossCharacter> BossCharacter;
 
 	bool bCanStun;
-	UPROPERTY(EditAnywhere, Category = "Settings|Dodge", meta=(AllowPrivateAccess))
 	float DodgeMaxProb;
-	UPROPERTY(EditAnywhere, Category = "Settings|Dodge", meta=(AllowPrivateAccess))
+	/*Rate at which probability of performing dodge or dodgeAttack increases. 
+	Probability increases everytime Player attacks. 
+	Probability is out of 100.*/
+	UPROPERTY(EditAnywhere, Category = "Settings|Dodge", meta=(AllowPrivateAccess), meta=(ClampMin="3.0"), meta=(ClampMax="30.0"))
 	float DodgeProbRate;
 	float DodgeProbTotal;
+
+	//Default probability of performing defensive measures against player's attacks.
+	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
+	float DefenseProbability;
+	float DefenseProb;
+	//Probability of parrying attacks. Performs Block otherwise.
+	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
+	float ParryProbability;
 };
