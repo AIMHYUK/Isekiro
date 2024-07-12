@@ -22,6 +22,12 @@ void UStateObject::Initialize(UFSMComponent* _FSMComp, ABossCharacter* _Instigat
 
 void UStateObject::Start()
 {
+	EBossState NewStateE = GetFSMState();
+	if (FSMComp && (NewStateE != EBossState::NONE && NewStateE != EBossState::MAX))
+	{
+		FSMComp->SetFSMState(GetFSMState());
+	}
+
 	PlayMontage();
 }
 

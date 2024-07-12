@@ -324,12 +324,7 @@ bool UFSMComponent::PrepNewState(EBossState NewState)
 			if (CurrentState) CurrentState->Stop();
 			NewStateObj->Start();
 			CurrentState = NewStateObj;
-			EBossState NewStateE = NewStateObj->GetFSMState();
-			if (ensure(NewStateE != EBossState::NONE && NewStateE != EBossState::MAX))
-			{
-				SetFSMState(NewStateObj->GetFSMState());
-				return true;
-			}
+			return true;
 		}
 		else UE_LOG(LogTemp, Warning, TEXT("Could not Instantiate new boss State object."));
 	}

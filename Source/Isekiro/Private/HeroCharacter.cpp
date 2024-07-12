@@ -40,7 +40,7 @@ AHeroCharacter::AHeroCharacter()
 	Camera->SetupAttachment(SpringArm); //생성자에서 만들자..
 
 	DeathCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("DeathCamera")); //죽었을때 카메라
-	DeathCamera->SetupAttachment(GetRootComponent()); 
+	DeathCamera->SetupAttachment(GetRootComponent());
 	DeathCamera->bAutoActivate = false; // 초기에는 비활성화
 
 	MaxCombo = 3;
@@ -112,7 +112,7 @@ void AHeroCharacter::BeginPlay()
 
 	// Ensure the owner is valid and has a mesh component
 	USkeletalMeshComponent* CharacterMesh = GetMesh();
-	ParryCheck->AttachToComponent(CharacterMesh,FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
+	ParryCheck->AttachToComponent(CharacterMesh, FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
 
 	if (GetCapsuleComponent() != nullptr)
 	{
@@ -144,7 +144,7 @@ void AHeroCharacter::BeginPlay()
 	IsekiroGameModeBase = Cast<AIsekiroGameModeBase>(GetWorld()->GetAuthGameMode());
 
 	AnimInstance = GetMesh()->GetAnimInstance();
-	
+
 
 }
 
@@ -167,11 +167,11 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 		});
 	HeroAnim->OnAttackHitCheck.AddLambda([this]() -> void
 		{
-			
+
 			DealDamage();
 			//OnWidget();
 			UE_LOG(LogTemp, Error, TEXT("ATTackHitCheck"));
-		});	
+		});
 }
 // Called every frame
 void AHeroCharacter::Tick(float DeltaTime)
@@ -208,7 +208,7 @@ void AHeroCharacter::Tick(float DeltaTime)
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("NO HAZARD")));;
 	}
 
-	
+
 }
 
 
@@ -259,12 +259,12 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StartGuard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::EndGuard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Canceled, this, &AHeroCharacter::Attack);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);	
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
 	}
-	
+
 }
 void AHeroCharacter::Move(const FInputActionValue& value)
 {
@@ -281,7 +281,7 @@ void AHeroCharacter::Move(const FInputActionValue& value)
 		AddMovementInput(RightDirection, Vector.X);
 	}
 }
-void AHeroCharacter::Look(const FInputActionValue& value) 
+void AHeroCharacter::Look(const FInputActionValue& value)
 {
 	const FVector2D LookAxisValue = value.Get<FVector2D>();
 
@@ -341,7 +341,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 	bool bIsPressed = Value.Get<bool>();
 	ParryCheck->ParryStarted();
 	GuardState = ECharacterGuardState::ECGS_Guarding;
-	
+
 	auto Movement = GetCharacterMovement();
 	//가드걷기속도로 전환
 	Movement->MaxWalkSpeed = GuardWalkSpeed;
@@ -361,25 +361,34 @@ void AHeroCharacter::PlayParryMontage()
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	PlayerController->SetIgnoreMoveInput(true); //패링중 못움직이게
-	
+
 	ParryMontageSections = { TEXT("Parry1"), TEXT("Parry2"), TEXT("Parry3") }; //섹션 이름 받아서
 
-	
+
 	AnimInstance->Montage_Play(ParryMontage);
-		if (ParryMontageSections.Num() > 0)
-		{
-			// Select a random section from the array
-			int32 SectionIndex = FMath::RandRange(0, ParryMontageSections.Num() - 1);
-			FName SelectedSection = ParryMontageSections[SectionIndex]; //랜덤하게 플레이하기
+	if (ParryMontageSections.Num() > 0)
+	{
+		// Select a random section from the array
+		int32 SectionIndex = FMath::RandRange(0, ParryMontageSections.Num() - 1);
+		FName SelectedSection = ParryMontageSections[SectionIndex]; //랜덤하게 플레이하기
 
-			// Jump to the selected section
-			AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
-			ShakeCam();
-			// Log the selected section (optional, for debugging)
-			UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
-		}
-		PlayerController->SetIgnoreMoveInput(false);
+		// Jump to the selected section
+		AnimInstance->Montage_JumpToSection(SelectedSection, ParryMontage);
+		ShakeCam();
+		// Log the selected section (optional, for debugging)
+		UE_LOG(LogTemp, Log, TEXT("Playing Parry Montage Section: %s"), *SelectedSection.ToString());
+	}
+	PlayerController->SetIgnoreMoveInput(false);
 
+}
+void AHeroCharacter::PlayParriedMontage()
+{ //by justin
+	BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
+	if (BossState == EBossState::PARRY)
+	{
+		if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
+			AnimInstance->Montage_Play(GetParriedMontage);
+	}
 }
 void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
 {
@@ -418,7 +427,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 		if (AnimInstance && StrongAttackMontage)
 		{
 			AnimInstance->Montage_Play(StrongAttackMontage);
-			
+
 		}
 
 		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.2f, false);
@@ -472,11 +481,11 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 		{
 			PlayerController->SetIgnoreMoveInput(true);
 			PlayerController->SetIgnoreLookInput(true); //못 움직이게 하고 맞는 판정
-			
+
 			if (AnimInstance)
 			{
 				ApplyDamage(10);
-				ApplyPosture(10); 
+				ApplyPosture(10);
 				AnimInstance->Montage_Play(HittedMontage);
 				// 몽타주가 끝났을 때 호출될 델리게이트 설정
 				FOnMontageEnded MontageEndedDelegate;
@@ -506,18 +515,18 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
 					switch (BossState)
 					{
-						case EBossState::LUNGEATTACK:
-							KnockBack(3000);
-							break;
-						case EBossState::JUMPATTACK:
-							KnockBack(3000);
-							break;
-						case EBossState::THRUSTATTACK:
-							KnockBack(3000);
-							break;
-						default:
-							KnockBack(800);
-							break;
+					case EBossState::LUNGEATTACK:
+						KnockBack(3000);
+						break;
+					case EBossState::JUMPATTACK:
+						KnockBack(3000);
+						break;
+					case EBossState::THRUSTATTACK:
+						KnockBack(3000);
+						break;
+					default:
+						KnockBack(800);
+						break;
 					}
 					ResetCombo();
 				}
@@ -559,7 +568,7 @@ void AHeroCharacter::Run(const FInputActionValue& value)
 		movement->MaxWalkSpeed = walkSpeed;
 	}
 	//현재 달리기 모드가 아니라면
-	else if(!AnimInstance->Montage_IsPlaying(GuardMontage))
+	else if (!AnimInstance->Montage_IsPlaying(GuardMontage))
 	{
 		//달리기속도로 전환
 		movement->MaxWalkSpeed = runSpeed;
@@ -578,7 +587,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 			if (bCanExecution)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Slow"));
-				Camera->SetFieldOfView(45.f); 
+				Camera->SetFieldOfView(45.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
 				AnimInstance->Montage_Play(ExecutionMontage);
@@ -598,20 +607,23 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		}
 		else
 		{ //근데 가드 몽타주면 실행가능   = 가드중이거나 다른 몽타주를 실행중이지 않다면 
-
-			AttackStartComboState();
-			bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
-			if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
+			if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 			{
-				DealDamage();
-				HeroAnim->PlayAttackMontage();
-				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-				IsAttacking = true;
+				AttackStartComboState();
+				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
+				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
+				{
+					DealDamage();
+					HeroAnim->PlayAttackMontage();
+					HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+					IsAttacking = true;
 
+				}
 			}
+
 		}
 	}
-	
+
 
 }
 
@@ -679,22 +691,14 @@ void AHeroCharacter::DealDamage()
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
 				{
-					if (BossState == EBossState::PARRY)
+					ActorStatus->TryApplyDamage(10, 10);
+					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
+					// 액터를 이미 데미지를 입은 것으로 표시			
+					DamagedActors.Add(OverlappedActor, true);
+					if (IsBossPostureBroken()) //체간이 무너지면
 					{
-						AnimInstance->Montage_Play(GetParriedMontage);
+						MakeSlowTimeDilation();
 					}
-					else 
-					{
-						ActorStatus->TryApplyDamage(10, 10);
-						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
-						// 액터를 이미 데미지를 입은 것으로 표시			
-						DamagedActors.Add(OverlappedActor, true);
-						if (IsBossPostureBroken()) //체간이 무너지면
-						{
-							MakeSlowTimeDilation();
-						}
-					}
-
 				}
 			}
 		}

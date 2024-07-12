@@ -99,6 +99,8 @@ public:
 	UFUNCTION()
 	void PlayParryMontage();
 
+	void PlayParriedMontage();
+
 	UPROPERTY(EditAnywhere, Category = "Animation")
     TArray<FName> ParryMontageSections; // Array to hold section names
 

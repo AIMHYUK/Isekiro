@@ -3,6 +3,7 @@
 
 #include "FSM/BossStates/Reactions/ParryState.h"
 #include "Character/BossCharacter.h"
+#include "HeroCharacter.h"
 
 UParryState::UParryState()
 {
@@ -17,6 +18,12 @@ void UParryState::Start()
 	//Child Functionality
 	int32 SectionNum = FMath::RandRange(1,6);
 	JumpToSection(FName(FString::FromInt(SectionNum)));
+
+	auto Hero = Cast<AHeroCharacter>(Target);
+	if (Hero)
+	{
+		Hero->PlayParriedMontage();
+	}
 }
 
 void UParryState::RespondToInput()

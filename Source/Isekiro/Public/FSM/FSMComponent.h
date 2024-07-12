@@ -88,6 +88,7 @@ class ISEKIRO_API UFSMComponent : public UActorComponent
 	GENERATED_BODY()
 	friend class UDeathState;
 	friend class UParryState;
+	friend class UStateObject;
 public:	
 	UFSMComponent();
 
