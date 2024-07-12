@@ -12,8 +12,8 @@ UReactionState::UReactionState()
 
 	TravelDist = 250.f;
 
-	MeleeAttackProb = .8f;
-	NormalAttackProb = .8f;
+	MeleeAttackProb = 1.f;
+	NormalAttackProb = 1.f;
 }
 
 void UReactionState::Start()
