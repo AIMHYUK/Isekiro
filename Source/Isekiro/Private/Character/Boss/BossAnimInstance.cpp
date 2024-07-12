@@ -116,3 +116,11 @@ void UBossAnimInstance::AnimNotify_RestoreHealth()
 		Status->SetPosture(0.f);
 	}
 }
+
+void UBossAnimInstance::AnimNotify_Respond()
+{
+	if (FSMComp)
+	{
+		FSMComp->RespondToInput();
+	}
+}

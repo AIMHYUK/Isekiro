@@ -27,7 +27,7 @@ EBossState URunState::Update(float DeltaTime)
 	Super::Update(DeltaTime);
 
 	float DistToTarget = Instigator->GetDistanceToTargetOffset();
-	if (FSMComp && FSMComp->CanChangeStateTo(SelectedState))
+	if (FSMComp && FSMComp->TargetWithinRangeFor(SelectedState))
 	{
 		StopMovement();
 		return SelectedState;

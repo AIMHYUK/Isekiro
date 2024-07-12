@@ -7,7 +7,7 @@
 UAttackState::UAttackState()
 {
 	MoveSpeed = 70.f;
-	StateDistance.Max = 300.f;
+	StateDistance.Max = 350.f;
 }
 
 void UAttackState::Start()

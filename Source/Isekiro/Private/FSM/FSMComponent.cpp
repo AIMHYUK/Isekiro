@@ -11,6 +11,7 @@ UFSMComponent::UFSMComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CurrentStateE = EBossState::STRAFE;
+	PrevStateE = EBossState::NONE;
 
 	bCanStun = true;
 
@@ -20,13 +21,17 @@ UFSMComponent::UFSMComponent()
 
 	FightSpace = EFightingSpace::FAR;
 
-	ParryProbability = .8f;
+	DefenseProbability = 1.f;
+	DefenseProb = DefenseProbability;
+	ParryProbability = .5f;
 }
 
 
 void UFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefenseProb = DefenseProbability;
 
 	auto* Boss = Cast<ABossCharacter>(GetOwner());
 	if (Boss)
@@ -57,23 +62,25 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Def Percent: %f"), DefenseProb);
+
 	if (CanStun())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Yes Can Stun")));
 	}
-	else GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("No Can't Stun")));
+	else GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, FString::Printf(TEXT("No Can't Stun")));
 
-	switch(FightSpace)
+	switch (FightSpace)
 	{
 	case EFightingSpace::FAR:
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("FAR")));
 		break;
 	case EFightingSpace::NEAR:
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("NEAR")));
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Red, FString::Printf(TEXT("NEAR")));
 		break;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Magenta, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
 }
 
 EBossState UFSMComponent::RandomState()
@@ -101,11 +108,27 @@ EBossState UFSMComponent::RandomState()
 	{
 		index = FMath::RandRange(min, max);
 		RandomStateCount++;
-	} while (EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !CanChangeStateTo((EBossState)index) && RandomStateCount < 50);
+	} while (EBossState(index) != PrevStateE && EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !TargetWithinRangeFor((EBossState)index) && RandomStateCount < 50);
 
 	if (RandomStateCount >= 50)
 	{
-		return EBossState::DODGE;
+		return EBossState::COUNTERATTACK;
+		/*if (BossCharacter && BossCharacter->IsWithinTarget())
+		{
+			if (FMath::RandRange(0, 1 == 1))
+			{
+				FightSpace = EFightingSpace::NEAR;
+				RandomState();
+			}
+		}
+		else
+		{
+			if (FMath::RandRange(0, 1 == 1))
+			{
+				return EBossState::STRAFE;
+			}
+			else return EBossState::THRUSTATTACK;			
+		}*/
 	}
 
 	return EBossState(index);
@@ -121,13 +144,13 @@ void UFSMComponent::SetFSMState(EBossState _CurrentStateE)
 	CurrentStateE = _CurrentStateE;
 }
 
-bool UFSMComponent::CanChangeStateTo(EBossState StateToTest)
+bool UFSMComponent::TargetWithinRangeFor(EBossState BossState)
 {
-	if (StateToTest == EBossState::NONE) return false;
+	if (BossState == EBossState::NONE) return false;
 
-	if (StateToTest == CurrentStateE) return false;
+	if (BossState == CurrentStateE) return false;
 
-	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(StateToTest);
+	TSubclassOf<UStateObject>* StateObjectClass = BossStateMap.Find(BossState);
 	if (StateObjectClass && *StateObjectClass)
 	{
 		TSubclassOf<UStateObject> StateObjClass = *StateObjectClass;
@@ -144,14 +167,16 @@ bool UFSMComponent::CanChangeStateTo(EBossState StateToTest)
 
 void UFSMComponent::ChangeStateTo(EBossState NewState)
 {
-	PrepNewState(NewState) ? CurrentStateE = NewState : CurrentStateE = EBossState::NONE;
-}
 
-void UFSMComponent::RespondToState()
-{
-	if (CurrentState)
+	if (PrepNewState(NewState))
 	{
-		CurrentState->RespondToInput();
+		PrevStateE = CurrentStateE;
+		CurrentStateE = NewState;
+	}
+	else 
+	{
+		PrevStateE = CurrentStateE;
+		CurrentStateE = EBossState::NONE;
 	}
 }
 
@@ -196,15 +221,12 @@ void UFSMComponent::SetPostureState(EPostureState _PostureState)
 
 bool UFSMComponent::CanTakeDamage()
 {
-	if(HandleDodgeProbability())
+	if (HandleDodgeProbability())
 	{
-		return true;
-	}
-	else
-	{
-		RespondToDamageTakenFailed();
+		PerformDodge();
 		return false;
-	}	
+	}
+	else return true;
 }
 
 bool UFSMComponent::HandleDodgeProbability()
@@ -213,17 +235,17 @@ bool UFSMComponent::HandleDodgeProbability()
 	{
 		FightSpace = EFightingSpace::NEAR;
 		DodgeProbTotal += DodgeProbRate;
-		return true;
+		return false;
 	}
 	else
 	{
 		FightSpace = EFightingSpace::FAR;
 		DodgeProbTotal = 0.f;
-		return false;
+		return true;
 	}
 }
 
-void UFSMComponent::RespondToDamageTakenFailed()
+void UFSMComponent::PerformDodge()
 {
 	switch (FMath::RandRange(0, 1))
 	{
@@ -248,9 +270,21 @@ void UFSMComponent::EnableStun(bool bStun)
 	bCanStun = bStun;
 }
 
-bool UFSMComponent::CanParry() const
+void UFSMComponent::StartParryOrBlock()
 {
-	float value = 0.f;
+	float Prob = FMath::RandRange(0.f, 1.f);
+	if (Prob <= ParryProbability) ChangeStateTo(EBossState::PARRY);
+	else ChangeStateTo(EBossState::BLOCK);
+}
+
+void UFSMComponent::EnableDefense(bool bEnabled)
+{
+	bEnabled ? DefenseProb = DefenseProbability : DefenseProb = .0f;
+}
+
+bool UFSMComponent::CanDefend() const
+{
+	float value = FMath::RandRange(0.f, 1.f);
 	switch (CurrentStateE)
 	{
 	case EBossState::NONE:
@@ -258,24 +292,9 @@ bool UFSMComponent::CanParry() const
 	case EBossState::STRAFE:
 		return true;
 	case EBossState::RUN:
-		value = FMath::RandRange(0.f, 1.f);
-		return value <= .8f; // 80% chance to block while running.
-
-		/*add another case for Boss normal attack state
-		if (BossCharacter)
-		{
-			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
-			if (StatusComp)
-			{
-				value = FMath::RandRange(1, 10);
-				if (StatusComp->GetPosturePercent() >= .7f)
-					return value <= 5;
-				else return value <= 7;
-			}
-		}*/
+		return value <= DefenseProb;
 	case EBossState::DEFLECTED:
-		value = FMath::RandRange(0.f, 1.f);
-		return value <= .1f; // 10% chance to block when Deflected.
+		return value <= DefenseProb;
 	default:
 	{
 		if (BossCharacter)
@@ -283,8 +302,8 @@ bool UFSMComponent::CanParry() const
 			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
 			if (StatusComp)
 			{
-				if (StatusComp->GetPosturePercent() >= .7f) return value <= ParryProbability;
-				else return value <= ParryProbability;
+				if (StatusComp->GetPosturePercent() >= .7f) return value <= DefenseProb;
+				else return value <= DefenseProb;
 			}
 		}
 	}

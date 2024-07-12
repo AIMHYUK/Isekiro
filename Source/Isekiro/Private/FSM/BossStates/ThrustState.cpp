@@ -9,7 +9,6 @@ UThrustState::UThrustState()
 	MaxRunTime = .4f;
 	TotalRunTime = .0f;
 
-	StateDistance.Min = 400.f;
 	StateDistance.Max = 600.f;
 	bIsWithinRange = true;
 	Speed = 300.f;

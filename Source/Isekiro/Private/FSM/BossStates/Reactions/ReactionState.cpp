@@ -1,17 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "FSM/BossStates/ParryState.h"
+#include "FSM/BossStates/Reactions/ReactionState.h"
 #include "Character/BossCharacter.h"
 
-UParryState::UParryState()
+UReactionState::UReactionState()
 {
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
 	StateDistance.Max = 350.f;
+
+	TravelDist = 250.f;
+
+	MeleeAttackProb = .8f;
+	NormalAttackProb = .8f;
 }
 
-void UParryState::Start()
+void UReactionState::Start()
 {
 	Super::Start();
 
@@ -27,48 +32,46 @@ void UParryState::Start()
 	FVector DirVec = PrevLoc - TargetLoc;
 	DirVec.Normalize();
 
-	if(Distance < Instigator->GetTargetOffset())
+	if (Distance < Instigator->GetTargetOffset())
 		NewLoc = Instigator->GetTargetOffset() * DirVec + TargetLoc;
-	else 
+	else
 		NewLoc = Distance * DirVec + TargetLoc;
 
-	NewLoc = 200.f * DirVec + TargetLoc;
-
-	int32 SectionNum = FMath::RandRange(1,4);
-	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
-		FName(FString::FromInt(SectionNum)), MontageState.Montage);
+	NewLoc = TravelDist * DirVec + TargetLoc;
 }
 
-EBossState UParryState::Update(float DeltaTime)
+EBossState UReactionState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
-	
-	if (FMath::RandRange(1, 10) <= 8)
-	{
-		if (FMath::RandRange(1, 10) <= 7)
-		{
-			return EBossState::NORMALATTACK;
-		}
-		else return EBossState::COUNTERATTACK;
-	}
-	else
-	{
-		if (FSMComp && !FSMComp->IsCurrentStateActive()) return FSMComp->RandomState();
-	}
 
+	if (FSMComp && !FSMComp->IsCurrentStateActive())
+	{
+		if (FMath::RandRange(0.f, 1.f) <= MeleeAttackProb)
+		{
+			if (FMath::RandRange(0.f, 1.f) <= NormalAttackProb)
+			{
+				return EBossState::NORMALATTACK;
+			}
+			else return EBossState::COUNTERATTACK;
+		}
+		else
+		{
+			return FSMComp->RandomState();
+		}
+	}
 	return EBossState::NONE;
 }
 
-void UParryState::Stop()
+void UReactionState::Stop()
 {
 	Super::Stop();
 }
 
-EBossState UParryState::UpdateMovement(float DeltaTime)
+EBossState UReactionState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
 
-	if(!CanStartMovement()) return EBossState::NONE;
+	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (TotalRunTime <= MaxRunTime)
 	{

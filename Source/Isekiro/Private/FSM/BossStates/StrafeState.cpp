@@ -9,7 +9,7 @@ UStrafeState::UStrafeState()
 	StrafeSpeed = 80.f;
 	StrafeMaxTime = 3.f;
 	StrafeTotalTime = 0.f;
-	StateDistance.Min = 500.f;
+	StateDistance.Min = 250.f;
 }
 
 void UStrafeState::Start()

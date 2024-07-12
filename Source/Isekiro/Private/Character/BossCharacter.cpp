@@ -172,10 +172,10 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 		{
 			if (FSMComponent->CanStun())
 			{
-				if (FSMComponent->CanParry())
+				if (FSMComponent->CanDefend())
 				{
 					StatusComponent->SetHealth(OldHealth);
-					FSMComponent->ChangeStateTo(EBossState::PARRY);
+					FSMComponent->StartParryOrBlock();
 				}
 				else FSMComponent->ChangeStateTo(EBossState::HIT);
 			}
