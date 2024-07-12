@@ -27,10 +27,10 @@ void UParryState::RespondToInput()
 
 
 	float val = FMath::RandRange(0.f, 1.f);
-	if (val <= .6f) FSMComp->ChangeStateTo(EBossState::NORMALATTACK);
+	if (val <= .7f) FSMComp->ChangeStateTo(EBossState::NORMALATTACK);
 
 	val = FMath::RandRange(0.f, 1.f);
-	if (val <= .4f) FSMComp->ChangeStateTo(EBossState::COUNTERATTACK);
+	if (val <= .2f) FSMComp->ChangeStateTo(EBossState::COUNTERATTACK);
 
 	val = FMath::RandRange(0.f, 1.f);
 	if (val <= .2f) FSMComp->ChangeStateTo(EBossState::DODGE);	
