@@ -588,20 +588,8 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	}
 	else
 	{
-		ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
-		if (Boss)
-		{
-			UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
-			if (FSMComponent)
-			{
-				BossState = FSMComponent->GetCurrentStateE();
-			}
-		}
-		if (BossState == EBossState::PARRY)
-		{
-			AnimInstance->Montage_Play(GetParriedMontage);
-		}
-		else if (IsAttacking)
+
+		if (IsAttacking)
 		{
 			if (CanNextCombo)
 			{
@@ -674,7 +662,15 @@ void AHeroCharacter::DealDamage()
 			ActorsToIgnore,
 			OutActors
 		);
-
+		ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+		if (Boss)
+		{
+			UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
+			if (FSMComponent)
+			{
+				BossState = FSMComponent->GetCurrentStateE();
+			}
+		}
 		for (AActor* OverlappedActor : OutActors)
 		{
 			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
@@ -683,14 +679,22 @@ void AHeroCharacter::DealDamage()
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
 				{
-					ActorStatus->TryApplyDamage(10, 10);
-					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
-					// 액터를 이미 데미지를 입은 것으로 표시			
-					DamagedActors.Add(OverlappedActor, true);
-					if (IsBossPostureBroken()) //체간이 무너지면
+					if (BossState == EBossState::PARRY)
 					{
-						MakeSlowTimeDilation();
+						AnimInstance->Montage_Play(GetParriedMontage);
 					}
+					else 
+					{
+						ActorStatus->TryApplyDamage(10, 10);
+						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
+						// 액터를 이미 데미지를 입은 것으로 표시			
+						DamagedActors.Add(OverlappedActor, true);
+						if (IsBossPostureBroken()) //체간이 무너지면
+						{
+							MakeSlowTimeDilation();
+						}
+					}
+
 				}
 			}
 		}
