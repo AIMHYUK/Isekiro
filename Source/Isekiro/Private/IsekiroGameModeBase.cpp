@@ -11,6 +11,7 @@
 #include "HeroCharacter.h"
 #include "Character/BossCharacter.h"
 #include "Components/TextBlock.h"
+#include "GameOverWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 void AIsekiroGameModeBase::BeginPlay()
@@ -56,14 +57,43 @@ void AIsekiroGameModeBase::BeginPlay()
 				BossUI->AddToViewport();
 		}
 	}
+	//캐릭터가 죽으면 게임오버 위젯 + 3초후 게임 시작
+
+}
+
+void AIsekiroGameModeBase::Tick(float DeltaSeconds)
+{
+	AHeroCharacter* HeroCharacter = Cast<AHeroCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (!IsGameOverWidgetVisible && HeroCharacter->IsDead())
+	{
+		PlayerIsDead();
+		IsGameOverWidgetVisible = true;
+	}
 }
 
 void AIsekiroGameModeBase::GameHasEnded()
 {
 	BossUI->RemoveFromViewport();
+	mainUI->RemoveFromViewport();
 }
 
+void AIsekiroGameModeBase::PlayerIsDead()
+{
+	GameOverWidget = CreateWidget<UGameOverWidget>(GetWorld(), GameOverWidgetFactory);
+	if (GameOverWidget)
+	{
+		GameOverWidget->AddToViewport(); //위젯띄우기
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AIsekiroGameModeBase::RestartLevel, 3.0f, false);	
+	}
+	UE_LOG(LogTemp, Display, TEXT("HELPME!!"));
+}
 
+void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
+{
+	FString MapName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*MapName));
+}
 
 void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {

@@ -107,6 +107,8 @@ public:
     TArray<FName> GuardMontageSections; // Array to hold section names
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
+    TArray<FName> GetParriedMontageSections; // Array to hold section names
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	URealParryBox* ParryCheck;
 
 	UPROPERTY(EditAnywhere)
@@ -154,13 +156,25 @@ public:
 
 	EBossState BossState;
 
+	//보스 막타 시간느리게 + 확대
 	FTimerHandle TimeDilationHandle;
+	FTimerHandle CameraHandle;
 	void ResetTimeDilation();
 	void MakeSlowTimeDilation();
+	void MakeCameraDefault();
 	bool bIsDilated = false;
 	bool bCanExecution = false;
 
 	FTimerHandle DealDamageTimerHandl;
+
+	//연속 점프 막기
+	bool bCanJump = true;
+	void Landed(const FHitResult& Hit);
+
+	class UAnimInstance* AnimInstance;
+
+	FVector DeathCameraOffset;
+	FRotator DeathCameraRotation;
 protected:
 
 	virtual void BeginPlay() override;
@@ -168,7 +182,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArm;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	UCameraComponent* Camera;
+	UCameraComponent* Camera;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UCameraComponent* DeathCamera;
 
 
 	UPROPERTY(EditAnywhere, Category = Input)
@@ -211,7 +227,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* StrongAttackMontage;	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* ExecutionMontage;
+	UAnimMontage* ExecutionMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* GetParriedMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -223,6 +241,8 @@ protected:
 	void StrongAttack(const FInputActionValue& value);
 	void EndStrongAttack();
 
+	UFUNCTION()
+	void Die();
 	
 	UFUNCTION()
 	void PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

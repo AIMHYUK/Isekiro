@@ -10,6 +10,7 @@
 #include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
 #include "CharacterTypes.h"
+#include "FSM/FSMComponent.h"
 
 // Sets default values for this component's properties
 URealParryBox::URealParryBox()
@@ -54,6 +55,13 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
 		MyCharacter->SetActionStateDifferentWithParry();
+		//머지할떄 풀자
+		auto FSM = OtherActor->GetComponentByClass<UFSMComponent>();
+		if (FSM && FSM->CanStun())
+		{
+			//FSM->ChangeStateTo(EBossState::DEFLECTED);
+		}
+		
 	}
 }
 

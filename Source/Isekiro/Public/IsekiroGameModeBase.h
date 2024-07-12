@@ -10,6 +10,7 @@
  * 
  */
 class UCharacterWidget;
+class UGameOverWidget;
 
 UCLASS()
 class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
@@ -24,6 +25,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UBossWidget> BossWidget;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UGameOverWidget> GameOverWidgetFactory;
 
 	class UStatusComponent* State;
 	UPROPERTY()
@@ -40,14 +44,19 @@ public:
 
 	void GameHasEnded();
 
+
+	void PlayerIsDead();
+	void RestartLevel();
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 private:
 	float HPPercent;
 	UCharacterWidget* mainUI;
 	class UBossWidget* BossUI;
+	UGameOverWidget* GameOverWidget;
 
-
+	bool IsGameOverWidgetVisible = false;
 };
