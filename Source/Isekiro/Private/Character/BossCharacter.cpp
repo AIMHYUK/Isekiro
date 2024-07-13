@@ -18,8 +18,8 @@ ABossCharacter::ABossCharacter()
 {
 	FSMComponent = CreateDefaultSubobject<UFSMComponent>("FSMComponent");
 
-	SetActorRelativeScale3D(FVector(1.25f,1.25f,1.25f));
-	
+	SetActorRelativeScale3D(FVector(1.25f, 1.25f, 1.25f));
+
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
 	AttackBoxComp->SetRelativeLocation(FVector(110.f, 0.f, 0.f));
@@ -48,6 +48,18 @@ ABossCharacter::ABossCharacter()
 
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -88.f));
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	GetMesh()->SetVisibility(false);
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+
+	RetargetedSKMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RetargetedSkeletalMeshComponent");
+	RetargetedSKMesh->SetupAttachment(GetMesh());
+
+	WeaponSMesh = CreateDefaultSubobject<UStaticMeshComponent>("WeaponStaticMeshComponent");
+	WeaponSMesh->SetupAttachment(GetMesh());
+	WeaponSMesh->SetRelativeLocation(FVector(2.276266f, 0.419644f, 0.572694f));
+	WeaponSMesh->SetRelativeRotation(FRotator(80.f, 100.f, 195.f));
+	WeaponSMesh->SetRelativeScale3D(FVector::One() * 1.25f);
+	WeaponSMesh->SetCollisionProfileName("NoCollision");
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
@@ -56,6 +68,7 @@ ABossCharacter::ABossCharacter()
 	TargetWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("TargetWidgetComponent");
 	TargetWidgetComponent->SetupAttachment(GetMesh());
 	TargetWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
 }
 
 void ABossCharacter::BeginPlay()

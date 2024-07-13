@@ -63,6 +63,10 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
+	TObjectPtr<USkeletalMeshComponent> RetargetedSKMesh;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
+	TObjectPtr<UStaticMeshComponent> WeaponSMesh;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;

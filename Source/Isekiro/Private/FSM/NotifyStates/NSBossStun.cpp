@@ -8,11 +8,16 @@ void UNSBossStun::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
-	auto FSMComp = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
-	if (FSMComp)
+	AActor* Owner = MeshComp->GetOwner();
+	if (Owner)
 	{
-		FSMComp->EnableStun(false);
+		auto FSMComp = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
+		if (FSMComp)
+		{
+			FSMComp->EnableStun(false);
+		}
 	}
+
 }
 
 void UNSBossStun::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
@@ -23,10 +28,14 @@ void UNSBossStun::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 void UNSBossStun::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	
-	auto FSMComp = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
-	if (FSMComp)
+
+	AActor* Owner = MeshComp->GetOwner();
+	if (Owner)
 	{
-		FSMComp->EnableStun(true);
+		auto FSMComp = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
+		if (FSMComp)
+		{
+			FSMComp->EnableStun(true);
+		}
 	}
 }
