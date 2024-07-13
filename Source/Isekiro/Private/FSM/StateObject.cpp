@@ -11,6 +11,7 @@ UStateObject::UStateObject()
 	StateDistance.Min = 0.f;
 	StateDistance.Max = 50000.f;
 	FSMState = EBossState::NONE;
+	SelectedIndex = -1;
 }
 
 void UStateObject::Initialize(UFSMComponent* _FSMComp, ABossCharacter* _Instigator, AActor* _Target)
@@ -46,22 +47,39 @@ void UStateObject::Activate()
 
 void UStateObject::JumpToSection(FName SectionName)
 {
-	if (Instigator)
+	if (Instigator && SelectedIndex != -1)
 	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
 		{
-			if (Anim) Anim->Montage_JumpToSection(SectionName, MontageState.Montage);
+			if (Anim) Anim->Montage_JumpToSection(SectionName, MontageStates[SelectedIndex].Montage);
 		}
 	}
 }
 
 void UStateObject::PlayMontage()
 {
-	if (Instigator && MontageState.Montage)
+	if (MontageStates.Num() == 0)
 	{
-		Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageState.Montage);
-		if (!MontageState.SectionName.IsNone())
-			Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageState.SectionName, MontageState.Montage);
+		UE_LOG(LogTemp, Warning, TEXT("No Anim Montage to play in %s state"), *GetNameSafe(this));
+		return;
+	}
+
+	SelectedIndex = FMath::RandRange(0, MontageStates.Num() - 1);
+
+	if (Instigator)
+	{
+		if (MontageStates[SelectedIndex].Montage)
+		{
+			Instigator->GetMesh()->GetAnimInstance()->Montage_Play(MontageStates[SelectedIndex].Montage);
+			if (!MontageStates[SelectedIndex].SectionName.IsNone())
+				Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
+					MontageStates[SelectedIndex].SectionName, MontageStates[SelectedIndex].Montage);
+		}
+		else 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Selected Anim Montage is null in %s state"), *GetNameSafe(this));
+			SelectedIndex = -1;
+		}
 	}
 }
 

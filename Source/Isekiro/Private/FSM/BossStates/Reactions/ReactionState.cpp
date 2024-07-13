@@ -65,6 +65,14 @@ EBossState UReactionState::Update(float DeltaTime)
 void UReactionState::Stop()
 {
 	Super::Stop();
+	if(Instigator && Instigator->GetMesh() && Instigator->GetMesh()->GetAnimInstance())
+	{
+		auto Anim = Instigator->GetMesh()->GetAnimInstance();
+		if(Anim && Anim->IsAnyMontagePlaying())
+		{
+			Anim->StopAllMontages(0.1f);
+		}
+	}
 }
 
 EBossState UReactionState::UpdateMovement(float DeltaTime)

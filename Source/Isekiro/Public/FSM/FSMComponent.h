@@ -128,6 +128,8 @@ protected:
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 	
 private:
+	void ChooseAttackResponse();
+
 	bool HandleDodgeProbability();
 	void PerformDodge();
 
@@ -150,14 +152,20 @@ private:
 	/*Rate at which probability of performing dodge or dodgeAttack increases. 
 	Probability increases everytime Player attacks. 
 	Probability is out of 100.*/
-	UPROPERTY(EditAnywhere, Category = "Settings|Dodge", meta=(AllowPrivateAccess), meta=(ClampMin="3.0"), meta=(ClampMax="30.0"))
+	UPROPERTY(EditAnywhere, Category = "Settings|Dodge", meta=(AllowPrivateAccess), meta=(ClampMin="0.0"), meta=(ClampMax="30.0"))
 	float DodgeProbRate;
 	float DodgeProbTotal;
 
 	//Default probability of performing defensive measures against player's attacks.
 	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
 	float DefenseProbability;
+	//Probability of blocking player's attack during the boss's Deflected State.
+	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
+	float DeflectedBlockProb;
 	float DefenseProb;
+
+
+
 	//Probability of parrying attacks. Performs Block otherwise.
 	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
 	float ParryProbability;

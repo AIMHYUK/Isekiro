@@ -16,10 +16,7 @@ void URunState::Start()
 	Super::Start();
 	StartMovement();
 
-	int32 index = FMath::RandRange(0, TransitionStates.Num() - 1);
-	if (ensure(TransitionStates.IsValidIndex(index)))
-		SelectedState = TransitionStates[index];
-	else SelectedState = EBossState::NONE;
+	SelectNextState();
 }
 
 EBossState URunState::Update(float DeltaTime)
@@ -27,10 +24,17 @@ EBossState URunState::Update(float DeltaTime)
 	Super::Update(DeltaTime);
 
 	float DistToTarget = Instigator->GetDistanceToTargetOffset();
-	if (FSMComp && FSMComp->TargetWithinRangeFor(SelectedState))
+	if (DistToTarget <= StateDistance.Min)
 	{
-		StopMovement();
-		return SelectedState;
+		if (FSMComp && FSMComp->TargetWithinRangeFor(SelectedState))
+		{
+			StopMovement();
+			return SelectedState;
+		}
+		else
+		{
+			SelectNextState();
+		}
 	}
 	return EBossState::NONE;
 }
@@ -53,5 +57,13 @@ EBossState URunState::UpdateMovement(float DeltaTime)
 	Instigator->SetActorLocation(NewLoc);
 
 	return EBossState::NONE;
+}
+
+void URunState::SelectNextState()
+{
+	int32 index = FMath::RandRange(0, TransitionStates.Num() - 1);
+	if (ensure(TransitionStates.IsValidIndex(index)))
+		SelectedState = TransitionStates[index];
+	else SelectedState = EBossState::NONE;
 }
 

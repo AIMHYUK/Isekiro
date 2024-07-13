@@ -17,22 +17,22 @@ void UDodgeState::Start()
 		{
 		case EDirection::FORWARD:
 		{
-			MontageState.SectionName = "Dodge_B";
+			JumpToSection("Dodge_B");
 			break;
 		}
 		case EDirection::BACK:
 		{
-			MontageState.SectionName = "Dodge_B";
+			JumpToSection("Dodge_B");
 			break;
 		}
 		case EDirection::LEFT:
 		{
-			MontageState.SectionName = "Dodge_L";
+			JumpToSection("Dodge_L");
 			break;
 		}
 		case EDirection::RIGHT:
 		{
-			MontageState.SectionName = "Dodge_R";
+			JumpToSection("Dodge_R");
 			break;
 		}
 		}		

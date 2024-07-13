@@ -31,9 +31,9 @@ ABossCharacter::ABossCharacter()
 	NearSpaceBuffer = 200.f;
 
 	DefaultSetting.Damage = 20.f;
-	DefaultSetting.Speed = 1800.f;
+	DefaultSetting.Speed = 3600.f;
 	HardSetting.Damage = 30.f;
-	HardSetting.Speed = 2600.f;
+	HardSetting.Speed = 3600.f;
 
 	CurrDir = EDirection::BACK;
 
@@ -125,6 +125,8 @@ void ABossCharacter::Tick(float DeltaTime)
 		StatusComponent->RecoverPosture(3.f);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("POsture: %f"), StatusComponent->GetPosture());
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Emerald, FString::Printf(TEXT("Distance: %f"), GetDistanceToTargetOffset()));
 }
 
 bool ABossCharacter::CanRecoverPosture() const
@@ -236,7 +238,13 @@ float ABossCharacter::GetDistanceToTargetOffset() const
 	{
 		FVector BossLoc = GetActorLocation();
 		BossLoc.Z = HeightZ;
-		FVector DirVector = GetTargetOffsetLocation() - BossLoc;
+		
+		
+		FVector TargetLoc = Target->GetActorLocation();
+		TargetLoc.Z = HeightZ;
+
+		//FVector DirVector = GetTargetOffsetLocation() - BossLoc;
+		FVector DirVector = TargetLoc - BossLoc;
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
 

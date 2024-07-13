@@ -102,7 +102,7 @@ void UBossAnimInstance::AnimNotify_Restore()
 	{
 		if (Status->GetPosture() >= Status->MaxPosture)
 			Status->SetPosture(Status->MaxPosture * .4);
-		else if(Status->GetHealth() <= 0.f)
+		else if (Status->GetHealth() <= 0.f)
 			Status->SetHealth(.01f);
 	}
 }
