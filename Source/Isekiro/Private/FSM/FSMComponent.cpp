@@ -98,7 +98,7 @@ EBossState UFSMComponent::RandomState()
 		max = (int32)EBossState::STRAFE;
 		break;
 	case EFightingSpace::FAR:
-		min = (int32)EBossState::STRAFE;
+		min = (int32)EBossState::THRUSTATTACK;
 		max = (int32)EBossState::LUNGEATTACK;
 		break;
 	}
@@ -108,11 +108,17 @@ EBossState UFSMComponent::RandomState()
 	{
 		index = FMath::RandRange(min, max);
 		RandomStateCount++;
-	} while (EBossState(index) != PrevStateE && EBossState(index) == EBossState::HIT || EBossState(index) == EBossState::PARRY || !TargetWithinRangeFor((EBossState)index) && RandomStateCount < 50);
+	} while (
+		EBossState(index) != PrevStateE && 
+		EBossState(index) == EBossState::HIT || 
+		EBossState(index) == EBossState::PARRY || 
+		!TargetWithinRangeFor((EBossState)index) && 
+		RandomStateCount < 50
+	);
 
 	if (RandomStateCount >= 50)
 	{
-		return EBossState::COUNTERATTACK;
+		return EBossState::STRAFE;
 		/*if (BossCharacter && BossCharacter->IsWithinTarget())
 		{
 			if (FMath::RandRange(0, 1 == 1))

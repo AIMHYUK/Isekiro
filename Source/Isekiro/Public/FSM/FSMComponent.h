@@ -30,25 +30,25 @@ enum class EBossState : uint8
 	PARRY UMETA(DisplayName = "Parry"),						
 	//Stun
 	DEFLECTED UMETA(DisplayName = "Deflected"),				
-	
+				
 	//Near
-	NORMALATTACK UMETA(DisplayName = "NormalAttack"),		
+	NORMALATTACK UMETA(DisplayName = "NormalAttack"),
 	//Near
-	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),		
-	//Near
-	JUMPATTACK UMETA(DisplayName = "JumpAttack"),			
-	//Near
-	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		
+	JUMPATTACK UMETA(DisplayName = "JumpAttack"),						
 
 	//Both
-	STRAFE UMETA(DisplayName = "Strafe"),					
+	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		
+	//Both
+	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),
+	//Both
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	
+	//Both
+	STRAFE UMETA(DisplayName = "Strafe"),
 
 	//Far
 	RUN UMETA(DisplayName = "Run"),							
 	//Far
 	PATTERNATTACK UMETA(DisplayName = "PatternAttack"),		
-	//Far
-	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	
 	//Far
 	LUNGEATTACK UMETA(DisplayName = "LungeAttack"),			
 		

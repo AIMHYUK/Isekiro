@@ -18,6 +18,8 @@ ABossCharacter::ABossCharacter()
 {
 	FSMComponent = CreateDefaultSubobject<UFSMComponent>("FSMComponent");
 
+	SetActorRelativeScale3D(FVector(1.25f,1.25f,1.25f));
+	
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
 	AttackBoxComp->SetRelativeLocation(FVector(110.f, 0.f, 0.f));
