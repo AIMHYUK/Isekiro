@@ -86,8 +86,9 @@ void URealParryBox::ParryStarted()
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	MyCharacter->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore); //패링상태이면 데미지 안받음
-	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //패리상태로 가드 올리기
+	if (!MyCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) //패리상태로 가드 올리기, 어떤 몽타주도 실행되고 있지 않다면 
 	{
+		UE_LOG(LogTemp, Display, TEXT("IsAnymontageplaying"));
 		MyCharacter->PlayGuardMontage(); //가드 몽타주 실행 -> 후에 가드히트로 바꿔야함.
 	}
 		

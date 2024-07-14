@@ -445,7 +445,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 
 		}
 
-		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.2f, false);
+		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.4f, false);
 	}
 }
 
