@@ -8,7 +8,7 @@ UHitState::UHitState()
 {
 	MaxRunTime = .6f;
 	TotalRunTime = 0.f;
-	TravelDist = 50.f;
+	TravelDist = 100.f;
 	StateDistance.Max = 350.f;
 }
 

@@ -39,6 +39,7 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
+	StopMovement();
 }
 
 void UStateObject::Activate()

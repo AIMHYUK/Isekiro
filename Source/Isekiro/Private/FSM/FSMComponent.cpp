@@ -83,6 +83,7 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Magenta, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Magenta, FString::Printf(TEXT("PreviousState: %s"), *UEnum::GetValueAsString(PrevStateE)));
 }
 
 EBossState UFSMComponent::RandomState()

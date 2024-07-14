@@ -51,6 +51,8 @@ protected:
 	}
 	
 private:
+	UPROPERTY(EditAnywhere, Category = "Settings|Probability", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "100.0"))
+	float ResponseProbability;
 	//All probabilities must be a total sum to 100.f
 	UPROPERTY(EditAnywhere, Category = "Settings|Probability", meta=(AllowPrivateAccess))
 	TArray<FStateProbability> Probabilities;

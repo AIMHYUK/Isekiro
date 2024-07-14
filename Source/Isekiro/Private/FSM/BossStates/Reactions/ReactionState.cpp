@@ -14,6 +14,8 @@ UReactionState::UReactionState()
 
 	PrevState = EBossState::NONE;
 
+	ResponseProbability = 90.f;
+
 	//MeleeAttackProb = 1.f;
 	//NormalAttackProb = 1.f;
 }
@@ -48,7 +50,7 @@ EBossState UReactionState::Update(float DeltaTime)
 
 	if (FSMComp && !FSMComp->IsCurrentStateActive())
 	{
-		return EBossState::STRAFE;
+		return FSMComp->RandomState();
 	}
 	return EBossState::NONE;
 }
@@ -56,6 +58,7 @@ EBossState UReactionState::Update(float DeltaTime)
 void UReactionState::Stop()
 {
 	Super::Stop();
+	StopMovement();
 	if (Instigator && Instigator->GetMesh() && Instigator->GetMesh()->GetAnimInstance())
 	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
@@ -89,6 +92,8 @@ void UReactionState::RespondToInput()
 	Super::RespondToInput();
 
 	StopMovement();
+
+	if(FMath::RandRange(0.f, 100.f) > ResponseProbability) return;
 
 	if (!FSMComp) return;
 
