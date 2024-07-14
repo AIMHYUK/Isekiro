@@ -4,18 +4,21 @@
 #include "FSM/NotifyStates/NSHazardAttack.h"
 #include "Character/BossCharacter.h"
 #include "HeroCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 void UNSHazardAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	auto Boss = MeshComp->GetOwner<ABossCharacter>();
 
+	auto Boss = MeshComp->GetOwner<ABossCharacter>();
 	if (Boss)
 	{
 		auto Hero = Cast<AHeroCharacter>(Boss->GetTarget());
 		if (Hero)
 		{
-			Hero->SetActionStateHazardBegin();
+			auto Status = Hero->GetComponentByClass<UStatusComponent>();
+			if (Status && Status->HasHealth())
+				Hero->SetActionStateHazardBegin();
 		}
 	}
 }
@@ -28,14 +31,16 @@ void UNSHazardAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequence
 void UNSHazardAttack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	auto Boss = MeshComp->GetOwner<ABossCharacter>();
 
+	auto Boss = MeshComp->GetOwner<ABossCharacter>();
 	if (Boss)
 	{
 		auto Hero = Cast<AHeroCharacter>(Boss->GetTarget());
 		if (Hero)
 		{
-			Hero->SetActionStateHazardEnd();
+			auto Status = Hero->GetComponentByClass<UStatusComponent>();
+			if (Status && Status->HasHealth())
+				Hero->SetActionStateHazardEnd();
 		}
 	}
 }

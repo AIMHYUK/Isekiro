@@ -28,4 +28,5 @@ protected:
 	float TotalRunTime;
 	FVector PrevLoc;
 	FVector NewLoc;
+	int32 Count;
 };
