@@ -50,6 +50,7 @@ ABossCharacter::ABossCharacter()
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	GetMesh()->SetVisibility(false);
 	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 	RetargetedSKMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RetargetedSkeletalMeshComponent");
 	RetargetedSKMesh->SetupAttachment(GetMesh());
@@ -62,6 +63,7 @@ ABossCharacter::ABossCharacter()
 	WeaponSMesh->SetCollisionProfileName("NoCollision");
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 	Tags.Add(FName("LockOnPossible"));
 
@@ -124,6 +126,10 @@ void ABossCharacter::Tick(float DeltaTime)
 			SetActorRotation(newRotation.Quaternion());
 		}
 	}
+
+	if(StatusComponent && !StatusComponent->IsAlive())
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
 	if (CanRecoverPosture())
 	{
 		StatusComponent->RecoverPosture(3.f);
@@ -190,8 +196,16 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 
 void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
+
 	if (StatusComponent && FSMComponent)
 	{
+		if(FSMComponent->GetCurrentStateE() == EBossState::DODGE)
+		{
+			StatusComponent->SetHealth(OldHealth);
+			StatusComponent->SetPosture(OldPosture);
+			return;			
+		}
+
 		if (StatusComponent->IsPostureBroken() || !StatusComponent->HasHealth() || !StatusComponent->IsAlive())
 		{
 			if (FSMComponent && FSMComponent->GetCurrentStateE() != EBossState::DEATH)

@@ -103,6 +103,7 @@ public:
 	void ChangeStateTo(EBossState NewState);
 	
 	bool IsReactionState(EBossState State) const;
+	bool IsMeleeState(EBossState State) const;
 	bool CanRecoverPosture() const;
 
 	void StartMovement();
@@ -118,7 +119,7 @@ public:
 	//Can player stop boss's active attacks by forcing boss to respond to player attacks?
 	bool CanStun() const;
 	//if parry fails, boss starts hit state.
-	bool CanDefend() const;
+	bool CanDefend();
 	void EnableStun(bool bStun);
 	void StartParryOrBlock();
 

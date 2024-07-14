@@ -37,6 +37,8 @@ void UDodgeState::Start()
 		}
 		}		
 	}
+
+
 	Super::Start();
 }
 

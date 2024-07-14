@@ -202,6 +202,11 @@ bool UFSMComponent::IsReactionState(EBossState State) const
 		State == EBossState::BLOCK;
 }
 
+bool UFSMComponent::IsMeleeState(EBossState State) const
+{
+	return IsReactionState(State) || State == EBossState::NORMALATTACK;
+}
+
 bool UFSMComponent::CanRecoverPosture() const
 {
 	return CanStun() && !IsReactionState(CurrentStateE) && CurrentStateE != EBossState::NORMALATTACK;
@@ -308,7 +313,7 @@ void UFSMComponent::StartParryOrBlock()
 	float Prob = FMath::RandRange(0.f, 1.f);
 	if (Prob <= ParryProbability)
 	{
-		if (CurrentStateE == EBossState::DEFLECTED)
+		if (CurrentStateE == EBossState::DEFLECTED || !IsMeleeState(CurrentStateE))
 			ChangeStateTo(EBossState::BLOCK);
 		else ChangeStateTo(EBossState::PARRY);
 	}
@@ -320,7 +325,7 @@ void UFSMComponent::EnableDefense(bool bEnabled)
 	bEnabled ? DefenseProb = DefenseProbability : DefenseProb = DeflectedBlockProb;
 }
 
-bool UFSMComponent::CanDefend() const
+bool UFSMComponent::CanDefend()
 {
 	float value = FMath::RandRange(0.f, 1.f);
 	switch (CurrentStateE)
@@ -329,10 +334,6 @@ bool UFSMComponent::CanDefend() const
 		return false;
 	case EBossState::STRAFE:
 		return true;
-	case EBossState::RUN:
-		return value <= DefenseProb;
-	case EBossState::DEFLECTED:
-		return value <= DefenseProb;
 	default:
 	{
 		if (BossCharacter)
@@ -340,8 +341,17 @@ bool UFSMComponent::CanDefend() const
 			auto* StatusComp = BossCharacter->GetComponentByClass<UStatusComponent>();
 			if (StatusComp)
 			{
-				if (StatusComp->GetPosturePercent() >= .7f) return value <= DefenseProb;
-				else return value <= DefenseProb;
+				if (IsMeleeState(CurrentStateE))
+				{
+					return value <= DefenseProb;
+				}
+				else // Boss is performing some attack pattern that is not a melee type state.
+				{
+					EnableDefense(false);
+					bool bDefended = value <= DefenseProb;
+					EnableDefense(true);
+					return bDefended;
+				}
 			}
 		}
 	}

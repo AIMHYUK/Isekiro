@@ -10,7 +10,7 @@ UPatternState::UPatternState()
 	TotalRunTime = 0.f;
 	counter = 0;
 	TravelDist = 300.f;
-	StateDistance.Min = 340.f;
+	StateDistance.Min = 0.f;
 	StateDistance.Max = 900.f;
 }
 
@@ -45,7 +45,7 @@ void UPatternState::StartMovement()
 	{
 		if(Instigator)
 		{
-			if(Instigator->GetDistanceToTarget() <= StateDistance.Min)
+			if(Instigator->IsWithinNearRange())
 			{
 				NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::BACK);	
 			}

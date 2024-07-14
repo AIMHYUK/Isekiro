@@ -53,22 +53,11 @@ void UJumpState_Strike::StartMovement()
 	case 1:
 		if (Target)
 		{
-			auto Status = Target->GetComponentByClass<UStatusComponent>();
-			if (Status && Status->HasHealth())
-			{
-				UAnimInstance* AnimInstance = Instigator->GetMesh()->GetAnimInstance();
-				FName Section = AnimInstance->Montage_GetCurrentSection();
-				if (Section.ToString().IsEmpty()) return;
-
-				FString SectionS = Section.ToString();
-				int32 num = FCString::Atoi(*SectionS);
-
-				num++;
-				JumpToSection(FName(FString::FromInt(num)));
-
-				PrevLoc = Instigator->GetActorLocation();
-				NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
-			}
+			TotalRunTime = 0.f;
+			MaxRunTime = .25f;
+			PrevLoc = Instigator->GetActorLocation();
+			NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+			Count++;
 		}
 	default:
 		break;
