@@ -605,6 +605,15 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 				Camera->SetFieldOfView(70.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
+				ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+				if (BossDie)
+				{
+					UFSMComponent* FSM = Cast<UFSMComponent>(BossDie->GetComponentByClass(UFSMComponent::StaticClass()));
+					if (FSM)
+					{
+						FSM->RespondToInput(); //보스의 죽을준비
+					}
+				}
 				AnimInstance->Montage_Play(ExecutionMontage);
 				GetWorld()->GetTimerManager().SetTimer(CameraHandle, this, &AHeroCharacter::MakeCameraDefault, 2.f, false);
 			}
@@ -739,19 +748,22 @@ void AHeroCharacter::MakeSlowTimeDilation()
 	bIsDilated = true;
 	bCanExecution = true;
 }
+
 void AHeroCharacter::MakeCameraDefault()
 {
 	Camera->SetFieldOfView(90.f);
 }
+
 bool AHeroCharacter::IsBossPostureBroken()
 {
 	ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+	UStatusComponent* BStatus = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
 	if (Boss)
 	{
 		UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
 		if (FSMComponent)
 		{
-			return FSMComponent->IsPostureBroken();
+			return (FSMComponent->IsPostureBroken() || BStatus->GetHealth() <= 0);
 		}
 	}
 	return false;
