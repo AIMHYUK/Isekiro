@@ -123,7 +123,7 @@ public:
 	void StartGuard(const struct FInputActionValue& Value);
 	void EndGuard(const struct FInputActionValue& Value);
 
-	void PlayGuardMontage(FName Section);
+	/*void PlayGuardMontage(FName Section);*/
 	void PlayGuardMontage();
 	class UHeroAnimInstance* HeroAnimInstance;
 

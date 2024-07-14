@@ -19,7 +19,7 @@ URealParryBox::URealParryBox()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	InitSphereRadius(30.0f); // Example: Set the sphere radius
+	InitSphereRadius(70.0f); // Example: Set the sphere radius
 	// Set collision settings
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -35,8 +35,7 @@ void URealParryBox::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ParryCheck에 대한 충돌 이벤트 핸들러를 바인딩합니다.
-
+	// ParryCheck에 대한 충돌 이벤트
 	OnComponentBeginOverlap.AddDynamic(this, &URealParryBox::OnParryCheckBeginOverlap);
 
 }

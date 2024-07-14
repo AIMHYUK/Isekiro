@@ -65,7 +65,6 @@ AHeroCharacter::AHeroCharacter()
 
 }
 
-
 EActionState AHeroCharacter::GetActionState()
 {
 	return ActionState;
@@ -112,8 +111,11 @@ void AHeroCharacter::BeginPlay()
 
 	// Ensure the owner is valid and has a mesh component
 	USkeletalMeshComponent* CharacterMesh = GetMesh();
-	ParryCheck->AttachToComponent(CharacterMesh, FAttachmentTransformRules::KeepRelativeTransform, TEXT("ParryCheckBox"));
-
+	ParryCheck->AttachToComponent(CharacterMesh, FAttachmentTransformRules::KeepRelativeTransform, TEXT("FX_weapon_base"));
+	if (ParryCheck)
+	{
+		UE_LOG(LogTemp, Display, TEXT("ParryChecked"));
+	}
 	if (GetCapsuleComponent() != nullptr)
 	{
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap); //캡슐콜리전이 attackbox감지
@@ -192,13 +194,27 @@ void AHeroCharacter::Tick(float DeltaTime)
 	}
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
-	if (HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+	if (HeroAnimInstance)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playing %s"), *GetNameSafe(HeroAnimInstance->GuardMontage)));
+		// 현재 재생 중인 몽타주를 가져옴
+		UAnimMontage* CurrentMontage = HeroAnimInstance->GetCurrentActiveMontage();
+
+		if (CurrentMontage)
+		{
+			// 재생 중인 몽타주가 있으면 그 이름을 출력
+			GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Currently playing: %s"), *GetNameSafe(CurrentMontage)));
+		}
+		else
+		{
+			// 재생 중인 몽타주가 없으면 메시지를 출력
+			GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, TEXT("No montage playing"));
+		}
 	}
 	else
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("is playinh????")));;
-
+	{
+		// HeroAnimInstance가 유효하지 않은 경우 에러 메시지 출력
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, TEXT("HeroAnimInstance is not valid"));
+	}
 	if (GetActionState() == EActionState::EAS_Hazard)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("HAZARD")));;
@@ -211,13 +227,12 @@ void AHeroCharacter::Tick(float DeltaTime)
 
 }
 
-
 void AHeroCharacter::ApplyDamage(float damage)
 {
 	Status->TryApplyDamage(0, damage);
 	if (IsDead())
 	{
-		DetachFromControllerPendingDestroy();
+		DetachFromControllerPendingDestroy(); //컨트롤러 떼기
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
@@ -321,20 +336,20 @@ void AHeroCharacter::EndGuard(const FInputActionValue& Value)
 	Movement->MaxWalkSpeed = walkSpeed;
 }
 
-void AHeroCharacter::PlayGuardMontage(FName SectionName)
-{
-	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
-	if (HeroAnimInstance && HeroAnimInstance->GuardMontage)
-	{
-		// Guard 몽타주가 이미 재생 중이 아닌 경우에만 재생
-		if (!HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
-		{
-			HeroAnimInstance->Montage_Play(HeroAnimInstance->GuardMontage);
-			HeroAnimInstance->Montage_JumpToSection(SectionName, HeroAnimInstance->GuardMontage);
-		}
-
-	}
-}
+//void AHeroCharacter::PlayGuardMontage(FName SectionName)
+//{
+//	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
+//	if (HeroAnimInstance && HeroAnimInstance->GuardMontage)
+//	{
+//		// Guard 몽타주가 이미 재생 중이 아닌 경우에만 재생
+//		if (!HeroAnimInstance->Montage_IsPlaying(HeroAnimInstance->GuardMontage))
+//		{
+//			HeroAnimInstance->Montage_Play(HeroAnimInstance->GuardMontage);
+//			HeroAnimInstance->Montage_JumpToSection(SectionName, HeroAnimInstance->GuardMontage);
+//		}
+//
+//	}
+//}
 
 void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 {
@@ -350,7 +365,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 
 void AHeroCharacter::PlayGuardMontage()
 {
-	if (AnimInstance)
+	if (!AnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //가드브레이크는 출력되야함
 	{
 		AnimInstance->Montage_Play(GuardMontage);
 	}
@@ -522,7 +537,8 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 						KnockBack(3000);
 						break;
 					case EBossState::THRUSTATTACK:
-						KnockBack(3000);
+						GuardState = ECharacterGuardState::ECGS_GuardBroken;
+						AnimInstance->Montage_Play(DefenseBreakMontage);
 						break;
 					default:
 						KnockBack(800);
@@ -586,8 +602,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		{
 			if (bCanExecution)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Slow"));
-				Camera->SetFieldOfView(45.f);
+				Camera->SetFieldOfView(70.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
 				AnimInstance->Montage_Play(ExecutionMontage);
@@ -597,7 +612,6 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	}
 	else
 	{
-
 		if (IsAttacking)
 		{
 			if (CanNextCombo)
@@ -665,6 +679,8 @@ void AHeroCharacter::DealDamage()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AActor*> OutActors;
 
+		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
+
 		UKismetSystemLibrary::SphereOverlapActors(
 			GetWorld(),
 			SphereLocation,
@@ -674,19 +690,21 @@ void AHeroCharacter::DealDamage()
 			ActorsToIgnore,
 			OutActors
 		);
-		ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
-		if (Boss)
+		for (AActor* Actor : OutActors)
 		{
-			UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
-			if (FSMComponent)
+			if (Actor)
 			{
-				BossState = FSMComponent->GetCurrentStateE();
+				FString ActorName = Actor->GetName();
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Overlapping Actor: %s"), *ActorName));
 			}
 		}
+		
 		for (AActor* OverlappedActor : OutActors)
 		{
+			UE_LOG(LogTemp, Error, TEXT("Overllaped"));
 			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
 			{
+				UE_LOG(LogTemp, Error, TEXT("Overllaped"));
 				// State 컴포넌트를 가져옴
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
@@ -704,7 +722,6 @@ void AHeroCharacter::DealDamage()
 		}
 		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
 		DamagedActors.Empty();
-
 	}
 }
 void AHeroCharacter::ResetTimeDilation()

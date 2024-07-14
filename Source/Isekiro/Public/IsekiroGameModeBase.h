@@ -12,6 +12,7 @@
 class UCharacterWidget;
 class UGameOverWidget;
 
+
 UCLASS()
 class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 {
@@ -32,7 +33,10 @@ public:
 	class UStatusComponent* State;
 	UPROPERTY()
     class UStatusComponent* BossState;
-	
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* DeathSound;
+
 	void UpdateHPBar();
 	void UpdatePostureBar();
 	UFUNCTION(BlueprintCallable)
@@ -59,4 +63,5 @@ private:
 	UGameOverWidget* GameOverWidget;
 
 	bool IsGameOverWidgetVisible = false;
+
 };

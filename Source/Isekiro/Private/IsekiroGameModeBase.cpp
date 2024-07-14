@@ -83,10 +83,11 @@ void AIsekiroGameModeBase::PlayerIsDead()
 	if (GameOverWidget)
 	{
 		GameOverWidget->AddToViewport(); //위젯띄우기
+		UGameplayStatics::PlaySound2D(this, DeathSound);
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AIsekiroGameModeBase::RestartLevel, 3.0f, false);	
 	}
-	UE_LOG(LogTemp, Display, TEXT("HELPME!!"));
+	
 }
 
 void AIsekiroGameModeBase::RestartLevel() //3초후 재시작

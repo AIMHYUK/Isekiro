@@ -109,7 +109,7 @@ void ABossCharacter::Tick(float DeltaTime)
 	{
 		StatusComponent->RecoverPosture(3.f);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("POsture: %f"), StatusComponent->GetPosture());
+	/*UE_LOG(LogTemp, Warning, TEXT("POsture: %f"), StatusComponent->GetPosture());*/
 }
 
 bool ABossCharacter::CanRecoverPosture() const
