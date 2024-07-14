@@ -5,7 +5,7 @@
 
 UDistAttackState::UDistAttackState()
 {
-    StateDistance.Min = 1000.f;
+    StateDistance.Min = 550.f;
 }
 
 void UDistAttackState::Start()

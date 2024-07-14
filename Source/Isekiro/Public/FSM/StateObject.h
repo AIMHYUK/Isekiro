@@ -64,7 +64,7 @@ protected:
 	TObjectPtr<UFSMComponent> FSMComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	FMontageState MontageState;
+	TArray<FMontageState> MontageStates;
 	//Distances at which states are triggered
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	FStateDistance StateDistance;
@@ -76,4 +76,5 @@ protected:
 
 private:
 	bool bIsMoving;
+	int32 SelectedIndex;
 };

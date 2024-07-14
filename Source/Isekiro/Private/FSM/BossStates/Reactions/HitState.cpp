@@ -16,6 +16,5 @@ void UHitState::Start()
 {
 	Super::Start();
 	int32 SectionNum = FMath::RandRange(1, 4);
-	Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
-		FName(FString::FromInt(SectionNum)), MontageState.Montage);
+	JumpToSection(FName(FString::FromInt(SectionNum)));
 }

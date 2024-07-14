@@ -58,7 +58,7 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		auto FSM = OtherActor->GetComponentByClass<UFSMComponent>();
 		if (FSM && FSM->CanStun())
 		{
-			//FSM->ChangeStateTo(EBossState::DEFLECTED);
+			FSM->ChangeStateTo(EBossState::DEFLECTED);
 		}
 		
 	}

@@ -31,4 +31,5 @@ protected:
 
 private:
 	EBossState SelectedState;
+	void SelectNextState();
 };

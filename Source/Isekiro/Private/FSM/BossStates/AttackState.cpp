@@ -56,6 +56,7 @@ EBossState UAttackState::Update(float DeltaTime)
 void UAttackState::Stop()
 {
 	Super::Stop();
+	StopMovement();
 }
 
 EBossState UAttackState::UpdateMovement(float DeltaTime)
