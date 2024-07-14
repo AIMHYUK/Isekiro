@@ -151,6 +151,7 @@ public:
 	FTimerHandle StrongAttackTimerHandle;
 
 	EActionState GetActionState();
+	EHazardState GetHazardState();
 	void SetActionStateHazardBegin();
 	void SetActionStateHazardEnd();
 	void SetActionStateParrySuccess();
@@ -266,8 +267,14 @@ private:
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EHazardState HazardState = EHazardState::EHS_NoHazard;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	bool bHasDisplayedHazardUI;	
+
 	void GetHPPercent();
 	bool IsBossPostureBroken();
+
 };
 
 

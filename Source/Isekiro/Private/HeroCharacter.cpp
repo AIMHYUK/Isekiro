@@ -63,6 +63,7 @@ AHeroCharacter::AHeroCharacter()
 	DeathCameraOffset = FVector(0.0f, 0.0f, 300.0f); // 캐릭터 위쪽으로 300 유닛
 	DeathCameraRotation = FRotator(-45.0f, 0.0f, 0.0f); // 아래쪽을 향하도록 45도 회전
 
+	bHasDisplayedHazardUI = false;
 }
 
 EActionState AHeroCharacter::GetActionState()
@@ -70,14 +71,19 @@ EActionState AHeroCharacter::GetActionState()
 	return ActionState;
 }
 
+EHazardState AHeroCharacter::GetHazardState()
+{
+	return HazardState;
+}
+
 void AHeroCharacter::SetActionStateHazardBegin()
 {
-	ActionState = EActionState::EAS_Hazard;
+	HazardState = EHazardState::EHS_Hazard;
 }
 
 void AHeroCharacter::SetActionStateHazardEnd()
 {
-	ActionState = EActionState::EAS_Unoccupied;
+	HazardState = EHazardState::EHS_NoHazard;
 }
 
 void AHeroCharacter::SetActionStateParrySuccess()
@@ -188,9 +194,6 @@ void AHeroCharacter::Tick(float DeltaTime)
 	case EActionState::EAS_ParrySuccess:
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("ParrySuccess")));
 		break;
-	case EActionState::EAS_Hazard:
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("Hazard")));
-		break;
 	}
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(GetMesh()->GetAnimInstance());
@@ -215,16 +218,20 @@ void AHeroCharacter::Tick(float DeltaTime)
 		// HeroAnimInstance가 유효하지 않은 경우 에러 메시지 출력
 		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, TEXT("HeroAnimInstance is not valid"));
 	}
-	if (GetActionState() == EActionState::EAS_Hazard)
+
+	if (!bHasDisplayedHazardUI && GetHazardState() == EHazardState::EHS_Hazard)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("HAZARD")));;
+		bHasDisplayedHazardUI = true;
 	}
-	else
+	else if (bHasDisplayedHazardUI && GetHazardState() == EHazardState::EHS_NoHazard)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("NO HAZARD")));;
+		bHasDisplayedHazardUI = false;
 	}
 
-
+	GetHazardState() == EHazardState::EHS_Hazard ?
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("HAZARD")))
+		:
+		GEngine->AddOnScreenDebugMessage(-1, 0, FColor::Red, FString::Printf(TEXT("NO HAZARD")));
 }
 
 void AHeroCharacter::ApplyDamage(float damage)
@@ -499,8 +506,17 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 
 			if (AnimInstance)
 			{
-				ApplyDamage(10);
-				ApplyPosture(10);
+				if (GetHazardState() == EHazardState::EHS_Hazard)
+				{
+					ApplyDamage(20);
+					ApplyPosture(20);
+				}
+				else
+				{
+					ApplyDamage(10);
+					ApplyPosture(10);
+				}
+
 				AnimInstance->Montage_Play(HittedMontage);
 				// 몽타주가 끝났을 때 호출될 델리게이트 설정
 				FOnMontageEnded MontageEndedDelegate;
@@ -537,6 +553,10 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 						KnockBack(3000);
 						break;
 					case EBossState::THRUSTATTACK:
+						GuardState = ECharacterGuardState::ECGS_GuardBroken;
+						AnimInstance->Montage_Play(DefenseBreakMontage);
+						break;
+					case EBossState::DISTANCEATTACK:
 						GuardState = ECharacterGuardState::ECGS_GuardBroken;
 						AnimInstance->Montage_Play(DefenseBreakMontage);
 						break;
@@ -707,7 +727,7 @@ void AHeroCharacter::DealDamage()
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Overlapping Actor: %s"), *ActorName));
 			}
 		}
-		
+
 		for (AActor* OverlappedActor : OutActors)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Overllaped"));

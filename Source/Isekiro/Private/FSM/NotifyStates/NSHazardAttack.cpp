@@ -38,9 +38,7 @@ void UNSHazardAttack::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 		auto Hero = Cast<AHeroCharacter>(Boss->GetTarget());
 		if (Hero)
 		{
-			auto Status = Hero->GetComponentByClass<UStatusComponent>();
-			if (Status && Status->HasHealth())
-				Hero->SetActionStateHazardEnd();
+			Hero->SetActionStateHazardEnd();
 		}
 	}
 }

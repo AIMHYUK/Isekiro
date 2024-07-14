@@ -14,12 +14,18 @@ enum class EActionState : uint8
 {
 	EAS_Unoccupied UMETA(DisplayName = "Unoccupied"),
 	EAS_Attacking UMETA(DisplayName = "Attacking"),
-	EAS_ParrySuccess UMETA(DisplayName = "ParrySuccess"),
-	EAS_Hazard UMETA(DisplayName = "Hazard")
+	EAS_ParrySuccess UMETA(DisplayName = "ParrySuccess")
 };
 UENUM(BlueprintType)
 enum class EPlayerState : uint8
 {
 	EPS_Patrol UMETA(DisplayName = "Patrol"),
 	EPS_BossFight UMETA(DisplayName = "BossFight")
+};
+
+UENUM(BlueprintType)
+enum class EHazardState : uint8
+{
+	EHS_Hazard UMETA(DisplayName = "Hazard"),
+	EHS_NoHazard UMETA(DisplayName = "NoHazard")
 };

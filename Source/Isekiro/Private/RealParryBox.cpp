@@ -47,7 +47,11 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 	{		
 		MyCharacter->SetActionStateParrySuccess();
 		MyCharacter->PlayParryMontage();
-		UGameplayStatics::SetGlobalTimeDilation(this, 0.85f);
+		
+		float TimeDilation;
+		MyCharacter->GetHazardState() == EHazardState::EHS_Hazard ? TimeDilation = .3f : TimeDilation = .85f;
+		UGameplayStatics::SetGlobalTimeDilation(this, TimeDilation);
+
 		UStatusComponent* State = MyCharacter->GetStatusComponent();
 		State->TryApplyDamage(5, 0);
 		MyCharacter->KnockBack(500);
@@ -96,8 +100,10 @@ void URealParryBox::ParryStarted()
 	// ECC_GameTraceChannel3에 대한 충돌 응답 설정
 	SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
 
+	float ParryTimeWindow;
+	MyCharacter->GetHazardState() == EHazardState::EHS_Hazard ? ParryTimeWindow = 1.f : ParryTimeWindow = 8.f;
 	// 패링 종료 타이머 설정
-	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &URealParryBox::ParryEnded, 8.0f / 60.0f, false);
+	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &URealParryBox::ParryEnded, ParryTimeWindow / 60.0f, false);
 
 	// 패링 쿨다운 설정
 	bCanParry = false;
