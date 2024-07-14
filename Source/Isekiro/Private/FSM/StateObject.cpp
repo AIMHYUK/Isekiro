@@ -39,6 +39,7 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
+	StopMovement();
 }
 
 void UStateObject::Activate()
@@ -79,6 +80,17 @@ void UStateObject::PlayMontage()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Selected Anim Montage is null in %s state"), *GetNameSafe(this));
 			SelectedIndex = -1;
+		}
+	}
+}
+
+void UStateObject::StopMontage()
+{
+	if (Instigator && SelectedIndex != -1)
+	{
+		auto Anim = Instigator->GetMesh()->GetAnimInstance();
+		{
+			if (Anim) Anim->Montage_Stop(0.1f, MontageStates[SelectedIndex].Montage);
 		}
 	}
 }

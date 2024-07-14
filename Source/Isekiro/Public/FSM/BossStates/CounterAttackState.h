@@ -14,6 +14,7 @@ class ISEKIRO_API UCounterAttackState : public UAttackState
 {
 	GENERATED_BODY()
 public:
+	UCounterAttackState();
 	virtual EBossState Update(float DeltaTime) override;
 
 };

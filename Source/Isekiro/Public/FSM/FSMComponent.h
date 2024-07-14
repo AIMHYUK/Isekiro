@@ -101,6 +101,9 @@ public:
 	bool TargetWithinRangeFor(EBossState BossState);
 	UFUNCTION(BlueprintCallable)
 	void ChangeStateTo(EBossState NewState);
+	
+	bool IsReactionState(EBossState State) const;
+	bool CanRecoverPosture() const;
 
 	void StartMovement();
 	void StopMovement();
@@ -128,14 +131,13 @@ protected:
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 	
 private:
-	void ChooseAttackResponse();
-
 	bool HandleDodgeProbability();
 	void PerformDodge();
 
 	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
 	EBossState CurrentStateE;
 	EBossState PrevStateE;
+	void SetPreviousState(EBossState State);
 	EFightingSpace FightSpace;
 	EPostureState PostureState;
 

@@ -10,7 +10,7 @@ UPatternState::UPatternState()
 	TotalRunTime = 0.f;
 	counter = 0;
 	TravelDist = 300.f;
-	StateDistance.Min = 600.f;
+	StateDistance.Min = 340.f;
 	StateDistance.Max = 900.f;
 }
 
@@ -43,15 +43,30 @@ void UPatternState::StartMovement()
 	{
 	case 0: // Fire Arrow
 	{
-		NewLoc = Instigator->GetNewMovementLocation(TravelDist);
+		if(Instigator)
+		{
+			if(Instigator->GetDistanceToTarget() <= StateDistance.Min)
+			{
+				NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::BACK);	
+			}
+			else NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+		}
 		counter++;
 		break;
 	}
 	case 1: //Forward roll and swinging sword
 	{
 		TravelDist = 500.f;
-		NewLoc = Instigator->GetNewMovementLocation(TravelDist);
-		MaxRunTime = 1.45f;
+		NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+		MaxRunTime = .9f;
+		counter++;
+		break;
+	}
+	case 2: 
+	{
+		TravelDist = 180.f;
+		NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+		MaxRunTime = .4f;
 		break;
 	}
 	}

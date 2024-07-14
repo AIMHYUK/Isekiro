@@ -22,13 +22,13 @@ ABossCharacter::ABossCharacter()
 
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
-	AttackBoxComp->SetRelativeLocation(FVector(110.f, 0.f, 0.f));
-	AttackBoxComp->SetBoxExtent(FVector(100.f, 80.f, 75.f));
+	AttackBoxComp->SetRelativeLocation(FVector(80.f, 0.f, 0.f));
+	AttackBoxComp->SetBoxExtent(FVector(80.f, 80.f, 75.f));
 	AttackBoxComp->SetCollisionProfileName("Arrow");
 
-	TargetOffset = 80.0f;
-	TargetOffsetBuffer = 5.f;
-	NearSpaceBuffer = 200.f;
+	TargetOffset = 120.0f;
+	TargetOffsetBuffer = 30.f;
+	NearSpaceBuffer = 300.f;
 
 	DefaultSetting.Damage = 20.f;
 	DefaultSetting.Speed = 3600.f;
@@ -111,20 +111,24 @@ void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ensureAlways(Target) && bLockOnTarget)
+	if (Target && bLockOnTarget)
 	{
-		FVector DirVector = Target->GetActorLocation() - GetActorLocation();
-		DirVector.Normalize();
-		FRotator newRotation = DirVector.Rotation();
-		newRotation.Pitch = 0.f;
-		newRotation.Roll = 0.f;
-		SetActorRotation(newRotation.Quaternion());
+		auto Status = Target->GetComponentByClass<UStatusComponent>();
+		if (Status && Status->HasHealth())
+		{
+			FVector DirVector = Target->GetActorLocation() - GetActorLocation();
+			DirVector.Normalize();
+			FRotator newRotation = DirVector.Rotation();
+			newRotation.Pitch = 0.f;
+			newRotation.Roll = 0.f;
+			SetActorRotation(newRotation.Quaternion());
+		}
 	}
 	if (CanRecoverPosture())
 	{
 		StatusComponent->RecoverPosture(3.f);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("POsture: %f"), StatusComponent->GetPosture());
+	UE_LOG(LogTemp, Warning, TEXT("Posture: %f"), StatusComponent->GetPosture());
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Emerald, FString::Printf(TEXT("Distance: %f"), GetDistanceToTargetOffset()));
 }
@@ -133,8 +137,7 @@ bool ABossCharacter::CanRecoverPosture() const
 {
 	if (StatusComponent && FSMComponent)
 	{
-		EBossState CurrState = FSMComponent->GetCurrentStateE();
-		return FSMComponent->CanStun() && CurrState != EBossState::DEATH && CurrState != EBossState::PARRY && CurrState != EBossState::HIT;
+		return FSMComponent->CanRecoverPosture();
 	}
 
 	return false;
@@ -238,12 +241,25 @@ float ABossCharacter::GetDistanceToTargetOffset() const
 	{
 		FVector BossLoc = GetActorLocation();
 		BossLoc.Z = HeightZ;
-		
-		
+
+		FVector DirVector = GetTargetOffsetLocation() - BossLoc;
+		return FMath::Sqrt(DirVector.Dot(DirVector));
+	}
+
+	return -1.f;
+}
+
+float ABossCharacter::GetDistanceToTarget() const
+{
+	if (Target)
+	{
+		FVector BossLoc = GetActorLocation();
+		BossLoc.Z = HeightZ;
+
+
 		FVector TargetLoc = Target->GetActorLocation();
 		TargetLoc.Z = HeightZ;
 
-		//FVector DirVector = GetTargetOffsetLocation() - BossLoc;
 		FVector DirVector = TargetLoc - BossLoc;
 		return FMath::Sqrt(DirVector.Dot(DirVector));
 	}
@@ -253,30 +269,51 @@ float ABossCharacter::GetDistanceToTargetOffset() const
 
 FVector ABossCharacter::GetDirectionVectorToTarget() const
 {
-	FVector DirVector = GetTargetOffsetLocation() - GetActorLocation();
+	FVector Loc = GetActorLocation();
+	Loc.Z = HeightZ;
+	FVector DirVector = GetTargetLoc() - Loc;
 	DirVector.Normalize();
 	return DirVector;
 }
 
-FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel) const
+FVector ABossCharacter::GetDirectionVector(EDirection Dir) const
 {
-	FVector DirVec = GetDirectionVectorToTarget();
+	switch (Dir)
+	{
+	case EDirection::FORWARD:
+		return GetDirectionVectorToTarget();
+	case EDirection::BACK:
+		return GetDirectionVectorToTarget() * -1.f;
+	case EDirection::RIGHT:
+		return GetActorRightVector();
+	case EDirection::LEFT:
+		return GetActorRightVector() * -1.f;
+	}
+	return FVector();
+}
+
+FVector ABossCharacter::GetNewMovementLocation(float DistanceToTravel, EDirection Dir) const
+{
+	FVector DirVec = GetDirectionVector(Dir);
 	DirVec *= DistanceToTravel;
 	FVector NewLoc = DirVec + GetActorLocation();
 
-	float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
-	float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
-
-	if (NewDist < TargetDist) // if new boss location is within the Target
+	if (Dir == EDirection::FORWARD)
 	{
-		if (IsWithinTarget(NewLoc, TargetOffsetBuffer))
+		float NewDist = FVector::DistSquared(NewLoc, GetActorLocation());
+		float TargetDist = FVector::DistSquared(Target->GetActorLocation(), GetActorLocation());
+		if (NewDist < TargetDist) // if new boss location is within the Target
+		{
+			if (IsWithinTarget(NewLoc, TargetOffsetBuffer))
+				return GetTargetOffsetLocation();
+		}
+		else // if new boss location is beyond the Target
+		{
 			return GetTargetOffsetLocation();
-		else return NewLoc;
+		}
 	}
-	else // if new boss location is beyond the Target
-	{
-		return GetTargetOffsetLocation();
-	}
+
+	return NewLoc;
 }
 
 FVector ABossCharacter::GetTargetOffsetLocation() const

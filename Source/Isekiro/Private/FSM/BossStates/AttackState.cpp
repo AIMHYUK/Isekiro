@@ -7,7 +7,7 @@
 UAttackState::UAttackState()
 {
 	MoveSpeed = 70.f;
-	StateDistance.Max = 350.f;
+	StateDistance.Max = 400.f;
 }
 
 void UAttackState::Start()
@@ -57,6 +57,7 @@ void UAttackState::Stop()
 {
 	Super::Stop();
 	StopMovement();
+	StopMontage();
 }
 
 EBossState UAttackState::UpdateMovement(float DeltaTime)

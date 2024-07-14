@@ -83,15 +83,25 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Magenta, FString::Printf(TEXT("CurrentState: %s"), *GetNameSafe(CurrentState)));
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Magenta, FString::Printf(TEXT("PreviousState: %s"), *UEnum::GetValueAsString(PrevStateE)));
 }
 
 EBossState UFSMComponent::RandomState()
 {
+	if (Target)
+	{
+		auto Status = Target->GetComponentByClass<UStatusComponent>();
+		if (Status && !Status->HasHealth())
+			return EBossState::STRAFE;
+	}
+
 	int index;
 	int32 min = 0;
 	int32 max = 0;
 
-	if (BossCharacter && !BossCharacter->IsWithinNearRange()) FightSpace = EFightingSpace::FAR;
+	if (BossCharacter && BossCharacter->IsWithinNearRange())
+		FightSpace = EFightingSpace::NEAR;
+	else FightSpace = EFightingSpace::FAR;
 
 	switch (FightSpace)
 	{
@@ -174,16 +184,33 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 
 	if (PrepNewState(NewState))
 	{
-		if (CurrentStateE != EBossState::NORMALATTACK)
-			PrevStateE = CurrentStateE;
+		SetPreviousState(NewState);
 		CurrentStateE = NewState;
 	}
 	else
 	{
-		if (CurrentStateE != EBossState::NORMALATTACK)
-			PrevStateE = CurrentStateE;
+		SetPreviousState(NewState);
 		CurrentStateE = EBossState::NONE;
 	}
+}
+bool UFSMComponent::IsReactionState(EBossState State) const
+{
+	return State == EBossState::DEATH ||
+		State == EBossState::PARRY ||
+		State == EBossState::HIT ||
+		State == EBossState::DEFLECTED ||
+		State == EBossState::BLOCK;
+}
+
+bool UFSMComponent::CanRecoverPosture() const
+{
+	return CanStun() && !IsReactionState(CurrentStateE) && CurrentStateE != EBossState::NORMALATTACK;
+}
+
+void UFSMComponent::SetPreviousState(EBossState State)
+{
+	if (!IsReactionState(State) && State != EBossState::NORMALATTACK && CurrentStateE != EBossState::STRAFE)
+		PrevStateE = CurrentStateE;
 }
 
 void UFSMComponent::RespondToInput()
@@ -235,13 +262,6 @@ bool UFSMComponent::CanTakeDamage()
 	else return true;
 }
 
-void UFSMComponent::ChooseAttackResponse()
-{
-	float val = FMath::RandRange(0.f, 1.f);
-	if (val <= .85f) ChangeStateTo(EBossState::NORMALATTACK);
-	else ChangeStateTo(EBossState::DODGE);	
-}
-
 bool UFSMComponent::HandleDodgeProbability()
 {
 	if (FMath::RandRange(0.f, 1.f) >= DodgeProbTotal / DodgeMaxProb) // Take Damage
@@ -286,9 +306,9 @@ void UFSMComponent::EnableStun(bool bStun)
 void UFSMComponent::StartParryOrBlock()
 {
 	float Prob = FMath::RandRange(0.f, 1.f);
-	if (Prob <= ParryProbability) 
+	if (Prob <= ParryProbability)
 	{
-		if(CurrentStateE == EBossState::DEFLECTED) 
+		if (CurrentStateE == EBossState::DEFLECTED)
 			ChangeStateTo(EBossState::BLOCK);
 		else ChangeStateTo(EBossState::PARRY);
 	}

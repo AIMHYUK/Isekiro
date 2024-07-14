@@ -78,10 +78,16 @@ void UBossAnimInstance::AnimNotify_Transition()
 		num++;
 		SectionS = FString::FromInt(num);
 
-		if (!BossCharacter->IsWithinTarget())
-			SectionS.Append("_r"); // play root anim sequence
+		FString SectionRoot = SectionS;
 
-		Montage_JumpToSection(FName(SectionS), GetCurrentActiveMontage());
+		if (!BossCharacter->IsWithinTarget())
+			SectionRoot.Append("_r"); // play root anim sequence
+
+
+		auto what = GetCurrentActiveMontage();
+		if (what->IsValidSectionName(FName(SectionRoot)))
+			Montage_JumpToSection(FName(SectionRoot));
+		else Montage_JumpToSection(FName(SectionS));
 	}
 }
 

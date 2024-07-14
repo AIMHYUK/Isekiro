@@ -7,7 +7,7 @@
 UStrafeState::UStrafeState()
 {
 	StrafeSpeed = 80.f;
-	StrafeMaxTime = 3.f;
+	StrafeMaxTime = 4.f;
 	StrafeTotalTime = 0.f;
 	StateDistance.Min = 250.f;
 }
@@ -45,9 +45,6 @@ EBossState UStrafeState::UpdateMovement(float DeltaTime)
 			FVector newLoc = Instigator->GetActorLocation() + Instigator->GetActorRightVector() * StrafeSpeed * DeltaTime;
 			Instigator->SetActorLocation(newLoc);
 		}
-	}
-	else {
-		return EBossState::PARRY;
 	}
 	return EBossState::NONE;
 }

@@ -9,6 +9,18 @@
 /**
  * 
  */
+
+USTRUCT()
+struct FStateProbability
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	EBossState BossState;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings", meta=(ClampMin="0.0"), meta=(ClampMax="100.0"))
+	float Probability;
+};
+
 UCLASS()
 class ISEKIRO_API UReactionState : public UStateObject
 {
@@ -21,13 +33,14 @@ public:
 
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;
+	virtual void RespondToInput() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;
-	UPROPERTY(EditDefaultsOnly, Category = "Settings", meta=(ClampMin="0.0"), meta=(ClampMax="1.0"))
+	/*UPROPERTY(EditDefaultsOnly, Category = "Settings", meta=(ClampMin="0.0"), meta=(ClampMax="1.0"))
 	float MeleeAttackProb;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings", meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
-	float NormalAttackProb;
+	float NormalAttackProb;*/
 
 	float TotalRunTime;
 	FVector PrevLoc;
@@ -36,6 +49,15 @@ protected:
 	float EaseOutExpo(float x) {
 		return x == 1 ? 1 : 1 - FMath::Pow(2, -10 * x);
 	}
-
-
+	
+private:
+	UPROPERTY(EditAnywhere, Category = "Settings|Probability", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "100.0"))
+	float ResponseProbability;
+	//All probabilities must be a total sum to 100.f
+	UPROPERTY(EditAnywhere, Category = "Settings|Probability", meta=(AllowPrivateAccess))
+	TArray<FStateProbability> Probabilities;
+	TArray<FStateProbability> Cumulative;
+	void SetupCulumativeProbability();
+	EBossState GetNextState();
+	EBossState PrevState;
 };

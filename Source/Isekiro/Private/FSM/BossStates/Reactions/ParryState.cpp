@@ -26,13 +26,3 @@ void UParryState::Start()
 		Hero->PlayParriedMontage();
 	}
 }
-
-void UParryState::RespondToInput()
-{
-	Super::RespondToInput();
-
-	if (!FSMComp) return;
-
-	StopMovement();
-	FSMComp->ChooseAttackResponse();
-}

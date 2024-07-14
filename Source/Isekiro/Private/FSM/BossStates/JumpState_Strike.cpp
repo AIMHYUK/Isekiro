@@ -3,14 +3,16 @@
 
 #include "FSM/BossStates/JumpState_Strike.h"
 #include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 UJumpState_Strike::UJumpState_Strike()
 {
 	StateDistance.Min = 0.f;
 	StateDistance.Max = 650.f;
 	MaxRunTime = .9f;
-	TotalRunTime = 0.f;	
+	TotalRunTime = 0.f;
 	TravelDist = 500.f;
+	Count = 0;
 }
 
 void UJumpState_Strike::Start()
@@ -41,20 +43,48 @@ void UJumpState_Strike::Stop()
 void UJumpState_Strike::StartMovement()
 {
 	Super::StartMovement();
-	PrevLoc = Instigator->GetActorLocation();
-	NewLoc = Instigator->GetNewMovementLocation(TravelDist);
+	switch (Count)
+	{
+	case 0:
+		PrevLoc = Instigator->GetActorLocation();
+		NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+		Count++;
+		break;
+	case 1:
+		if (Target)
+		{
+			auto Status = Target->GetComponentByClass<UStatusComponent>();
+			if (Status && Status->HasHealth())
+			{
+				UAnimInstance* AnimInstance = Instigator->GetMesh()->GetAnimInstance();
+				FName Section = AnimInstance->Montage_GetCurrentSection();
+				if (Section.ToString().IsEmpty()) return;
+
+				FString SectionS = Section.ToString();
+				int32 num = FCString::Atoi(*SectionS);
+
+				num++;
+				JumpToSection(FName(FString::FromInt(num)));
+
+				PrevLoc = Instigator->GetActorLocation();
+				NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
+			}
+		}
+	default:
+		break;
+	}
 }
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
 	if (!CanStartMovement()) return EBossState::NONE;
-	
-	if (TotalRunTime < MaxRunTime) 
-	{		
+
+	if (TotalRunTime < MaxRunTime)
+	{
 		TotalRunTime += DeltaTime;
 
 		FVector MoveVec = FMath::Lerp(PrevLoc, NewLoc, TotalRunTime / MaxRunTime);
-		Instigator->SetActorLocation(MoveVec);	
+		Instigator->SetActorLocation(MoveVec);
 	}
 
 	return EBossState::NONE;
