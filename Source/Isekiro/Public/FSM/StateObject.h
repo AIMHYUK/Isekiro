@@ -56,6 +56,7 @@ protected:
 protected:
 	void JumpToSection(FName SectionName);
 	void PlayMontage();
+	void StopMontage();
 	virtual bool CanStartMovement() const;
 	virtual EBossState UpdateMovement(float DeltaTime);
 

@@ -16,5 +16,4 @@ class ISEKIRO_API UParryState : public UReactionState
 public:
 	UParryState();
 	virtual void Start() override;
-	virtual void RespondToInput() override;
 };

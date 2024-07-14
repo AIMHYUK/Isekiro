@@ -83,6 +83,17 @@ void UStateObject::PlayMontage()
 	}
 }
 
+void UStateObject::StopMontage()
+{
+	if (Instigator && SelectedIndex != -1)
+	{
+		auto Anim = Instigator->GetMesh()->GetAnimInstance();
+		{
+			if (Anim) Anim->Montage_Stop(0.1f, MontageStates[SelectedIndex].Montage);
+		}
+	}
+}
+
 bool UStateObject::CanStartMovement() const
 {
 	return bIsMoving;

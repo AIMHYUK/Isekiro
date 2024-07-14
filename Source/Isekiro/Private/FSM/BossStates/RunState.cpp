@@ -7,7 +7,7 @@
 
 URunState::URunState()
 {
-	StateDistance.Min = 1200.f;
+	StateDistance.Min = 850.f;
 	RunSpeed = 500.f;
 }
 

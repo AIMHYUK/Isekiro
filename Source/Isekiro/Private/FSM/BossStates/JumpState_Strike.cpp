@@ -42,7 +42,7 @@ void UJumpState_Strike::StartMovement()
 {
 	Super::StartMovement();
 	PrevLoc = Instigator->GetActorLocation();
-	NewLoc = Instigator->GetNewMovementLocation(TravelDist);
+	NewLoc = Instigator->GetNewMovementLocation(TravelDist, EDirection::FORWARD);
 }
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)

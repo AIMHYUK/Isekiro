@@ -49,8 +49,10 @@ public:
 	float GetTargetOffset() const;
 
 	float GetDistanceToTargetOffset() const;
+	float GetDistanceToTarget() const;
 	FVector GetDirectionVectorToTarget() const;
-	FVector GetNewMovementLocation(float DistanceToTravel) const;
+	FVector GetDirectionVector(EDirection Dir) const;
+	FVector GetNewMovementLocation(float DistanceToTravel, EDirection Dir) const;
 	EDirection GetCurrentDirection() const;
 
 	UFUNCTION(BlueprintCallable)

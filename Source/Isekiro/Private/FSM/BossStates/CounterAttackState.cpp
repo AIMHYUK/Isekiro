@@ -5,6 +5,11 @@
 
 
 
+UCounterAttackState::UCounterAttackState()
+{
+	StateDistance.Max = 420.f;
+}
+
 EBossState UCounterAttackState::Update(float DeltaTime)
 {
 	return Super::Update(DeltaTime);

@@ -12,8 +12,10 @@ UReactionState::UReactionState()
 
 	TravelDist = 250.f;
 
-	MeleeAttackProb = 1.f;
-	NormalAttackProb = 1.f;
+	PrevState = EBossState::NONE;
+
+	//MeleeAttackProb = 1.f;
+	//NormalAttackProb = 1.f;
 }
 
 void UReactionState::Start()
@@ -46,18 +48,7 @@ EBossState UReactionState::Update(float DeltaTime)
 
 	if (FSMComp && !FSMComp->IsCurrentStateActive())
 	{
-		if (FMath::RandRange(0.f, 1.f) <= MeleeAttackProb)
-		{
-			if (FMath::RandRange(0.f, 1.f) <= NormalAttackProb)
-			{
-				return EBossState::NORMALATTACK;
-			}
-			else return EBossState::COUNTERATTACK;
-		}
-		else
-		{
-			return FSMComp->RandomState();
-		}
+		return EBossState::STRAFE;
 	}
 	return EBossState::NONE;
 }
@@ -65,10 +56,10 @@ EBossState UReactionState::Update(float DeltaTime)
 void UReactionState::Stop()
 {
 	Super::Stop();
-	if(Instigator && Instigator->GetMesh() && Instigator->GetMesh()->GetAnimInstance())
+	if (Instigator && Instigator->GetMesh() && Instigator->GetMesh()->GetAnimInstance())
 	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
-		if(Anim && Anim->IsAnyMontagePlaying())
+		if (Anim && Anim->IsAnyMontagePlaying())
 		{
 			Anim->StopAllMontages(0.1f);
 		}
@@ -91,4 +82,58 @@ EBossState UReactionState::UpdateMovement(float DeltaTime)
 	}
 
 	return EBossState::NONE;
+}
+
+void UReactionState::RespondToInput()
+{
+	Super::RespondToInput();
+
+	StopMovement();
+
+	if (!FSMComp) return;
+
+	SetupCulumativeProbability();
+
+	EBossState NextState = GetNextState();
+
+	FSMComp->ChangeStateTo(NextState);
+}
+
+void UReactionState::SetupCulumativeProbability()
+{
+	float Total = 0.f;
+
+	for (int i = 0; i < Probabilities.Num(); ++i)
+	{
+		Total += Probabilities[i].Probability;
+		Cumulative.Add(FStateProbability{ Probabilities[i].BossState,Total });
+	}
+	if (!ensureAlways(Total == 100.f))
+		UE_LOG(LogTemp, Warning, TEXT("Near Probabilities does not add up to 100%%"));
+}
+
+EBossState UReactionState::GetNextState()
+{
+	int32 Index = -1;
+	do
+	{
+		float Selected = FMath::RandRange(0.f, 100.f);
+
+		for (int i = 0; i < Cumulative.Num(); ++i)
+		{
+			if (Selected <= Cumulative[i].Probability)
+			{
+				Index = i;
+				break;
+			}
+		}
+		if (!Cumulative.IsValidIndex(Index)) return EBossState::NONE;
+
+	} while (Cumulative[Index].BossState == PrevState);
+
+
+	if (Cumulative[Index].BossState != EBossState::NORMALATTACK)
+		PrevState = Cumulative[Index].BossState;
+
+	return Cumulative[Index].BossState;
 }
