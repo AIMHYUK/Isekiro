@@ -35,9 +35,7 @@ enum class EBossState : uint8
 	NORMALATTACK UMETA(DisplayName = "NormalAttack"),
 	//Near
 	JUMPATTACK UMETA(DisplayName = "JumpAttack"),						
-
-	//Both
-	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),		
+		
 	//Both
 	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),
 	//Both
@@ -45,6 +43,8 @@ enum class EBossState : uint8
 	//Both
 	STRAFE UMETA(DisplayName = "Strafe"),
 
+	//Far
+	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),
 	//Far
 	RUN UMETA(DisplayName = "Run"),							
 	//Far
