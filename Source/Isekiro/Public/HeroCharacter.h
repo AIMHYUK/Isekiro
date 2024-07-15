@@ -178,6 +178,13 @@ public:
 
 	FVector DeathCameraOffset;
 	FRotator DeathCameraRotation;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UBossWidget> BossUI;
+
+	void KillLifePoint();
+	FName GetSectionNameFromCombo(int32 ComboNum) const;
+
 protected:
 
 	virtual void BeginPlay() override;

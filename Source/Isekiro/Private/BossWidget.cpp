@@ -4,6 +4,9 @@
 #include "BossWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/Image.h"
+#include "Components/WidgetSwitcher.h"
+
+
 void UBossWidget::NativeConstruct()
 {
 	/*Super::NativeConstruct();*/
@@ -19,5 +22,16 @@ void UBossWidget::DisplayPostureBroken(bool bDisplay)
 	else
 	{
 		Image_PostureBreak->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UBossWidget::DisplayLoseLifePoint(bool bCanLoseLife)
+{
+	if (bCanLoseLife)
+	{
+		if (WidgetSwitcher)
+		{
+			WidgetSwitcher->SetActiveWidgetIndex(1);
+		}
 	}
 }

@@ -96,6 +96,11 @@ void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*MapName));
 }
 
+UBossWidget* AIsekiroGameModeBase::GetBossUI()
+{
+	return BossUI;
+}
+
 void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);

@@ -4,6 +4,7 @@
 #include "Character/Boss/BossAnimInstance.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "HeroCharacter.h"
 #include "ActorComponents/StatusComponent.h"
 
 UBossAnimInstance::UBossAnimInstance()
@@ -98,6 +99,12 @@ void UBossAnimInstance::AnimNotify_RemoveALifePoint()
 	{
 		Status->RemoveOneLifePoint();
 		Status->SetHealth(0.f);
+		
+		Hero = Cast<AHeroCharacter>(BossCharacter->GetTarget());
+		if (Hero)
+		{
+			Hero->KillLifePoint();
+		}
 	}
 }
 

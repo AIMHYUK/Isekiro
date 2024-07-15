@@ -21,6 +21,7 @@ public:
 	UBossAnimInstance();
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	class AHeroCharacter* Hero;
 protected:
 	UFUNCTION()
 	void AnimNotify_StartMovement();

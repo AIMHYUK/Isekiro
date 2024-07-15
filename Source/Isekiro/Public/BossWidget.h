@@ -22,8 +22,11 @@ public:
 	UProgressBar* BossHPBar;	
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	UProgressBar* BossPostureBar;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	class UWidgetSwitcher* WidgetSwitcher;
 
 	void DisplayPostureBroken(bool bDisplay);
+	void DisplayLoseLifePoint(bool bCanLoseLife);
 
 protected:
 	UPROPERTY(EditAnywhere, meta = (BindWidget))

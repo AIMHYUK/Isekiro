@@ -51,6 +51,7 @@ public:
 
 	void PlayerIsDead();
 	void RestartLevel();
+	UBossWidget* GetBossUI();
 protected:
 
 	virtual void BeginPlay() override;
