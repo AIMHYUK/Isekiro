@@ -21,6 +21,7 @@ public:
 	UBossAnimInstance();
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	class AHeroCharacter* Hero;
 protected:
 	UFUNCTION()
 	void AnimNotify_StartMovement();
@@ -49,10 +50,13 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_Respond();
+	UFUNCTION()
+	void AnimNotify_DeclareDead();
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead;
+	bool bDisplayingExecutionWidget;
 private:
 	TObjectPtr<UFSMComponent> FSMComp;
 	TObjectPtr<ABossCharacter> BossCharacter;

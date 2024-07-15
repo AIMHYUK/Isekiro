@@ -4,11 +4,14 @@
 #include "Character/Boss/BossAnimInstance.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "HeroCharacter.h"
 #include "ActorComponents/StatusComponent.h"
+#include "IsekiroGameModeBase.h"
 
 UBossAnimInstance::UBossAnimInstance()
 {
 	bIsDead = false;
+	bDisplayingExecutionWidget = false;
 }
 
 void UBossAnimInstance::NativeBeginPlay()
@@ -98,6 +101,12 @@ void UBossAnimInstance::AnimNotify_RemoveALifePoint()
 	{
 		Status->RemoveOneLifePoint();
 		Status->SetHealth(0.f);
+		
+		Hero = Cast<AHeroCharacter>(BossCharacter->GetTarget());
+		if (Hero)
+		{
+			Hero->KillLifePoint();
+		}
 	}
 }
 
@@ -128,5 +137,15 @@ void UBossAnimInstance::AnimNotify_Respond()
 	if (FSMComp)
 	{
 		FSMComp->RespondToInput();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_DeclareDead()
+{
+	if (!bDisplayingExecutionWidget)
+	{
+		bDisplayingExecutionWidget = true;
+		auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+		if (GM) GM->GameHasEnded();
 	}
 }

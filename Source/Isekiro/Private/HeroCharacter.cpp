@@ -27,6 +27,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "BossWidget.h"
 
 // Sets default values
 AHeroCharacter::AHeroCharacter()
@@ -94,6 +95,15 @@ void AHeroCharacter::SetActionStateParrySuccess()
 void AHeroCharacter::SetActionStateDifferentWithParry()
 {
 	ActionState = EActionState::EAS_Attacking;
+}
+
+void AHeroCharacter::KillLifePoint()
+{
+	UBossWidget* BW = IsekiroGameModeBase->GetBossUI();
+	if (BW)
+	{
+			BW->DisplayLoseLifePoint(true);		
+	}
 }
 
 void AHeroCharacter::BeginPlay()
@@ -178,7 +188,6 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 
 			DealDamage();
 			//OnWidget();
-			UE_LOG(LogTemp, Error, TEXT("ATTackHitCheck"));
 		});
 }
 // Called every frame
@@ -409,6 +418,7 @@ void AHeroCharacter::PlayParriedMontage()
 	if (BossState == EBossState::PARRY)
 	{
 		if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
+			ResetCombo();
 			AnimInstance->Montage_Play(GetParriedMontage);
 	}
 }
@@ -618,6 +628,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		//시간을 느리게 함
 		//입력을 받으면 시간이 다시 빨라짐
 		//입력은 bool값으로 구분 
+		ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 		if (bIsDilated)
 		{
 			if (bCanExecution)
@@ -625,7 +636,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 				Camera->SetFieldOfView(70.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
-				ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
 				if (BossDie)
 				{
 					UFSMComponent* FSM = Cast<UFSMComponent>(BossDie->GetComponentByClass(UFSMComponent::StaticClass()));
@@ -649,39 +660,55 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 			}
 		}
 		else
-		{ //근데 가드 몽타주면 실행가능   = 가드중이거나 다른 몽타주를 실행중이지 않다면 
-			if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
+		{
+			if (!HeroAnim->Montage_IsPlaying(GuardMontage) && !HeroAnim->Montage_IsPlaying(GetParriedMontage))
 			{
-				AttackStartComboState();
-				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
-				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
+				if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 				{
-					DealDamage();
-					HeroAnim->PlayAttackMontage();
-					HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-					IsAttacking = true;
-
+					AttackStartComboState();
+					bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
+					if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
+					{
+						DealDamage();
+						HeroAnim->PlayAttackMontage();
+						HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+						IsAttacking = true;
+					}
 				}
 			}
-
 		}
 	}
-
-
+}
+FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
+{
+	switch (ComboNum)
+	{
+	case 1:
+		return FName("Attack1");
+	case 2:
+		return FName("Attack2");
+	case 3:
+		return FName("Attack3");
+	default:
+		return FName(""); // 예기치 않은 값이면 빈 이름 반환
+	}
 }
 
 void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	IsAttacking = false;
 	AttackEndComboState();
-	//UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d"), CurrentCombo);
+	UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d"), CurrentCombo);
 }
 
 void AHeroCharacter::AttackStartComboState()
 {
+
 	CanNextCombo = true;
 	IsComboInputOn = false;
 	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
+	UE_LOG(LogTemp, Error, TEXT("StartCombo, Currentcombo = %d"), CurrentCombo);
+	
 }
 
 void AHeroCharacter::AttackEndComboState()
@@ -708,7 +735,7 @@ void AHeroCharacter::DealDamage()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AActor*> OutActors;
 
-		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
+		//DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
 
 		UKismetSystemLibrary::SphereOverlapActors(
 			GetWorld(),
@@ -719,15 +746,6 @@ void AHeroCharacter::DealDamage()
 			ActorsToIgnore,
 			OutActors
 		);
-		for (AActor* Actor : OutActors)
-		{
-			if (Actor)
-			{
-				FString ActorName = Actor->GetName();
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Overlapping Actor: %s"), *ActorName));
-			}
-		}
-
 		for (AActor* OverlappedActor : OutActors)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Overllaped"));
