@@ -13,6 +13,8 @@
 #include "Components/TextBlock.h"
 #include "GameOverWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShinobiExecutionWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void AIsekiroGameModeBase::BeginPlay()
 {
@@ -57,8 +59,9 @@ void AIsekiroGameModeBase::BeginPlay()
 				BossUI->AddToViewport();
 		}
 	}
-	//캐릭터가 죽으면 게임오버 위젯 + 3초후 게임 시작
 
+	ExecutionWidget = CreateWidget<UShinobiExecutionWidget>(GetWorld(), ExecutionWidgetClass);
+	//캐릭터가 죽으면 게임오버 위젯 + 3초후 게임 시작
 }
 
 void AIsekiroGameModeBase::Tick(float DeltaSeconds)
@@ -75,6 +78,13 @@ void AIsekiroGameModeBase::GameHasEnded()
 {
 	BossUI->RemoveFromViewport();
 	mainUI->RemoveFromViewport();
+	if (ExecutionWidget) ExecutionWidget->AddToViewport();
+	AHeroCharacter* HeroCharacter = Cast<AHeroCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (HeroCharacter)
+	{
+		HeroCharacter->GetCharacterMovement()->DisableMovement();
+		HeroCharacter->GetController()->SetIgnoreLookInput(true);
+	}
 }
 
 void AIsekiroGameModeBase::PlayerIsDead()

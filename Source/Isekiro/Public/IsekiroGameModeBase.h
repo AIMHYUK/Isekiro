@@ -11,6 +11,7 @@
  */
 class UCharacterWidget;
 class UGameOverWidget;
+class UShinobiExecutionWidget;
 
 
 UCLASS()
@@ -62,6 +63,10 @@ private:
 	UCharacterWidget* mainUI;
 	class UBossWidget* BossUI;
 	UGameOverWidget* GameOverWidget;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UShinobiExecutionWidget> ExecutionWidgetClass;
+	UPROPERTY()
+	UShinobiExecutionWidget* ExecutionWidget;
 
 	bool IsGameOverWidgetVisible = false;
 

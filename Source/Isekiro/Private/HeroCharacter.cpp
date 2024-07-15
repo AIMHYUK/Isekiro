@@ -735,6 +735,8 @@ void AHeroCharacter::DealDamage()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AActor*> OutActors;
 
+		//DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
+
 		UKismetSystemLibrary::SphereOverlapActors(
 			GetWorld(),
 			SphereLocation,

@@ -68,6 +68,7 @@ private:
 	float MaxHealth;
 	float Portion;
 	float MaxPortion;
+	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
 	int LifePoints;
 		
 	void SetPosture(float Value);

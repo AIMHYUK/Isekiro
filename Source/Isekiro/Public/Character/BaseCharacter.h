@@ -20,5 +20,6 @@ protected:
 	virtual void BeginPlay() override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Settings")
 	TObjectPtr<UStatusComponent> StatusComponent;
 };
