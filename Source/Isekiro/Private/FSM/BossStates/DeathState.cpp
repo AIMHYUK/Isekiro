@@ -45,8 +45,8 @@ EBossState UDeathState::Update(float DeltaTime)
 		{
 			Status->OfficiallyDeclareDead();
 			auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
-			if (GM)
-				GM->GameHasEnded();
+			if (GM) GM->GameHasEnded();
+			Instigator->GetController()->UnPossess();
 		}
 	}
 	return EBossState::NONE;

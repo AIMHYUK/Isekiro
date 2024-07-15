@@ -5,10 +5,12 @@
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
 #include "ActorComponents/StatusComponent.h"
+#include "IsekiroGameModeBase.h"
 
 UBossAnimInstance::UBossAnimInstance()
 {
 	bIsDead = false;
+	bDisplayingExecutionWidget = false;
 }
 
 void UBossAnimInstance::NativeBeginPlay()
@@ -128,5 +130,15 @@ void UBossAnimInstance::AnimNotify_Respond()
 	if (FSMComp)
 	{
 		FSMComp->RespondToInput();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_DeclareDead()
+{
+	if (!bDisplayingExecutionWidget)
+	{
+		bDisplayingExecutionWidget = true;
+		auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+		if (GM) GM->GameHasEnded();
 	}
 }
