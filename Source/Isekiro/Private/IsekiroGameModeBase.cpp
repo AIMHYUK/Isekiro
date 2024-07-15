@@ -80,6 +80,7 @@ void AIsekiroGameModeBase::GameHasEnded()
 	mainUI->RemoveFromViewport();
 	if (ExecutionWidget) ExecutionWidget->AddToViewport();
 	AHeroCharacter* HeroCharacter = Cast<AHeroCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	UGameplayStatics::PlaySound2D(GetWorld(), ExecutionSound);
 	if (HeroCharacter)
 	{
 		HeroCharacter->GetCharacterMovement()->DisableMovement();

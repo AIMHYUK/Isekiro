@@ -57,6 +57,8 @@ protected:
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* ExecutionSound;
 
 private:
 	float HPPercent;
