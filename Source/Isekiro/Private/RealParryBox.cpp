@@ -10,6 +10,8 @@
 #include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
 #include "CharacterTypes.h"
+#include "Character/BossCharacter.h"
+#include "FSM/FSMComponent.h"
 #include "FSM/FSMComponent.h"
 
 // Sets default values for this component's properties
@@ -42,6 +44,8 @@ void URealParryBox::BeginPlay()
 
 void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	if (MyCharacter && bIsParryWindow)
 	{		
@@ -52,8 +56,13 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		MyCharacter->GetHazardState() == EHazardState::EHS_Hazard ? TimeDilation = .3f : TimeDilation = .85f;
 		UGameplayStatics::SetGlobalTimeDilation(this, TimeDilation);
 
-		UStatusComponent* State = MyCharacter->GetStatusComponent();
+		State = MyCharacter->GetStatusComponent();
 		State->TryApplyDamage(5, 0);
+		if (Boss)
+		{
+			BState = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
+			BState->TryApplyDamage(3, 0);
+		}
 		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);

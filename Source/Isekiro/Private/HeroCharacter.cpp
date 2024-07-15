@@ -518,13 +518,13 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			{
 				if (GetHazardState() == EHazardState::EHS_Hazard)
 				{
-					ApplyDamage(20);
-					ApplyPosture(20);
+					ApplyDamage(30);
+					ApplyPosture(30);
 				}
 				else
 				{
-					ApplyDamage(10);
-					ApplyPosture(10);
+					ApplyDamage(20);
+					ApplyPosture(20);
 				}
 
 				AnimInstance->Montage_Play(HittedMontage);
@@ -548,7 +548,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 				BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
 				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
-					ApplyDamage(4);
+					ApplyDamage(0);
 					ApplyPosture(10);
 					UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
 					int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
