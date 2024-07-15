@@ -195,6 +195,8 @@ void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	Status->RecoverPosture(2.f);
+
 	switch (ActionState)
 	{
 	case EActionState::EAS_Attacking:
@@ -756,11 +758,10 @@ void AHeroCharacter::DealDamage()
 				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 				if (ActorStatus)
 				{
-					ActorStatus->TryApplyDamage(10, 10);
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 					// 액터를 이미 데미지를 입은 것으로 표시			
 					DamagedActors.Add(OverlappedActor, true);
-					if (IsBossPostureBroken()) //체간이 무너지면
+					if (ActorStatus->TryApplyDamage(10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
 					{
 						MakeSlowTimeDilation();
 					}

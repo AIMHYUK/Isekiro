@@ -10,9 +10,8 @@
 #include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
 #include "CharacterTypes.h"
+#include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
-#include "FSM/FSMComponent.h"
-#include "FSM/FSMComponent.h"
 
 // Sets default values for this component's properties
 URealParryBox::URealParryBox()
@@ -21,7 +20,7 @@ URealParryBox::URealParryBox()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	InitSphereRadius(70.0f); // Example: Set the sphere radius
+	InitSphereRadius(100.0f); // Example: Set the sphere radius
 	// Set collision settings
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
@@ -45,6 +44,7 @@ void URealParryBox::BeginPlay()
 void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+	UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
 
 	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	if (MyCharacter && bIsParryWindow)
@@ -62,6 +62,10 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		{
 			BState = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
 			BState->TryApplyDamage(3, 0);
+			if (FSMComponent->IsPostureBroken())
+			{
+				MyCharacter->MakeSlowTimeDilation();
+			}
 		}
 		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration

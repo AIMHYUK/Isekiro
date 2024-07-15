@@ -25,7 +25,6 @@ public:
 	class UStatusComponent* State;
 	class UStatusComponent* BState;
 	class ABossCharacter* Boss;
-	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

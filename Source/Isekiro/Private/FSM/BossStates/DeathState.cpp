@@ -19,6 +19,7 @@ void UDeathState::Start()
 	if (FSMComp)
 	{
 		FSMComp->EnableStun(false);
+		FSMComp->SetPostureState(EPostureState::BROKEN);
 	}
 
 	if (Instigator)
@@ -56,6 +57,7 @@ void UDeathState::Stop()
 {
 	Super::Stop();
 	FSMComp->EnableStun(true);
+	FSMComp->SetPostureState(EPostureState::STABLE);
 }
 
 void UDeathState::RespondToInput()
