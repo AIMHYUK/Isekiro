@@ -11,6 +11,7 @@
 #include "HeroCharacter.h"
 #include "CharacterTypes.h"
 #include "FSM/FSMComponent.h"
+#include "HeroAnimInstance.h"
 #include "Character/BossCharacter.h"
 
 // Sets default values for this component's properties
@@ -28,7 +29,6 @@ URealParryBox::URealParryBox()
 	//SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECollisionResponse::ECR_Overlap); // Example: Respond to GameTraceChannel1
 
 	bCanParry = true;
-	/*State = Cast<UStatusComponent>(GetWorld()->GetAuthGameMode());*/
 }
 
 // Called when the game starts
@@ -36,17 +36,77 @@ void URealParryBox::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogTemp, Warning, TEXT("BeginPlay 호출됨"));
+
 	// ParryCheck에 대한 충돌 이벤트
 	OnComponentBeginOverlap.AddDynamic(this, &URealParryBox::OnParryCheckBeginOverlap);
 
+	MyCharacter = Cast<AHeroCharacter>(GetOwner());
+	if (!MyCharacter)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MyCharacter 캐스팅 실패"));
+		return;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MyCharacter 캐스팅 성공"));
+	}
+
+	HeroAnim = Cast<UHeroAnimInstance>(MyCharacter->GetMesh()->GetAnimInstance());
+	if (!HeroAnim)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HeroAnim 캐스팅 실패"));
+		return;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HeroAnim 캐스팅 성공"));
+	}
+
+	Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+	if (!Boss)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Boss 캐스팅 실패"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Boss 캐스팅 성공"));
+	}
+
+	HeroAnim->OnCanKillBoss.AddLambda([this]() -> void
+		{
+			if (Boss)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("OnCanKillBoss 이벤트 실행됨"));
+				UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
+				if (FSMComponent && FSMComponent->IsPostureBroken())
+				{
+					UE_LOG(LogTemp, Error, TEXT("Delicated"));
+					MyCharacter->MakeSlowTimeDilation();
+				}
+			}
+		});
 }
+
+	//Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+	//HeroAnim->OnCanKillBoss.AddLambda([this]() -> void
+	//	{
+	//		if (Boss)
+	//		{
+	//			UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
+	//			if (FSMComponent->IsPostureBroken())
+	//			{
+	//				UE_LOG(LogTemp, Error, TEXT("Delicated"));
+	//				MyCharacter->MakeSlowTimeDilation();
+	//			}
+	//		}
+	//	});
+
+
 
 void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
-	UFSMComponent* FSMComponent = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
 
-	MyCharacter = Cast<AHeroCharacter>(GetOwner());
 	if (MyCharacter && bIsParryWindow)
 	{		
 		MyCharacter->SetActionStateParrySuccess();
@@ -58,15 +118,8 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 
 		State = MyCharacter->GetStatusComponent();
 		State->TryApplyDamage(5, 0);
-		if (Boss)
-		{
-			BState = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
-			BState->TryApplyDamage(3, 0);
-			if (FSMComponent->IsPostureBroken())
-			{
-				MyCharacter->MakeSlowTimeDilation();
-			}
-		}
+		BState = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
+		BState->TryApplyDamage(3, 0);
 		MyCharacter->KnockBack(500);
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
@@ -77,7 +130,6 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		{
 			FSM->ChangeStateTo(EBossState::DEFLECTED);
 		}
-		
 	}
 }
 

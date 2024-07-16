@@ -59,15 +59,11 @@ void UHeroAnimInstance::AnimNotify_NextAttackCheck()
 	OnNextAttackCheck.Broadcast();
 }
 
-//void UHeroAnimInstance::AnimNotify_GuardCheck()
-//{
-//	AHeroCharacter* OwningCharacter = Cast<AHeroCharacter>(TryGetPawnOwner());
-//	if (OwningCharacter && OwningCharacter->bGuardButtonHold)
-//	{
-//		OwningCharacter->PlayGuardMontage(FName("KeepGuard"));
-//		UE_LOG(LogTemp, Display, TEXT("Keepguard"));
-//	}	
-//}
+void UHeroAnimInstance::AnimNotify_CanKillBoss()
+{
+	OnCanKillBoss.Broadcast();
+	UE_LOG(LogTemp, Error, TEXT("Displayed"));
+}
 
 FName UHeroAnimInstance::GetAttackMontageSectionName(int32 Section)
 {

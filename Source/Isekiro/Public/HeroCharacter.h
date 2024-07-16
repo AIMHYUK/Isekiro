@@ -76,14 +76,14 @@ public:
 	//달리기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
 	float runSpeed = 600;
-
-
 	//앞으로 대쉬 기능 함수 선언
 	void LaunchFoward();
 	
 	//Cooldown초기화 함수 선언
 	void ResetLaunchCooldown();
 
+	FTimerHandle DashTimerHandle;
+	void StopDash();
 	//딜레이 처리할 변수세트 선언
 	FTimerHandle LaunchUpwardTimeHandle;
 	FTimerHandle CooldownTimerHandle;
@@ -185,6 +185,7 @@ public:
 	void KillLifePoint();
 	FName GetSectionNameFromCombo(int32 ComboNum) const;
 
+	void PutInDamage();
 protected:
 
 	virtual void BeginPlay() override;
@@ -241,12 +242,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GetParriedMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* SlideMontage;
+
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
 	void Guard(const FInputActionValue& value);
-	void Jump(const FInputActionValue& value);
+	void HeroJump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
-	void Dash(const FInputActionValue& value);
+	void Dash();
 	void UseItem(const FInputActionValue& value);
 	void StrongAttack(const FInputActionValue& value);
 	void EndStrongAttack();

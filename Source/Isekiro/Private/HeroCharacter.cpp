@@ -110,6 +110,9 @@ void AHeroCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
+	GetCharacterMovement()->GravityScale = 2.0f; //중력 2배
+
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
 	{
@@ -294,7 +297,6 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Canceled, this, &AHeroCharacter::Attack);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
 	}
 
@@ -308,12 +310,43 @@ void AHeroCharacter::Move(const FInputActionValue& value)
 		FRotator YawRotation(0, Rotation.Yaw, 0); //yaw사용
 
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		UE_LOG(LogTemp, Warning, TEXT("ForwardDirection: %s"), *ForwardDirection.ToString());
 		AddMovementInput(ForwardDirection, Vector.Y);
 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		UE_LOG(LogTemp, Warning, TEXT("RightDirection: %s"), *RightDirection.ToString());
 		AddMovementInput(RightDirection, Vector.X);
 	}
 }
+
+void AHeroCharacter::Run(const FInputActionValue& value)
+{
+
+	//대쉬 몽타주 실행
+	UE_LOG(LogTemp, Display, TEXT("Run"));
+	auto movement = GetCharacterMovement();
+	//현재 달리기 모드라면
+	if (movement->MaxWalkSpeed > walkSpeed)
+	{
+		//걷기속도로 전환
+		movement->MaxWalkSpeed = walkSpeed;
+	}
+	//현재 달리기 모드가 아니라면
+	else if (!AnimInstance->Montage_IsPlaying(GuardMontage))
+	{
+		//대쉬한번하고
+		HeroAnim->bCanJumpInAnim = true;
+		//달리기속도로 전환
+		movement->MaxWalkSpeed = runSpeed;
+		//.5초 후에 대쉬가능
+		GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AHeroCharacter::StopDash, 0.5f, false);
+	}
+}
+void AHeroCharacter::StopDash()
+{
+	HeroAnim->bCanJumpInAnim = false;
+}
+
 void AHeroCharacter::Look(const FInputActionValue& value)
 {
 	const FVector2D LookAxisValue = value.Get<FVector2D>();
@@ -326,14 +359,12 @@ void AHeroCharacter::Look(const FInputActionValue& value)
 
 }
 
-void AHeroCharacter::Jump(const FInputActionValue& value)
+void AHeroCharacter::HeroJump(const FInputActionValue& value)
 {
 	if (!IsAttacking && bCanJump)
-	{
-		Super::ACharacter::Jump();
+	{		
+		Jump();
 		bCanJump = false;
-		//GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
-		//GetCharacterMovement()->GravityScale = 2.0f; //중력 2배
 		/*UKismetSystemLibrary::PrintString(GEngine->GetWorld(), "Hello", true, true, FLinearColor(0.0f, 0.66f, 1.0f, 1.0f), 2.0f);*/
 	}
 }
@@ -605,23 +636,6 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 		PlayerController->SetIgnoreMoveInput(false); // 몽타주가 끝난 후 이동 재활성화
 	}
 }
-void AHeroCharacter::Run(const FInputActionValue& value)
-{
-	UE_LOG(LogTemp, Display, TEXT("Run"));
-	auto movement = GetCharacterMovement();
-	//현재 달리기 모드라면
-	if (movement->MaxWalkSpeed > walkSpeed)
-	{
-		//걷기속도로 전환
-		movement->MaxWalkSpeed = walkSpeed;
-	}
-	//현재 달리기 모드가 아니라면
-	else if (!AnimInstance->Montage_IsPlaying(GuardMontage))
-	{
-		//달리기속도로 전환
-		movement->MaxWalkSpeed = runSpeed;
-	}
-}
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
 {
@@ -772,6 +786,11 @@ void AHeroCharacter::DealDamage()
 		DamagedActors.Empty();
 	}
 }
+void AHeroCharacter::PutInDamage()
+{
+	 
+}
+
 void AHeroCharacter::ResetTimeDilation()
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
@@ -808,8 +827,9 @@ bool AHeroCharacter::IsBossPostureBroken()
 	return false;
 }
 //대쉬 이벤트처리 함수 구현
-void AHeroCharacter::Dash(const FInputActionValue& value)
+void AHeroCharacter::Dash()
 {
+	AnimInstance->Montage_Play(SlideMontage);
 	//만약 지금 대쉬가 가능한 상태라면
 	if (bCanLaunch)
 	{
@@ -831,11 +851,12 @@ void AHeroCharacter::UseItem(const FInputActionValue& value)
 	Status->UsePortion();
 }
 
+
 //앞으로 대쉬 기능 함수 구현
 void AHeroCharacter::LaunchFoward()
 {
 	//앞으로 이동시킬 Velocity
-	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 900;
+	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 1000;
 	//캐릭터를 앞으로 이동
 	LaunchCharacter(LaunchVelocity, true, false);
 }

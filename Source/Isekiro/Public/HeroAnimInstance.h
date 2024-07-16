@@ -11,6 +11,7 @@
 //다음 공격 체크 딜리게이트
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnCanKillBossDelegate);
 /**
  * 
  */
@@ -45,16 +46,21 @@ public:
 
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate  OnAttackHitCheck;
+	FOnCanKillBossDelegate	OnCanKillBoss;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* GuardMontage;
 
 	UAnimInstance* HeroAnimInstance;
-private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	UAnimMontage* ParryMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanJumpInAnim = false;	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* AttackMontage;
-
+private:
 
 	UFUNCTION()
 	void AnimNotify_AttackHitCheck();
@@ -62,10 +68,8 @@ private:
 	UFUNCTION()
 	void AnimNotify_NextAttackCheck();
 
-	//UFUNCTION()
- //   void AnimNotify_GuardCheck();
-
-
+	UFUNCTION()
+	void AnimNotify_CanKillBoss();
 
 	FName GetAttackMontageSectionName(int32 Section);
 };
