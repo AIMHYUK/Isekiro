@@ -41,7 +41,13 @@ protected:
 	FVector EndJumpLoc;
 
 	void CalculateJump(FVector Start, FVector End, float Height);
-	void RunJump(float DeltaTime);
-
+	void UpdateJump(float DeltaTime);
+	
+	float EaseOutCubic(float x){
+		return 1 - FMath::Pow(1 - x, 3);
+	}
+	float EaseInQuad(float x) {
+		return x * x;
+	}
 	int32 Count;
 };

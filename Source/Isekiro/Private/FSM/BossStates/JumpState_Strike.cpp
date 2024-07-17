@@ -4,6 +4,7 @@
 #include "FSM/BossStates/JumpState_Strike.h"
 #include "Character/BossCharacter.h"
 #include "ActorComponents/StatusComponent.h"
+#include "Components/CapsuleComponent.h"
 
 UJumpState_Strike::UJumpState_Strike()
 {
@@ -45,6 +46,7 @@ void UJumpState_Strike::Stop()
 	{
 		Instigator->SetLockOnTarget(true);
 	}
+	Instigator->ResetHeight();
 	return Super::Stop();
 }
 
@@ -85,7 +87,7 @@ EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 	{
 	case 1:
 	{
-		RunJump(DeltaTime);
+		UpdateJump(DeltaTime);
 		break;
 	}
 	case 2:
@@ -116,30 +118,34 @@ void UJumpState_Strike::CalculateJump(FVector Start, FVector End, float Height)
 	ApexJumpLoc = DiffVec;
 }
 
-void UJumpState_Strike::RunJump(float DeltaTime)
+void UJumpState_Strike::UpdateJump(float DeltaTime)
 {
 	if (bCompletedJump) return;
 
-	if (TotalJumpRunTime < MaxHalfJumpTime)
+	if (TotalJumpRunTime <= MaxHalfJumpTime)
 	{
 		TotalJumpRunTime += DeltaTime;
 
 		if (bIsReachingApex)
 		{
-			FVector JumpVec = FMath::Lerp(PrevJumpLoc, ApexJumpLoc, TotalJumpRunTime / MaxHalfJumpTime);
+			FVector JumpVec = FMath::Lerp(PrevJumpLoc, ApexJumpLoc, EaseOutCubic(TotalJumpRunTime / MaxHalfJumpTime));
 
 			Instigator->SetActorLocation(JumpVec);
 		}
 		else
 		{
-			FVector JumpVec = FMath::Lerp(ApexJumpLoc, EndJumpLoc, TotalJumpRunTime / MaxHalfJumpTime);
+			FVector JumpVec = FMath::Lerp(ApexJumpLoc, EndJumpLoc, EaseInQuad(TotalJumpRunTime / MaxHalfJumpTime));
 
 			Instigator->SetActorLocation(JumpVec);
 		}
 	}
 	else
 	{
-		if (!bIsReachingApex) bCompletedJump = true;
+		if (!bIsReachingApex)
+		{
+			Instigator->ResetHeight();
+			bCompletedJump = true;
+		}
 		else
 		{
 			bIsReachingApex = false;
