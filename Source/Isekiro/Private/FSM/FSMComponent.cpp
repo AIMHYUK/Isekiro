@@ -252,6 +252,11 @@ bool UFSMComponent::IsPostureBroken() const
 	return PostureState == EPostureState::BROKEN;
 }
 
+EPostureState UFSMComponent::GetPostureState() const
+{
+	return PostureState;
+}
+
 void UFSMComponent::SetPostureState(EPostureState _PostureState)
 {
 	PostureState = _PostureState;
