@@ -25,8 +25,29 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float MaxRunTime;	
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	float JumpHeight;
+
 	float TotalRunTime;
 	FVector PrevLoc;
 	FVector NewLoc;
+
+	bool bCompletedJump;
+	bool bIsReachingApex;
+	float MaxHalfJumpTime;
+	float TotalJumpRunTime;
+	FVector PrevJumpLoc;
+	FVector ApexJumpLoc;
+	FVector EndJumpLoc;
+
+	void CalculateJump(FVector Start, FVector End, float Height);
+	void UpdateJump(float DeltaTime);
+	
+	float EaseOutCubic(float x){
+		return 1 - FMath::Pow(1 - x, 3);
+	}
+	float EaseInQuad(float x) {
+		return x * x;
+	}
 	int32 Count;
 };

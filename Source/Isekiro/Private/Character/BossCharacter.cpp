@@ -373,6 +373,13 @@ void ABossCharacter::SetLockOnTarget(bool _bLockOnTarget)
 	bLockOnTarget = _bLockOnTarget;
 }
 
+void ABossCharacter::ResetHeight()
+{
+	FVector Loc = GetActorLocation();
+	Loc.Z = HeightZ;
+	SetActorLocation(Loc);
+}
+
 EDirection ABossCharacter::GetCurrentDirection() const
 {
 	return CurrDir;

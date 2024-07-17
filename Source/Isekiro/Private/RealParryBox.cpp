@@ -21,7 +21,7 @@ URealParryBox::URealParryBox()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	InitSphereRadius(100.0f); // Example: Set the sphere radius
+	InitSphereRadius(160.0f); // Example: Set the sphere radius
 	// Set collision settings
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
