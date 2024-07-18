@@ -7,6 +7,7 @@
 #include "HeroCharacter.h"
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
 
 UBossAnimInstance::UBossAnimInstance()
 {
@@ -147,5 +148,13 @@ void UBossAnimInstance::AnimNotify_DeclareDead()
 		bDisplayingExecutionWidget = true;
 		auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
 		if (GM) GM->GameHasEnded();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_Test()
+{
+	if (SwingSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetOwningActor(), SwingSound, GetOwningActor()->GetActorLocation());
 	}
 }
