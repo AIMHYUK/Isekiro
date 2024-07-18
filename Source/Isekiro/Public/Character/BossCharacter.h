@@ -64,6 +64,11 @@ public:
 	void SetLockOnTarget(bool _bLockOnTarget);
 	void ResetHeight();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void EquipKatana();
+	UFUNCTION(BlueprintImplementableEvent)
+	void EquipBow();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<USkeletalMeshComponent> RetargetedSKMesh;

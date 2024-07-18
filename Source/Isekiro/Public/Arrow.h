@@ -9,6 +9,8 @@
 class AActor;
 class USphereComponent;
 class UStaticMeshComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 USTRUCT()
 struct FArrowSetting
@@ -39,12 +41,20 @@ protected:
 	TObjectPtr<USceneComponent> SceneComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	TObjectPtr<USphereComponent> SphereComp;
-	UPROPERTY(EditDefaultsOnly, Category = "Settings")
-	TObjectPtr<UStaticMeshComponent> SMComp;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+	TObjectPtr<UStaticMeshComponent> SMComp;	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+	TObjectPtr<UNiagaraComponent> ArrowTrailComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings")
+	TObjectPtr<UNiagaraSystem> ArrowTrail;
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-		
+	
+
+
+
 private:
 	TObjectPtr<AActor> Target;
 	FVector Dir;

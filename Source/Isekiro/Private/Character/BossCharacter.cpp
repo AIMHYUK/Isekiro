@@ -77,6 +77,8 @@ void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogTemp, Warning, TEXT("MeshName: %s"), *GetNameSafe(GetMesh()));
+	
 	auto Widget = TargetWidgetComponent->GetWidget();
 	if (Widget)
 	{
@@ -107,6 +109,8 @@ void ABossCharacter::BeginPlay()
 	{
 		BossUI = GM->BossUI;
 	}
+
+	EquipKatana();
 }
 
 void ABossCharacter::Tick(float DeltaTime)
