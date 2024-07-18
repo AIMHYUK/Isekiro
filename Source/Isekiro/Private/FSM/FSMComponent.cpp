@@ -64,7 +64,14 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Def Percent: %f"), DefenseProb);
+	if (CurrentStateE == EBossState::BLOCK)
+	{
+		UE_LOG(LogTemp, Error, TEXT("42BLOCKED??"));
+	}
+	if (CurrentStateE == EBossState::DEFLECTED)
+	{
+		UE_LOG(LogTemp, Error, TEXT("42DEFLECTED??"));
+	}
 
 	if (CanStun())
 	{

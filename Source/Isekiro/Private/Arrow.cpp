@@ -64,7 +64,7 @@ void AArrow::BeginPlay()
 		Dir.Normalize();
 	}
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnOverlapBegin);
-	SetLifeSpan(5.f);
+	SetLifeSpan(2.f);
 }
 
 void AArrow::Tick(float DeltaTime)

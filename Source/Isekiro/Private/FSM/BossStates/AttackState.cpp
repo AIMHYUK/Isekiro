@@ -53,18 +53,9 @@ EBossState UAttackState::Update(float DeltaTime)
 	return EBossState::NONE;
 }
 
-void UAttackState::Stop()
-{
-	Super::Stop();
-	StopMovement();
-	StopMontage();
-}
-
 EBossState UAttackState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
-
-	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (!Instigator->IsWithinTarget())
 	{

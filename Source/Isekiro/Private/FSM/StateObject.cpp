@@ -30,16 +30,20 @@ void UStateObject::Start()
 	}
 
 	PlayMontage();
+	UE_LOG(LogTemp, Warning, TEXT("42 Start: %s"), *UEnum::GetValueAsString(GetFSMState()));
 }
 
 EBossState UStateObject::Update(float DeltaTime)
 {
-	return UpdateMovement(DeltaTime);
+	if (CanStartMovement()) return UpdateMovement(DeltaTime);
+	return EBossState::NONE;
 }
 
 void UStateObject::Stop()
 {
 	StopMovement();
+	StopMontage();
+	UE_LOG(LogTemp, Warning, TEXT("42 Stop: %s"), *UEnum::GetValueAsString(GetFSMState()));
 }
 
 void UStateObject::Activate()
@@ -76,7 +80,7 @@ void UStateObject::PlayMontage()
 				Instigator->GetMesh()->GetAnimInstance()->Montage_JumpToSection(
 					MontageStates[SelectedIndex].SectionName, MontageStates[SelectedIndex].Montage);
 		}
-		else 
+		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Selected Anim Montage is null in %s state"), *GetNameSafe(this));
 			SelectedIndex = -1;

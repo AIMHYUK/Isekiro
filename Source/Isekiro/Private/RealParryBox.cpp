@@ -57,11 +57,11 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		UGameplayStatics::SetGlobalTimeDilation(this, TimeDilation);
 
 		State = MyCharacter->GetStatusComponent();
-		State->TryApplyDamage(5, 0);
+		State->TryApplyDamage(GetOwner(), 5, 0);
 		if (Boss)
 		{
 			BState = Cast<UStatusComponent>(Boss->GetComponentByClass(UStatusComponent::StaticClass()));
-			BState->TryApplyDamage(3, 0);
+			BState->TryApplyDamage(GetOwner(), 3, 0);
 			if (FSMComponent->IsPostureBroken())
 			{
 				MyCharacter->MakeSlowTimeDilation();
@@ -71,12 +71,14 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		// Set a timer to reset time dilation after a short duration
 		GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &URealParryBox::ResetTimeDilation, 0.5f, false);
 		MyCharacter->SetActionStateDifferentWithParry();
+		
 		//머지할떄 풀자
-		auto FSM = OtherActor->GetComponentByClass<UFSMComponent>();
+		//BossCharacter에서 해결하기 때문에 여기서 이제 부를 필요가 없다.
+		/*auto FSM = OtherActor->GetComponentByClass<UFSMComponent>();
 		if (FSM && FSM->CanStun())
 		{
 			FSM->ChangeStateTo(EBossState::DEFLECTED);
-		}
+		}*/
 		
 	}
 }

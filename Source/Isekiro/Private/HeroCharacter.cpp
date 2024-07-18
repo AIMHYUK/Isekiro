@@ -247,7 +247,7 @@ void AHeroCharacter::Tick(float DeltaTime)
 
 void AHeroCharacter::ApplyDamage(float damage)
 {
-	Status->TryApplyDamage(0, damage);
+	Status->TryApplyDamage(this, 0, damage);
 	if (IsDead())
 	{
 		DetachFromControllerPendingDestroy(); //컨트롤러 떼기
@@ -257,7 +257,7 @@ void AHeroCharacter::ApplyDamage(float damage)
 
 void AHeroCharacter::ApplyPosture(float posture)
 {
-	Status->TryApplyDamage(posture, 0);
+	Status->TryApplyDamage(this, posture, 0);
 }
 
 void AHeroCharacter::CallHPBarFunction()
@@ -278,6 +278,11 @@ UStatusComponent* AHeroCharacter::GetStatusComponent()
 bool AHeroCharacter::IsDead() const
 {
 	return (Status->GetHealth()) <= 0;
+}
+
+bool AHeroCharacter::IsParrying() const
+{
+	return ParryCheck->GetParryWindow();
 }
 
 // Called to bind functionality to input
@@ -492,8 +497,6 @@ void AHeroCharacter::Die()
 			Camera->SetActive(false);
 		}
 	}
-
-
 }
 
 void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -761,7 +764,7 @@ void AHeroCharacter::DealDamage()
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 					// 액터를 이미 데미지를 입은 것으로 표시			
 					DamagedActors.Add(OverlappedActor, true);
-					if (ActorStatus->TryApplyDamage(10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
+					if (ActorStatus->TryApplyDamage(this, 10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
 					{
 						MakeSlowTimeDilation();
 					}

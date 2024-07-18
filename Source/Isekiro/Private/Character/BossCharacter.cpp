@@ -13,6 +13,7 @@
 #include "BossWidget.h"
 #include "IsekiroGameModeBase.h"
 #include "Components/WidgetComponent.h"
+#include "HeroCharacter.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -55,13 +56,6 @@ ABossCharacter::ABossCharacter()
 	RetargetedSKMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RetargetedSkeletalMeshComponent");
 	RetargetedSKMesh->SetupAttachment(GetMesh());
 
-	WeaponSMesh = CreateDefaultSubobject<UStaticMeshComponent>("WeaponStaticMeshComponent");
-	WeaponSMesh->SetupAttachment(GetMesh());
-	WeaponSMesh->SetRelativeLocation(FVector(2.276266f, 0.419644f, 0.572694f));
-	WeaponSMesh->SetRelativeRotation(FRotator(80.f, 100.f, 195.f));
-	WeaponSMesh->SetRelativeScale3D(FVector::One() * 1.25f);
-	WeaponSMesh->SetCollisionProfileName("NoCollision");
-
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
@@ -77,8 +71,10 @@ void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	TargetWidgetComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "Spine2");
+
 	UE_LOG(LogTemp, Warning, TEXT("MeshName: %s"), *GetNameSafe(GetMesh()));
-	
+
 	auto Widget = TargetWidgetComponent->GetWidget();
 	if (Widget)
 	{
@@ -131,14 +127,13 @@ void ABossCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if(StatusComponent && !StatusComponent->IsAlive())
+	if (StatusComponent && !StatusComponent->IsAlive())
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
 	if (CanRecoverPosture())
 	{
 		StatusComponent->RecoverPosture(3.f);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Posture: %f"), StatusComponent->GetPosture());
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Emerald, FString::Printf(TEXT("Distance: %f"), GetDistanceToTargetOffset()));
 }
@@ -198,16 +193,17 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 	//if()
 }
 
-void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
+void ABossCharacter::OnStatusChanged(AActor* Initiator, float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
+	if (!ensure(Initiator)) return;
 
 	if (StatusComponent && FSMComponent)
 	{
-		if(FSMComponent->GetCurrentStateE() == EBossState::DODGE)
+		if (FSMComponent->GetCurrentStateE() == EBossState::DODGE)
 		{
 			StatusComponent->SetHealth(OldHealth);
 			StatusComponent->SetPosture(OldPosture);
-			return;			
+			return;
 		}
 
 		if (StatusComponent->IsPostureBroken() || !StatusComponent->HasHealth() || !StatusComponent->IsAlive())
@@ -224,7 +220,11 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 				if (FSMComponent->CanDefend())
 				{
 					StatusComponent->SetHealth(OldHealth);
-					FSMComponent->StartParryOrBlock();
+
+					auto Hero = Cast<AHeroCharacter>(Initiator);
+					if (Hero && Hero->IsParrying()) 
+						FSMComponent->ChangeStateTo(EBossState::DEFLECTED);
+					else FSMComponent->StartParryOrBlock();
 				}
 				else FSMComponent->ChangeStateTo(EBossState::HIT);
 			}

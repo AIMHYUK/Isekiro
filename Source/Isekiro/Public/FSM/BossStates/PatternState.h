@@ -18,7 +18,6 @@ public:
 	UPatternState();
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
-	virtual void Stop() override;
 	virtual void StartMovement() override;
 
 protected:

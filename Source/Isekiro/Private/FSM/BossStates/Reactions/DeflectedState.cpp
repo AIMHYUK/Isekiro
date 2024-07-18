@@ -14,6 +14,7 @@ UDeflectedState::UDeflectedState()
 
 void UDeflectedState::Start()
 {
+	if (FSMComp) FSMComp->EnableDefense(false);
 	Super::Start();
 
 	//Child Functionality
@@ -25,11 +26,10 @@ void UDeflectedState::Start()
 	}*/
 	JumpToSection(FName(Section));
 
-	if (FSMComp) FSMComp->EnableDefense(false);
 }
 
 void UDeflectedState::Stop()
 {
-	Super::Stop();
 	if (FSMComp) FSMComp->EnableDefense(true);
+	Super::Stop();
 }

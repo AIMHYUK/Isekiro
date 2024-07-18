@@ -36,12 +36,12 @@ void UReactionState::Start()
 	FVector DirVec = PrevLoc - TargetLoc;
 	DirVec.Normalize();
 
-	if (Distance < Instigator->GetTargetOffset())
-		NewLoc = Instigator->GetTargetOffset() * DirVec + TargetLoc;
+	/*if (Distance < Instigator->GetTargetOffset())
+		NewLoc = Instigator->GetTargetOffset() * DirVec + PrevLoc;
 	else
-		NewLoc = Distance * DirVec + TargetLoc;
+		NewLoc = Distance * DirVec + PrevLoc;*/
 
-	NewLoc = TravelDist * DirVec + TargetLoc;
+	NewLoc = TravelDist * DirVec + PrevLoc;
 }
 
 EBossState UReactionState::Update(float DeltaTime)
@@ -58,22 +58,11 @@ EBossState UReactionState::Update(float DeltaTime)
 void UReactionState::Stop()
 {
 	Super::Stop();
-	StopMovement();
-	if (Instigator && Instigator->GetMesh() && Instigator->GetMesh()->GetAnimInstance())
-	{
-		auto Anim = Instigator->GetMesh()->GetAnimInstance();
-		if (Anim && Anim->IsAnyMontagePlaying())
-		{
-			Anim->StopAllMontages(0.1f);
-		}
-	}
 }
 
 EBossState UReactionState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
-
-	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (TotalRunTime <= MaxRunTime)
 	{

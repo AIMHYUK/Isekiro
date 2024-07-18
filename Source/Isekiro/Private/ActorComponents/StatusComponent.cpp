@@ -45,7 +45,7 @@ void UStatusComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
+bool UStatusComponent::TryApplyDamage(AActor* Initiator, float PostureDmg, float HealthDmg)
 {
 	if (!GetOwner()) return false;
 
@@ -71,12 +71,12 @@ bool UStatusComponent::TryApplyDamage(float PostureDmg, float HealthDmg)
 		}
 	}
 
-	ApplyDamage(PostureDmg, HealthDmg);
+	ApplyDamage(Initiator, PostureDmg, HealthDmg);
 
 	return true;
 }
 
-void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
+void UStatusComponent::ApplyDamage(AActor* Initiator, float PostureDmg, float HealthDmg)
 {
 	if (ensureAlways(PostureDmg >= 0.f && HealthDmg >= 0.f))
 	{
@@ -86,7 +86,7 @@ void UStatusComponent::ApplyDamage(float PostureDmg, float HealthDmg)
 		Posture += PostureDmg;
 		Health -= HealthDmg;
 
-		OnStatusChanged.Broadcast(OldHealth, OldPosture, Health, Posture);
+		OnStatusChanged.Broadcast(Initiator, OldHealth, OldPosture, Health, Posture);
 	}
 }
 
