@@ -176,6 +176,9 @@ public:
 
 	class UAnimInstance* AnimInstance;
 
+	FVector OriginalCameraLocation;
+	FRotator OriginalCameraRotation;
+
 	FVector DeathCameraOffset;
 	FRotator DeathCameraRotation;
 
@@ -186,6 +189,24 @@ public:
 	FName GetSectionNameFromCombo(int32 ComboNum) const;
 
 	void PutInDamage();
+
+	FTimerHandle MouseChangeHandle;
+	
+	bool bMousePressed = false;
+	UFUNCTION(BlueprintPure)
+	bool GetMousePressed();
+	void ChangeMousePressed();
+
+	UFUNCTION(BlueprintCallable)
+	float easeInCubic(float x)
+	{
+		return x * x * x;
+	}
+	UFUNCTION(BlueprintCallable)
+	float easeOutQuint(float x) {
+		return 1 - FMath::Pow(1 - x, 5);
+	}
+
 protected:
 
 	virtual void BeginPlay() override;

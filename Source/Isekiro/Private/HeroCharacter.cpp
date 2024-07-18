@@ -27,6 +27,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "BossWidget.h"
 
 // Sets default values
@@ -63,6 +64,9 @@ AHeroCharacter::AHeroCharacter()
 
 	DeathCameraOffset = FVector(0.0f, 0.0f, 300.0f); // 캐릭터 위쪽으로 300 유닛
 	DeathCameraRotation = FRotator(-45.0f, 0.0f, 0.0f); // 아래쪽을 향하도록 45도 회전
+
+	OriginalCameraLocation = Camera->GetRelativeLocation();
+	OriginalCameraRotation = Camera->GetRelativeRotation();
 
 	bHasDisplayedHazardUI = false;
 }
@@ -198,8 +202,16 @@ void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Status->RecoverPosture(2.f);
-
+	if (GuardState != ECharacterGuardState::ECGS_Guarding)
+	{
+		Status->RecoverPosture(2.f);
+	}
+	else
+	{
+		Status->RecoverPosture(5.f);
+	}
+	
+	
 	switch (ActionState)
 	{
 	case EActionState::EAS_Attacking:
@@ -639,6 +651,8 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
 {
+	bMousePressed = true;
+	GetWorld()->GetTimerManager().SetTimer(MouseChangeHandle, this, &AHeroCharacter::ChangeMousePressed, 0.0333f, false);
 	if (IsBossPostureBroken()) //체간이 무너지면
 	{
 		//시간을 느리게 함
@@ -649,6 +663,10 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		{
 			if (bCanExecution)
 			{
+				FVector BossLocation = BossDie->GetActorLocation();
+				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), BossLocation);
+				SetActorRotation(LookAtRotation);
+
 				Camera->SetFieldOfView(70.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
@@ -694,6 +712,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 			}
 		}
 	}
+	bMousePressed = false;
 }
 FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
 {
@@ -791,6 +810,18 @@ void AHeroCharacter::PutInDamage()
 	 
 }
 
+bool AHeroCharacter::GetMousePressed()
+{
+	return bMousePressed;
+}
+
+void AHeroCharacter::ChangeMousePressed()
+{
+	bMousePressed = !bMousePressed;
+}
+
+
+
 void AHeroCharacter::ResetTimeDilation()
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
@@ -801,7 +832,7 @@ void AHeroCharacter::ResetTimeDilation()
 
 void AHeroCharacter::MakeSlowTimeDilation()
 {
-	UGameplayStatics::SetGlobalTimeDilation(this, 0.05f);
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
 	GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &AHeroCharacter::ResetTimeDilation, 2.f, false);
 	bIsDilated = true;
 	bCanExecution = true;
