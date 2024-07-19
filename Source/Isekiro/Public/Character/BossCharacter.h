@@ -19,7 +19,7 @@ class UBoxComponent;
 class UCapsuleComponent;
 class UBossWidget;
 class UWidgetComponent;
-
+class UStaticMeshComponent;
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
 {
@@ -64,9 +64,7 @@ public:
 	void SetLockOnTarget(bool _bLockOnTarget);
 	void ResetHeight();
 
-	UFUNCTION(BlueprintImplementableEvent)
 	void EquipKatana();
-	UFUNCTION(BlueprintImplementableEvent)
 	void EquipBow();
 
 protected:
@@ -76,7 +74,18 @@ protected:
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> BowEquippedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> KatanaEquippedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> BowStashedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> KatanaStashedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> ScabbardMesh;
+
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

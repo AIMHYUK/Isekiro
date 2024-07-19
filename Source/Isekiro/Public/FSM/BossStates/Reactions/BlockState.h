@@ -14,5 +14,6 @@ class ISEKIRO_API UBlockState : public UReactionState
 {
 	GENERATED_BODY()
 public: 
+	UBlockState();
 	virtual void Start() override;
 };

@@ -3,6 +3,11 @@
 
 #include "FSM/BossStates/Reactions/BlockState.h"
 
+UBlockState::UBlockState()
+{
+	TravelDist = 50.f;
+}
+
 void UBlockState::Start()
 {
 	Super::Start();
