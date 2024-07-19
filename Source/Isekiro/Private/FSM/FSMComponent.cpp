@@ -64,15 +64,6 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
-	if (CurrentStateE == EBossState::BLOCK)
-	{
-		UE_LOG(LogTemp, Error, TEXT("42BLOCKED??"));
-	}
-	if (CurrentStateE == EBossState::DEFLECTED)
-	{
-		UE_LOG(LogTemp, Error, TEXT("42DEFLECTED??"));
-	}
-
 	if (CanStun())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Yes Can Stun")));

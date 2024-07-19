@@ -564,7 +564,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					case EBossState::LUNGEATTACK:
 						KnockBack(3000);
 						break;
-					case EBossState::JUMPATTACK:
+					case EBossState::JUMPSTRIKE:
 						KnockBack(3000);
 						break;
 					case EBossState::THRUSTATTACK:
