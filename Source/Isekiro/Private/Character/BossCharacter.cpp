@@ -13,6 +13,7 @@
 #include "BossWidget.h"
 #include "IsekiroGameModeBase.h"
 #include "Components/WidgetComponent.h"
+#include "HeroCharacter.h"
 
 ABossCharacter::ABossCharacter()
 {
@@ -31,9 +32,9 @@ ABossCharacter::ABossCharacter()
 	NearSpaceBuffer = 300.f;
 
 	DefaultSetting.Damage = 20.f;
-	DefaultSetting.Speed = 3600.f;
+	DefaultSetting.Speed = 5600.f;
 	HardSetting.Damage = 30.f;
-	HardSetting.Speed = 3600.f;
+	HardSetting.Speed = 5600.f;
 
 	CurrDir = EDirection::BACK;
 
@@ -55,27 +56,46 @@ ABossCharacter::ABossCharacter()
 	RetargetedSKMesh = CreateDefaultSubobject<USkeletalMeshComponent>("RetargetedSkeletalMeshComponent");
 	RetargetedSKMesh->SetupAttachment(GetMesh());
 
-	WeaponSMesh = CreateDefaultSubobject<UStaticMeshComponent>("WeaponStaticMeshComponent");
-	WeaponSMesh->SetupAttachment(GetMesh());
-	WeaponSMesh->SetRelativeLocation(FVector(2.276266f, 0.419644f, 0.572694f));
-	WeaponSMesh->SetRelativeRotation(FRotator(80.f, 100.f, 195.f));
-	WeaponSMesh->SetRelativeScale3D(FVector::One() * 1.25f);
-	WeaponSMesh->SetCollisionProfileName("NoCollision");
-
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 	Tags.Add(FName("LockOnPossible"));
 
 	TargetWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("TargetWidgetComponent");
-	TargetWidgetComponent->SetupAttachment(GetMesh());
+	TargetWidgetComponent->SetupAttachment(GetMesh(), "Spine2");
 	TargetWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 
+	BowEquippedMesh = CreateDefaultSubobject<UStaticMeshComponent>("BowEquippedMesh");
+	BowEquippedMesh->SetupAttachment(RetargetedSKMesh, "BowEquippedSocket");
+	BowEquippedMesh->SetRelativeScale3D(FVector(1.6f));
+	BowEquippedMesh->SetCollisionProfileName("NoCollision");
+
+	BowStashedMesh = CreateDefaultSubobject<UStaticMeshComponent>("BowStashedMesh");
+	BowStashedMesh->SetupAttachment(RetargetedSKMesh, "BowSheathedSocket");
+	BowStashedMesh->SetRelativeScale3D(FVector(1.6f));
+	BowStashedMesh->SetCollisionProfileName("NoCollision");
+
+	KatanaEquippedMesh = CreateDefaultSubobject<UStaticMeshComponent>("KatanaEquippedMesh");
+	KatanaEquippedMesh->SetupAttachment(RetargetedSKMesh, "KatanaEquippedSocket");
+	KatanaEquippedMesh->SetRelativeScale3D(FVector(1.25f));
+	KatanaEquippedMesh->SetCollisionProfileName("NoCollision");
+
+	KatanaStashedMesh = CreateDefaultSubobject<UStaticMeshComponent>("KatanaStashedMesh");
+	KatanaStashedMesh->SetupAttachment(RetargetedSKMesh, "KatanaSheathSocket");
+	KatanaStashedMesh->SetRelativeScale3D(FVector(1.25f));
+	KatanaStashedMesh->SetCollisionProfileName("NoCollision");
+
+	ScabbardMesh = CreateDefaultSubobject<UStaticMeshComponent>("ScabbardMesh");
+	ScabbardMesh->SetupAttachment(RetargetedSKMesh, "ScabbardSocket");
+	ScabbardMesh->SetRelativeScale3D(FVector(1.25f));
+	ScabbardMesh->SetCollisionProfileName("NoCollision");
 }
 
 void ABossCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("MeshName: %s"), *GetNameSafe(RetargetedSKMesh));
 
 	auto Widget = TargetWidgetComponent->GetWidget();
 	if (Widget)
@@ -107,11 +127,15 @@ void ABossCharacter::BeginPlay()
 	{
 		BossUI = GM->BossUI;
 	}
+
+	EquipKatana();
 }
 
 void ABossCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("CompVel: %s"), *GetCapsuleComponent()->GetComponentVelocity().ToString()));
 
 	if (Target && bLockOnTarget)
 	{
@@ -127,14 +151,13 @@ void ABossCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if(StatusComponent && !StatusComponent->IsAlive())
+	if (StatusComponent && !StatusComponent->IsAlive())
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
 	if (CanRecoverPosture())
 	{
 		StatusComponent->RecoverPosture(3.f);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Posture: %f"), StatusComponent->GetPosture());
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Emerald, FString::Printf(TEXT("Distance: %f"), GetDistanceToTargetOffset()));
 }
@@ -194,16 +217,17 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 	//if()
 }
 
-void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture)
+void ABossCharacter::OnStatusChanged(AActor* Initiator, float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
+	if (!ensure(Initiator)) return;
 
 	if (StatusComponent && FSMComponent)
 	{
-		if(FSMComponent->GetCurrentStateE() == EBossState::DODGE)
+		if (FSMComponent->GetCurrentStateE() == EBossState::DODGE)
 		{
 			StatusComponent->SetHealth(OldHealth);
 			StatusComponent->SetPosture(OldPosture);
-			return;			
+			return;
 		}
 
 		if (StatusComponent->IsPostureBroken() || !StatusComponent->HasHealth() || !StatusComponent->IsAlive())
@@ -220,7 +244,11 @@ void ABossCharacter::OnStatusChanged(float OldHealth, float OldPosture, float Ne
 				if (FSMComponent->CanDefend())
 				{
 					StatusComponent->SetHealth(OldHealth);
-					FSMComponent->StartParryOrBlock();
+
+					auto Hero = Cast<AHeroCharacter>(Initiator);
+					if (Hero && Hero->IsParrying()) 
+						FSMComponent->ChangeStateTo(EBossState::DEFLECTED);
+					else FSMComponent->StartParryOrBlock();
 				}
 				else FSMComponent->ChangeStateTo(EBossState::HIT);
 			}
@@ -236,7 +264,7 @@ void ABossCharacter::SetupFireArrow(FArrowSetting Setting)
 		FRotator Rotate = DirVector.Rotation();
 		FTransform Trans;
 
-		Trans.SetLocation(GetActorLocation() + GetActorForwardVector() * 10.f);
+		Trans.SetLocation(GetActorLocation());
 		Trans.SetRotation(Rotate.Quaternion());
 		Trans.SetScale3D(FVector::One());
 
@@ -378,6 +406,24 @@ void ABossCharacter::ResetHeight()
 	FVector Loc = GetActorLocation();
 	Loc.Z = HeightZ;
 	SetActorLocation(Loc);
+}
+
+void ABossCharacter::EquipKatana()
+{
+	BowEquippedMesh->SetVisibility(false);
+	BowStashedMesh->SetVisibility(true);
+
+	KatanaEquippedMesh->SetVisibility(true);
+	KatanaStashedMesh->SetVisibility(false);
+}
+
+void ABossCharacter::EquipBow()
+{
+	BowEquippedMesh->SetVisibility(true);
+	BowStashedMesh->SetVisibility(false);
+
+	KatanaEquippedMesh->SetVisibility(false);
+	KatanaStashedMesh->SetVisibility(true);
 }
 
 EDirection ABossCharacter::GetCurrentDirection() const

@@ -151,10 +151,18 @@ void UBossAnimInstance::AnimNotify_DeclareDead()
 	}
 }
 
-void UBossAnimInstance::AnimNotify_Test()
+void UBossAnimInstance::AnimNotify_EquipKatana()
 {
-	if (SwingSound)
+	if (BossCharacter)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetOwningActor(), SwingSound, GetOwningActor()->GetActorLocation());
+		BossCharacter->EquipKatana();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_EquipBow()
+{
+	if (BossCharacter)
+	{
+		BossCharacter->EquipBow();
 	}
 }

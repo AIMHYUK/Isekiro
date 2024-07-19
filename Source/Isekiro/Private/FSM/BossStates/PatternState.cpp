@@ -27,11 +27,6 @@ EBossState UPatternState::Update(float DeltaTime)
 	return EBossState::NONE;
 }
 
-void UPatternState::Stop()
-{
-	Super::Stop();
-}
-
 void UPatternState::StartMovement()
 {
 	Super::StartMovement();
@@ -75,8 +70,6 @@ void UPatternState::StartMovement()
 EBossState UPatternState::UpdateMovement(float DeltaTime)
 {
 	Super::UpdateMovement(DeltaTime);
-
-	if (!CanStartMovement()) return EBossState::NONE;
 
 	if (TotalRunTime <= MaxRunTime)
 	{

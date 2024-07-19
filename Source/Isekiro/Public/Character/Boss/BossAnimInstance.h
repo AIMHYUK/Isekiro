@@ -13,7 +13,7 @@
 class UFSMComponent;
 class ABossCharacter;
 class UStatusComponent;
-class USoundBase;
+
 UCLASS()
 class ISEKIRO_API UBossAnimInstance : public UAnimInstance
 {
@@ -55,11 +55,11 @@ protected:
 	void AnimNotify_DeclareDead();
 
 	UFUNCTION()
-	void AnimNotify_Test();
+	void AnimNotify_EquipKatana();
 
+	UFUNCTION()
+	void AnimNotify_EquipBow();
 protected:
-	UPROPERTY(EditDefaultsOnly,Category="Settings")
-	USoundBase* SwingSound;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead;

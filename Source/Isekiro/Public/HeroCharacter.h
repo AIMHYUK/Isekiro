@@ -143,7 +143,7 @@ public:
 	UStatusComponent* GetStatusComponent();
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
-
+	bool IsParrying() const;
 	//타격감
 	void KnockBack(float distance);
 	void ShakeCam();

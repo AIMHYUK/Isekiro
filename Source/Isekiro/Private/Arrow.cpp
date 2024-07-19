@@ -6,6 +6,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "ActorComponents/StatusComponent.h"
 #include "HeroCharacter.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AArrow::AArrow()
 {
@@ -26,8 +28,11 @@ AArrow::AArrow()
 	Rotate.Yaw = -90.f;
 	SMComp->SetRelativeRotation(Rotate.Quaternion());
 	SMComp->SetCollisionProfileName("NoCollision");
-	bHasHit = false;
 
+	ArrowTrailComp = CreateDefaultSubobject<UNiagaraComponent>("ArrowTrailComponent");
+	ArrowTrailComp->SetupAttachment(SceneComp);
+
+	bHasHit = false;
 }
 
 void AArrow::Initialize(AActor* _Target, FArrowSetting _ArrowSetting)
@@ -49,27 +54,40 @@ void AArrow::PostInitializeComponents()
 void AArrow::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ArrowTrailComp = UNiagaraFunctionLibrary::SpawnSystemAttached(ArrowTrail, SMComp, "",
+		FVector::Zero(), FRotator::ZeroRotator, EAttachLocation::SnapToTarget, false);
+
 	if (Target)
 	{
 		Dir = Target->GetActorLocation() - GetActorLocation();
 		Dir.Normalize();
 	}
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AArrow::OnOverlapBegin);
-	SetLifeSpan(5.f);
+	SetLifeSpan(2.f);
 }
 
 void AArrow::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector DirVector = Dir * ArrowSetting.Speed * DeltaTime;
-	SetActorLocation(DirVector + GetActorLocation());
+	if (!bHasHit)
+	{
+		FVector DirVector = Dir * ArrowSetting.Speed * DeltaTime;
+		SetActorLocation(DirVector + GetActorLocation());
+	}
 }
 
-void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+void AArrow::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bHasHit) return;
+	if (SphereComp)
+	{
+		SphereComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	if (SMComp)
+		SMComp->SetVisibility(false);
+	
 	bHasHit = true;
 }
 

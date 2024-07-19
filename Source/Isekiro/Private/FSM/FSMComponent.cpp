@@ -64,8 +64,6 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Def Percent: %f"), DefenseProb);
-
 	if (CanStun())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Yes Can Stun")));

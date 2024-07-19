@@ -8,13 +8,13 @@ UHitState::UHitState()
 {
 	MaxRunTime = .6f;
 	TotalRunTime = 0.f;
-	TravelDist = 100.f;
+	TravelDist = 80.f;
 	StateDistance.Max = 350.f;
 }
 
 void UHitState::Start()
 {
 	Super::Start();
-	int32 SectionNum = FMath::RandRange(1, 4);
+	int32 SectionNum = FMath::RandRange(1, 3);
 	JumpToSection(FName(FString::FromInt(SectionNum)));
 }

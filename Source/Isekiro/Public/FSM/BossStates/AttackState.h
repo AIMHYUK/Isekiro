@@ -17,7 +17,6 @@ public:
 	UAttackState();
 	virtual void Start() override;
 	virtual EBossState Update(float DeltaTime) override;
-	virtual void Stop() override;
 
 protected:
 	virtual EBossState UpdateMovement(float DeltaTime) override;

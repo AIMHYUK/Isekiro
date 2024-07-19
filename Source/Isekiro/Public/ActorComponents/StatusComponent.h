@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "StatusComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FStatusChangedDelegate, float, OldHealth, float, OldPosture, float, NewHealth, float, NewPosture);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FStatusChangedDelegate, AActor*, Initiator, float, OldHealth, float, OldPosture, float, NewHealth, float, NewPosture);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UStatusComponent : public UActorComponent
@@ -20,8 +20,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	//
-	bool TryApplyDamage(float PostureDmg, float HealthDmg);
-	void ApplyDamage(float PostureDmg, float HealthDmg);
+	bool TryApplyDamage(AActor* Initiator, float PostureDmg, float HealthDmg);
+	void ApplyDamage(AActor* Initiator, float PostureDmg, float HealthDmg);
 
 	bool IsPostureBroken() const;
 	bool HasHealth() const;
