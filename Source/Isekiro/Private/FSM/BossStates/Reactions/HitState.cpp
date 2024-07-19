@@ -15,6 +15,6 @@ UHitState::UHitState()
 void UHitState::Start()
 {
 	Super::Start();
-	int32 SectionNum = FMath::RandRange(1, 4);
+	int32 SectionNum = FMath::RandRange(1, 3);
 	JumpToSection(FName(FString::FromInt(SectionNum)));
 }
