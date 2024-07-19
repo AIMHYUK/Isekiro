@@ -8,11 +8,11 @@
 
 UHeroAnimInstance::UHeroAnimInstance()
 {
-	static ConstructorHelpers::FObjectFinder <UAnimMontage> ATTACK_MONTAGE
-	(TEXT("/Script/Engine.AnimMontage'/Game/AM_Attack.AM_Attack'"));
+	//static ConstructorHelpers::FObjectFinder <UAnimMontage> ATTACK_MONTAGE
+	//(TEXT("/Script/Engine.AnimMontage'/Game/AM_Attack.AM_Attack'"));
 
-	if (ATTACK_MONTAGE.Succeeded())
-		AttackMontage = ATTACK_MONTAGE.Object;
+	//if (ATTACK_MONTAGE.Succeeded())
+	//	AttackMontage = ATTACK_MONTAGE.Object;
 }
 void UHeroAnimInstance::NativeInitializeAnimation()
 {

@@ -83,6 +83,7 @@ public:
 	void ResetLaunchCooldown();
 
 	FTimerHandle DashTimerHandle;
+	FTimerHandle ExcuteTimerHandle;
 	void StopDash();
 	//딜레이 처리할 변수세트 선언
 	FTimerHandle LaunchUpwardTimeHandle;
@@ -128,6 +129,7 @@ public:
 	class UHeroAnimInstance* HeroAnimInstance;
 
 	class UStatusComponent* Status;
+	class UStatusComponent* BossStatus;
 
 	AHeroPlayerController* HeroPlayerController;
 
@@ -206,10 +208,16 @@ public:
 	float easeOutQuint(float x) {
 		return 1 - FMath::Pow(1 - x, 5);
 	}
+	UFUNCTION(BlueprintCallable)
+	float easeInCirc(float x){
+		return 1 - FMath::Sqrt(1 - FMath::Pow(x, 2));
+	}
 
+	void ReadyToAttack();
 protected:
 
 	virtual void BeginPlay() override;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArm;
@@ -264,7 +272,11 @@ protected:
 	UAnimMontage* GetParriedMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* SlideMontage;
+	UAnimMontage* SlideMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AttackReadyMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* GameFinishAttackMontage;
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
@@ -273,7 +285,7 @@ protected:
 	void Run(const FInputActionValue& value);
 	void Dash();
 	void UseItem(const FInputActionValue& value);
-	void StrongAttack(const FInputActionValue& value);
+	void StrongAttack();
 	void EndStrongAttack();
 
 	UFUNCTION()

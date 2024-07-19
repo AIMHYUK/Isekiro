@@ -29,6 +29,7 @@
 #include "Character/BossCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BossWidget.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AHeroCharacter::AHeroCharacter()
@@ -60,6 +61,8 @@ AHeroCharacter::AHeroCharacter()
 	ParryCheck = CreateDefaultSubobject<URealParryBox>(TEXT("ParryCheck"));
 	ParryCheck->SetupAttachment(RootComponent);
 
+
+
 	Status = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
 
 	DeathCameraOffset = FVector(0.0f, 0.0f, 300.0f); // 캐릭터 위쪽으로 300 유닛
@@ -69,6 +72,9 @@ AHeroCharacter::AHeroCharacter()
 	OriginalCameraRotation = Camera->GetRelativeRotation();
 
 	bHasDisplayedHazardUI = false;
+
+	// Get the skeletal mesh component
+
 }
 
 EActionState AHeroCharacter::GetActionState()
@@ -109,6 +115,7 @@ void AHeroCharacter::KillLifePoint()
 			BW->DisplayLoseLifePoint(true);		
 	}
 }
+
 
 void AHeroCharacter::BeginPlay()
 {
@@ -185,7 +192,8 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 			CanNextCombo = false;
 
 			if (IsComboInputOn)
-			{
+			{				
+				UE_LOG(LogTemp, Error, TEXT("11111"));
 				AttackStartComboState();
 				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 			}
@@ -307,7 +315,8 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StartGuard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::EndGuard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Canceled, this, &AHeroCharacter::Attack);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AHeroCharacter::StrongAttack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AHeroCharacter::ReadyToAttack);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
 	}
@@ -426,7 +435,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 
 void AHeroCharacter::PlayGuardMontage()
 {
-	if (!AnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //가드브레이크는 출력되야함
+	if (!AnimInstance->IsAnyMontagePlaying()) //가드브레이크는 출력되야함
 	{
 		AnimInstance->Montage_Play(GuardMontage);
 	}
@@ -495,7 +504,7 @@ void AHeroCharacter::ResetCombo()
 	CurrentCombo = 0;
 }
 
-void AHeroCharacter::StrongAttack(const FInputActionValue& value)
+void AHeroCharacter::StrongAttack()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
@@ -583,7 +592,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			PlayerController->SetIgnoreMoveInput(false);
 			PlayerController->SetIgnoreLookInput(false);
 		}
-		else if (!AnimInstance->Montage_IsPlaying(ParryMontage) && !(AnimInstance->Montage_IsPlaying(DefenseBreakMontage))) //패링에 실패하고 가드브레이크가 안터졌으면 가드
+		else if (!AnimInstance->IsAnyMontagePlaying()) //패링에 실패하고 가드브레이크가 안터졌으면 가드
 		{
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
@@ -650,19 +659,36 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 }
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
-{
-	bMousePressed = true;
-	GetWorld()->GetTimerManager().SetTimer(MouseChangeHandle, this, &AHeroCharacter::ChangeMousePressed, 0.0333f, false);
-	if (IsBossPostureBroken()) //체간이 무너지면
+{ 
+
+	ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
+	BossStatus = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UStatusComponent>();
+	UE_LOG(LogTemp, Error, TEXT("Canceled"));
+	if (IsBossPostureBroken() && BossStatus->GetLifePoints() == 1)
 	{
+		if (BossDie)
+		{
+			UFSMComponent* FSM = Cast<UFSMComponent>(BossDie->GetComponentByClass(UFSMComponent::StaticClass()));
+			if (FSM)
+			{
+				FSM->RespondToInput(); //보스의 죽을준비
+			}
+		}
+		AnimInstance->Montage_Play(GameFinishAttackMontage);
+	}
+	else if (IsBossPostureBroken()) //체간이 무너지면
+	{
+
 		//시간을 느리게 함
 		//입력을 받으면 시간이 다시 빨라짐
 		//입력은 bool값으로 구분 
-		ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
 		if (bIsDilated)
 		{
 			if (bCanExecution)
 			{
+				//플레이어가 보스 쳐다보게 하기
 				FVector BossLocation = BossDie->GetActorLocation();
 				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), BossLocation);
 				SetActorRotation(LookAtRotation);
@@ -680,6 +706,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 					}
 				}
 				AnimInstance->Montage_Play(ExecutionMontage);
+				GetWorld()->GetTimerManager().SetTimer(ExcuteTimerHandle, this, &AHeroCharacter::ShakeCam, 1.62f, false);
 				GetWorld()->GetTimerManager().SetTimer(CameraHandle, this, &AHeroCharacter::MakeCameraDefault, 2.f, false);
 			}
 		}
@@ -695,15 +722,21 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		}
 		else
 		{
-			if (!HeroAnim->Montage_IsPlaying(GuardMontage) && !HeroAnim->Montage_IsPlaying(GetParriedMontage))
+			//UE_LOG(LogTemp, Error, TEXT("Canceled1"));
+
+			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
+				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
+				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
 			{
 				if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 				{
-					AttackStartComboState();
+					//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
+					UE_LOG(LogTemp, Error, TEXT("2222"));
 					bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
 					if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
 					{
-						DealDamage();
+						AttackStartComboState();
+						UE_LOG(LogTemp, Error, TEXT("3333"));
 						HeroAnim->PlayAttackMontage();
 						HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 						IsAttacking = true;
@@ -712,8 +745,14 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 			}
 		}
 	}
-	bMousePressed = false;
+	
 }
+void AHeroCharacter::ReadyToAttack()
+{
+	if(!AnimInstance->IsAnyMontagePlaying())
+	AnimInstance->Montage_Play(AttackReadyMontage);
+}
+
 FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
 {
 	switch (ComboNum)
@@ -731,9 +770,24 @@ FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
 
 void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (CurrentCombo >= MaxCombo)
+	{
+		IsAttacking = false;
+		AttackEndComboState();
+
+		FString strName = Montage->GetName();
+		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
+	}
+	else if (CanNextCombo == false || IsComboInputOn == false)
+	{
 	IsAttacking = false;
 	AttackEndComboState();
-	UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d"), CurrentCombo);
+
+	FString strName = Montage->GetName();		
+	UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
+
+	}
+
 }
 
 void AHeroCharacter::AttackStartComboState()
@@ -770,8 +824,6 @@ void AHeroCharacter::DealDamage()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AActor*> OutActors;
 
-		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
-
 		UKismetSystemLibrary::SphereOverlapActors(
 			GetWorld(),
 			SphereLocation,
@@ -794,7 +846,7 @@ void AHeroCharacter::DealDamage()
 					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 					// 액터를 이미 데미지를 입은 것으로 표시			
 					DamagedActors.Add(OverlappedActor, true);
-					if (ActorStatus->TryApplyDamage(10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
+					if (ActorStatus->TryApplyDamage(100, 10) &&  IsBossPostureBroken()) //체간이 무너지면	<<<잠시 데미지 100으로 해놓음 
 					{
 						MakeSlowTimeDilation();
 					}
@@ -836,10 +888,22 @@ void AHeroCharacter::MakeSlowTimeDilation()
 	GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &AHeroCharacter::ResetTimeDilation, 2.f, false);
 	bIsDilated = true;
 	bCanExecution = true;
+	SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	SpringArm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("upperarm_r"));
+	if (SpringArm->GetAttachParent() == GetMesh() && SpringArm->GetAttachSocketName() == TEXT("upperarm_r"))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SpringArm successfully attached to socket 'upperarm_r' on the skeletal mesh"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Failed"));
+	}
 }
 
 void AHeroCharacter::MakeCameraDefault()
 {
+	//SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	//SpringArm->SetupAttachment(GetRootComponent());
 	Camera->SetFieldOfView(90.f);
 }
 
