@@ -210,6 +210,7 @@ void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedCompon
 	const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
+	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
