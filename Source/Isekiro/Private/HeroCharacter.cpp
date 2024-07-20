@@ -112,7 +112,7 @@ void AHeroCharacter::KillLifePoint()
 	UBossWidget* BW = IsekiroGameModeBase->GetBossUI();
 	if (BW)
 	{
-			BW->DisplayLoseLifePoint(true);		
+		BW->DisplayLoseLifePoint(true);
 	}
 }
 
@@ -192,7 +192,7 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 			CanNextCombo = false;
 
 			if (IsComboInputOn)
-			{				
+			{
 				UE_LOG(LogTemp, Error, TEXT("11111"));
 				AttackStartComboState();
 				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
@@ -218,8 +218,8 @@ void AHeroCharacter::Tick(float DeltaTime)
 	{
 		Status->RecoverPosture(5.f);
 	}
-	
-	
+
+
 	switch (ActionState)
 	{
 	case EActionState::EAS_Attacking:
@@ -386,7 +386,7 @@ void AHeroCharacter::Look(const FInputActionValue& value)
 void AHeroCharacter::HeroJump(const FInputActionValue& value)
 {
 	if (!IsAttacking && bCanJump)
-	{		
+	{
 		Jump();
 		bCanJump = false;
 		/*UKismetSystemLibrary::PrintString(GEngine->GetWorld(), "Hello", true, true, FLinearColor(0.0f, 0.66f, 1.0f, 1.0f), 2.0f);*/
@@ -749,8 +749,8 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 }
 void AHeroCharacter::ReadyToAttack()
 {
-	if(!AnimInstance->IsAnyMontagePlaying())
-	AnimInstance->Montage_Play(AttackReadyMontage);
+	if (!AnimInstance->IsAnyMontagePlaying())
+		AnimInstance->Montage_Play(AttackReadyMontage);
 }
 
 FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
@@ -780,11 +780,11 @@ void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	}
 	else if (CanNextCombo == false || IsComboInputOn == false)
 	{
-	IsAttacking = false;
-	AttackEndComboState();
+		IsAttacking = false;
+		AttackEndComboState();
 
-	FString strName = Montage->GetName();		
-	UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
+		FString strName = Montage->GetName();
+		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
 
 	}
 
@@ -797,7 +797,7 @@ void AHeroCharacter::AttackStartComboState()
 	IsComboInputOn = false;
 	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
 	UE_LOG(LogTemp, Error, TEXT("StartCombo, Currentcombo = %d"), CurrentCombo);
-	
+
 }
 
 void AHeroCharacter::AttackEndComboState()
@@ -821,45 +821,61 @@ void AHeroCharacter::DealDamage()
 		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1)); // 예시로 LockOnPawn 타입 추가
 
-		TArray<AActor*> ActorsToIgnore;
-		TArray<AActor*> OutActors;
+		//TArray<AActor*> ActorsToIgnore;
+		//TArray<AActor*> OutActors;
+		//UKismetSystemLibrary::SphereOverlapActors(
+			//	GetWorld(),
+			//	SphereLocation,
+			//	SphereSize,
+			//	ObjectTypes,
+			//	nullptr, // QueryParams, 기본값 사용 (모든 타입의 액터와 오버랩)
+			//	ActorsToIgnore,
+			//	OutActors
+			//);
 
-		UKismetSystemLibrary::SphereOverlapActors(
-			GetWorld(),
-			SphereLocation,
-			SphereSize,
-			ObjectTypes,
-			nullptr, // QueryParams, 기본값 사용 (모든 타입의 액터와 오버랩)
-			ActorsToIgnore,
-			OutActors
-		);
-		for (AActor* OverlappedActor : OutActors)
+		TArray<FHitResult> Hits;
+		FCollisionShape Shape;
+		Shape.SetSphere(SphereSize);
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 32, FColor::Black);
+
+		if (GetWorld()->SweepMultiByChannel(Hits, SphereLocation, SphereLocation, FQuat::Identity,
+			ECollisionChannel::ECC_Pawn, Shape, QueryParams))
 		{
-			UE_LOG(LogTemp, Error, TEXT("Overllaped"));
-			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
+			for (const FHitResult& HitResult : Hits)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Overllaped"));
-				// State 컴포넌트를 가져옴
-				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
-				if (ActorStatus)
+				AActor* OverlappedActor = HitResult.GetActor();
+				if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
 				{
-					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
-					// 액터를 이미 데미지를 입은 것으로 표시			
-					DamagedActors.Add(OverlappedActor, true);
-					if (ActorStatus->TryApplyDamage(this, 10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
+					UE_LOG(LogTemp, Error, TEXT("Overllaped"));
+					// State 컴포넌트를 가져옴
+					UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
+					if (ActorStatus)
 					{
-						MakeSlowTimeDilation();
+						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
+						// 액터를 이미 데미지를 입은 것으로 표시			
+						DamagedActors.Add(OverlappedActor, true);
+						if (ActorStatus->TryApplyDamage(this, 10, 10)) //체간이 무너지면
+						{
+							AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
+								EWeaponCollisionType::DAMAGE);
+							if (IsBossPostureBroken())
+								MakeSlowTimeDilation();
+						}
 					}
 				}
 			}
 		}
+
 		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
 		DamagedActors.Empty();
 	}
 }
 void AHeroCharacter::PutInDamage()
 {
-	 
+
 }
 
 bool AHeroCharacter::GetMousePressed()

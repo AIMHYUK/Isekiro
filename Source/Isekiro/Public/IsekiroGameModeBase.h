@@ -29,6 +29,9 @@ class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 	friend class ABossCharacter;
 public:
+	static void SpawnCollisionEffect(AActor* Initiated, FVector Origin, EWeaponCollisionType Type);
+
+	UPROPERTY(EditDefaultsOnly)
 	TMap<EWeaponCollisionType, UNiagaraSystem*> WeaponCollisionType;
 	void SpawnWeaponCollisionEffect(FVector Loc, EWeaponCollisionType Type);
 
