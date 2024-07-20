@@ -5,6 +5,7 @@
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
 #include "Character/BossCharacter.h"
+#include "IsekiroGameModeBase.h"
 #include "ActorComponents/StatusComponent.h"
 
 UFSMComponent::UFSMComponent()
@@ -317,10 +318,21 @@ void UFSMComponent::StartParryOrBlock()
 	if (Prob <= ParryProbability)
 	{
 		if (CurrentStateE == EBossState::DEFLECTED || !IsMeleeState(CurrentStateE))
-			ChangeStateTo(EBossState::BLOCK);
+		{
+
+		}		
 		else ChangeStateTo(EBossState::PARRY);
+		{
+			AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
+				EWeaponCollisionType::PARRY);
+		}
 	}
-	else ChangeStateTo(EBossState::BLOCK);
+	else 
+	{
+		ChangeStateTo(EBossState::BLOCK);
+		AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
+			EWeaponCollisionType::BLOCK);
+	}
 }
 
 void UFSMComponent::EnableDefense(bool bEnabled)
