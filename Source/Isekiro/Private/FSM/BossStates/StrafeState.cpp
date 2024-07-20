@@ -36,6 +36,8 @@ void UStrafeState::Stop()
 
 EBossState UStrafeState::UpdateMovement(float DeltaTime)
 {
+	Super::UpdateMovement(DeltaTime);
+
 	if (StrafeTotalTime < StrafeMaxTime)
 	{
 		StrafeTotalTime += DeltaTime;

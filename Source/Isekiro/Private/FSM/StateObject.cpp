@@ -43,6 +43,7 @@ void UStateObject::Stop()
 {
 	StopMovement();
 	StopMontage();
+	if (Instigator) Instigator->EquipKatana();
 	UE_LOG(LogTemp, Warning, TEXT("42 Stop: %s"), *UEnum::GetValueAsString(GetFSMState()));
 }
 
@@ -90,7 +91,7 @@ void UStateObject::PlayMontage()
 
 void UStateObject::StopMontage()
 {
-	if (Instigator && SelectedIndex != -1)
+	if (Instigator/* && SelectedIndex != -1*/)
 	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
 		{

@@ -859,7 +859,8 @@ void AHeroCharacter::DealDamage()
 								UFSMComponent* FSM = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
 								if (FSM)
 								{
-									if (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY)
+									if (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY || 
+										FSM->GetCurrentStateE() == EBossState::DODGE || FSM->GetCurrentStateE() == EBossState::DODGEATTACK)
 									{
 
 									}

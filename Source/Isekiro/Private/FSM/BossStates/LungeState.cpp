@@ -31,17 +31,9 @@ EBossState ULungeState::Update(float DeltaTime)
 	return EBossState::NONE;
 }
 
-void ULungeState::Stop()
-{
-}
-
 EBossState ULungeState::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
-		return EBossState::NONE;
-	}
+	Super::UpdateMovement(DeltaTime);
 
 	if (!bHasPrevLoc)
 	{

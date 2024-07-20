@@ -81,7 +81,7 @@ void UJumpState_Strike::StartMovement()
 
 EBossState UJumpState_Strike::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement()) return EBossState::NONE;
+	Super::UpdateMovement(DeltaTime);
 
 	switch (Count)
 	{

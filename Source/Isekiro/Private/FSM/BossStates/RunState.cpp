@@ -46,8 +46,7 @@ void URunState::Stop()
 
 EBossState URunState::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement()) return EBossState::NONE;
-
+	Super::UpdateMovement(DeltaTime);
 	float DistToTarget = Instigator->GetDistanceToTargetOffset();
 
 	FVector DirVector = Instigator->GetTargetOffsetLocation() - Instigator->GetActorLocation();

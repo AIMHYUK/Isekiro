@@ -137,6 +137,8 @@ protected:
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
 	
 private:
+	bool bHasEnteredFight;
+
 	bool HandleDodgeProbability();
 	void PerformDodge();
 

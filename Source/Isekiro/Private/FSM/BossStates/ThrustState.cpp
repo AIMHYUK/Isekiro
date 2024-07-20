@@ -54,12 +54,7 @@ void UThrustState::StartMovement()
 
 EBossState UThrustState::UpdateMovement(float DeltaTime)
 {
-	if (!CanStartMovement())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), CanStartMovement() ? TEXT("YES") : TEXT("NO")));
-		return EBossState::NONE;
-	}
-	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Black, FString::Printf(TEXT("Test: %s"), bIsWithinRange ? TEXT("Within Attack Range") : TEXT("Out of Attack Range")));
+	Super::UpdateMovement(DeltaTime);
 
 	if (bIsWithinRange)
 	{

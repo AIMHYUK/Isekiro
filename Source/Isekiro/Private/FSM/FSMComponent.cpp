@@ -27,6 +27,8 @@ UFSMComponent::UFSMComponent()
 	ParryProbability = .4f;
 
 	DeflectedBlockProb = .4f;
+
+	bHasEnteredFight = false;
 }
 
 
@@ -321,8 +323,9 @@ void UFSMComponent::StartParryOrBlock()
 		{
 
 		}		
-		else ChangeStateTo(EBossState::PARRY);
+		else 
 		{
+			ChangeStateTo(EBossState::PARRY);
 			AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
 				EWeaponCollisionType::PARRY);
 		}
