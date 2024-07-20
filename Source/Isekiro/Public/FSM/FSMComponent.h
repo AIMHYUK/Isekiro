@@ -34,12 +34,14 @@ enum class EBossState : uint8
 	//Near
 	NORMALATTACK UMETA(DisplayName = "NormalAttack"),
 	//Near
-	JUMPATTACK UMETA(DisplayName = "JumpAttack"),						
+	JUMPSTRIKE UMETA(DisplayName = "JumpStrike"),						
 		
 	//Both
 	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),
 	//Both
-	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),	
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
+	//Both
+	JUMPFIRE  UMETA(DisplayName = "JumpFire"),
 	//Both
 	STRAFE UMETA(DisplayName = "Strafe"),
 
@@ -70,11 +72,11 @@ enum class EFightingSpace : uint8
 	FAR UMETA(DisplayName = "Far")
 };
 
-UENUM()
+UENUM(Blueprintable)
 enum class EPostureState : uint8
 {
-	STABLE,
-	BROKEN
+	STABLE UMETA(DisplayName = "Stable"),
+	BROKEN UMETA(DisplayName = "Broken")
 };
 
 DECLARE_MULTICAST_DELEGATE(FStateResponseDelegate);
@@ -112,7 +114,10 @@ public:
 	virtual void RespondToInput();
 
 	EBossState GetCurrentStateE() const;
+	UFUNCTION(BlueprintCallable)
 	bool IsPostureBroken() const;
+	UFUNCTION(BlueprintCallable)
+	EPostureState GetPostureState() const;
 	void SetPostureState(EPostureState _PostureState);
 	bool CanTakeDamage();
 

@@ -13,6 +13,7 @@
 class UFSMComponent;
 class ABossCharacter;
 class UStatusComponent;
+
 UCLASS()
 class ISEKIRO_API UBossAnimInstance : public UAnimInstance
 {
@@ -53,7 +54,13 @@ protected:
 	UFUNCTION()
 	void AnimNotify_DeclareDead();
 
+	UFUNCTION()
+	void AnimNotify_EquipKatana();
+
+	UFUNCTION()
+	void AnimNotify_EquipBow();
 protected:
+
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead;
 	bool bDisplayingExecutionWidget;

@@ -76,14 +76,15 @@ public:
 	//달리기속도
 	UPROPERTY(EditAnywhere, Category=PlayerSetting)
 	float runSpeed = 600;
-
-
 	//앞으로 대쉬 기능 함수 선언
 	void LaunchFoward();
 	
 	//Cooldown초기화 함수 선언
 	void ResetLaunchCooldown();
 
+	FTimerHandle DashTimerHandle;
+	FTimerHandle ExcuteTimerHandle;
+	void StopDash();
 	//딜레이 처리할 변수세트 선언
 	FTimerHandle LaunchUpwardTimeHandle;
 	FTimerHandle CooldownTimerHandle;
@@ -128,6 +129,7 @@ public:
 	class UHeroAnimInstance* HeroAnimInstance;
 
 	class UStatusComponent* Status;
+	class UStatusComponent* BossStatus;
 
 	AHeroPlayerController* HeroPlayerController;
 
@@ -141,7 +143,7 @@ public:
 	UStatusComponent* GetStatusComponent();
 	UFUNCTION(BlueprintPure)
 	bool IsDead() const;
-
+	bool IsParrying() const;
 	//타격감
 	void KnockBack(float distance);
 	void ShakeCam();
@@ -176,6 +178,9 @@ public:
 
 	class UAnimInstance* AnimInstance;
 
+	FVector OriginalCameraLocation;
+	FRotator OriginalCameraRotation;
+
 	FVector DeathCameraOffset;
 	FRotator DeathCameraRotation;
 
@@ -185,9 +190,34 @@ public:
 	void KillLifePoint();
 	FName GetSectionNameFromCombo(int32 ComboNum) const;
 
+	void PutInDamage();
+
+	FTimerHandle MouseChangeHandle;
+	
+	bool bMousePressed = false;
+	UFUNCTION(BlueprintPure)
+	bool GetMousePressed();
+	void ChangeMousePressed();
+
+	UFUNCTION(BlueprintCallable)
+	float easeInCubic(float x)
+	{
+		return x * x * x;
+	}
+	UFUNCTION(BlueprintCallable)
+	float easeOutQuint(float x) {
+		return 1 - FMath::Pow(1 - x, 5);
+	}
+	UFUNCTION(BlueprintCallable)
+	float easeInCirc(float x){
+		return 1 - FMath::Sqrt(1 - FMath::Pow(x, 2));
+	}
+
+	void ReadyToAttack();
 protected:
 
 	virtual void BeginPlay() override;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* SpringArm;
@@ -241,14 +271,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimMontage* GetParriedMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* SlideMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* AttackReadyMontage;	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* GameFinishAttackMontage;
+
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
 	void Guard(const FInputActionValue& value);
-	void Jump(const FInputActionValue& value);
+	void HeroJump(const FInputActionValue& value);
 	void Run(const FInputActionValue& value);
-	void Dash(const FInputActionValue& value);
+	void Dash();
 	void UseItem(const FInputActionValue& value);
-	void StrongAttack(const FInputActionValue& value);
+	void StrongAttack();
 	void EndStrongAttack();
 
 	UFUNCTION()

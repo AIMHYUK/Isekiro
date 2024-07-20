@@ -7,6 +7,7 @@
 #include "HeroCharacter.h"
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
 
 UBossAnimInstance::UBossAnimInstance()
 {
@@ -147,5 +148,21 @@ void UBossAnimInstance::AnimNotify_DeclareDead()
 		bDisplayingExecutionWidget = true;
 		auto GM = GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
 		if (GM) GM->GameHasEnded();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_EquipKatana()
+{
+	if (BossCharacter)
+	{
+		BossCharacter->EquipKatana();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_EquipBow()
+{
+	if (BossCharacter)
+	{
+		BossCharacter->EquipBow();
 	}
 }

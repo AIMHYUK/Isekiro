@@ -13,6 +13,15 @@ class UCharacterWidget;
 class UGameOverWidget;
 class UShinobiExecutionWidget;
 
+UENUM()
+enum class EWeaponCollisionType
+{
+	PARRY, 
+	BLOCK, 
+	DAMAGE
+};
+
+class UNiagaraSystem; 
 
 UCLASS()
 class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
@@ -20,6 +29,12 @@ class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 	friend class ABossCharacter;
 public:
+	static void SpawnCollisionEffect(AActor* Initiated, FVector Origin, EWeaponCollisionType Type);
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<EWeaponCollisionType, UNiagaraSystem*> WeaponCollisionType;
+	void SpawnWeaponCollisionEffect(FVector Loc, EWeaponCollisionType Type);
+
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	UPROPERTY(EditAnywhere)
@@ -48,7 +63,6 @@ public:
 	bool bIsPlayerBossFight = false;
 
 	void GameHasEnded();
-
 
 	void PlayerIsDead();
 	void RestartLevel();

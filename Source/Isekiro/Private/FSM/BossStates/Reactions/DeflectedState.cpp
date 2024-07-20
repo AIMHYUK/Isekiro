@@ -9,11 +9,12 @@ UDeflectedState::UDeflectedState()
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
 	StateDistance.Max = 350.f;
-	TravelDist = 100.f;
+	TravelDist = 10.f;
 }
 
 void UDeflectedState::Start()
 {
+	if (FSMComp) FSMComp->EnableDefense(false);
 	Super::Start();
 
 	//Child Functionality
@@ -25,11 +26,10 @@ void UDeflectedState::Start()
 	}*/
 	JumpToSection(FName(Section));
 
-	if (FSMComp) FSMComp->EnableDefense(false);
 }
 
 void UDeflectedState::Stop()
 {
-	Super::Stop();
 	if (FSMComp) FSMComp->EnableDefense(true);
+	Super::Stop();
 }

@@ -27,7 +27,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "FSM/FSMComponent.h"
 #include "Character/BossCharacter.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "BossWidget.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AHeroCharacter::AHeroCharacter()
@@ -59,12 +61,20 @@ AHeroCharacter::AHeroCharacter()
 	ParryCheck = CreateDefaultSubobject<URealParryBox>(TEXT("ParryCheck"));
 	ParryCheck->SetupAttachment(RootComponent);
 
+
+
 	Status = CreateDefaultSubobject<UStatusComponent>(TEXT("Status"));
 
 	DeathCameraOffset = FVector(0.0f, 0.0f, 300.0f); // 캐릭터 위쪽으로 300 유닛
 	DeathCameraRotation = FRotator(-45.0f, 0.0f, 0.0f); // 아래쪽을 향하도록 45도 회전
 
+	OriginalCameraLocation = Camera->GetRelativeLocation();
+	OriginalCameraRotation = Camera->GetRelativeRotation();
+
 	bHasDisplayedHazardUI = false;
+
+	// Get the skeletal mesh component
+
 }
 
 EActionState AHeroCharacter::GetActionState()
@@ -102,13 +112,17 @@ void AHeroCharacter::KillLifePoint()
 	UBossWidget* BW = IsekiroGameModeBase->GetBossUI();
 	if (BW)
 	{
-			BW->DisplayLoseLifePoint(true);		
+		BW->DisplayLoseLifePoint(true);
 	}
 }
+
 
 void AHeroCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
+	GetCharacterMovement()->GravityScale = 2.0f; //중력 2배
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
@@ -179,6 +193,7 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 
 			if (IsComboInputOn)
 			{
+				UE_LOG(LogTemp, Error, TEXT("11111"));
 				AttackStartComboState();
 				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 			}
@@ -195,7 +210,15 @@ void AHeroCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Status->RecoverPosture(2.f);
+	if (GuardState != ECharacterGuardState::ECGS_Guarding)
+	{
+		Status->RecoverPosture(2.f);
+	}
+	else
+	{
+		Status->RecoverPosture(5.f);
+	}
+
 
 	switch (ActionState)
 	{
@@ -247,7 +270,7 @@ void AHeroCharacter::Tick(float DeltaTime)
 
 void AHeroCharacter::ApplyDamage(float damage)
 {
-	Status->TryApplyDamage(0, damage);
+	Status->TryApplyDamage(this, 0, damage);
 	if (IsDead())
 	{
 		DetachFromControllerPendingDestroy(); //컨트롤러 떼기
@@ -257,7 +280,7 @@ void AHeroCharacter::ApplyDamage(float damage)
 
 void AHeroCharacter::ApplyPosture(float posture)
 {
-	Status->TryApplyDamage(posture, 0);
+	Status->TryApplyDamage(this, posture, 0);
 }
 
 void AHeroCharacter::CallHPBarFunction()
@@ -280,6 +303,11 @@ bool AHeroCharacter::IsDead() const
 	return (Status->GetHealth()) <= 0;
 }
 
+bool AHeroCharacter::IsParrying() const
+{
+	return ParryCheck->GetParryWindow();
+}
+
 // Called to bind functionality to input
 void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -292,9 +320,9 @@ void AHeroCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StartGuard);
 		EnhancedInputComponent->BindAction(GuardAction, ETriggerEvent::Completed, this, &AHeroCharacter::EndGuard);
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Canceled, this, &AHeroCharacter::Attack);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AHeroCharacter::StrongAttack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AHeroCharacter::StrongAttack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AHeroCharacter::ReadyToAttack);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Run);
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AHeroCharacter::Dash);
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Triggered, this, &AHeroCharacter::UseItem);
 	}
 
@@ -314,6 +342,35 @@ void AHeroCharacter::Move(const FInputActionValue& value)
 		AddMovementInput(RightDirection, Vector.X);
 	}
 }
+
+void AHeroCharacter::Run(const FInputActionValue& value)
+{
+
+	//대쉬 몽타주 실행
+	UE_LOG(LogTemp, Display, TEXT("Run"));
+	auto movement = GetCharacterMovement();
+	//현재 달리기 모드라면
+	if (movement->MaxWalkSpeed > walkSpeed)
+	{
+		//걷기속도로 전환
+		movement->MaxWalkSpeed = walkSpeed;
+	}
+	//현재 달리기 모드가 아니라면
+	else if (!AnimInstance->Montage_IsPlaying(GuardMontage))
+	{
+		//대쉬한번하고
+		HeroAnim->bCanJumpInAnim = true;
+		//달리기속도로 전환
+		movement->MaxWalkSpeed = runSpeed;
+		//.5초 후에 대쉬가능
+		GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AHeroCharacter::StopDash, 0.5f, false);
+	}
+}
+void AHeroCharacter::StopDash()
+{
+	HeroAnim->bCanJumpInAnim = false;
+}
+
 void AHeroCharacter::Look(const FInputActionValue& value)
 {
 	const FVector2D LookAxisValue = value.Get<FVector2D>();
@@ -326,14 +383,12 @@ void AHeroCharacter::Look(const FInputActionValue& value)
 
 }
 
-void AHeroCharacter::Jump(const FInputActionValue& value)
+void AHeroCharacter::HeroJump(const FInputActionValue& value)
 {
 	if (!IsAttacking && bCanJump)
 	{
-		Super::ACharacter::Jump();
+		Jump();
 		bCanJump = false;
-		//GetCharacterMovement()->JumpZVelocity = 800.0f;//800으로 임의 상승
-		//GetCharacterMovement()->GravityScale = 2.0f; //중력 2배
 		/*UKismetSystemLibrary::PrintString(GEngine->GetWorld(), "Hello", true, true, FLinearColor(0.0f, 0.66f, 1.0f, 1.0f), 2.0f);*/
 	}
 }
@@ -383,7 +438,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 
 void AHeroCharacter::PlayGuardMontage()
 {
-	if (!AnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //가드브레이크는 출력되야함
+	if (!AnimInstance->IsAnyMontagePlaying()) //가드브레이크는 출력되야함
 	{
 		AnimInstance->Montage_Play(GuardMontage);
 	}
@@ -422,6 +477,7 @@ void AHeroCharacter::PlayParriedMontage()
 		if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 			ResetCombo();
 			AnimInstance->Montage_Play(GetParriedMontage);
+			IsAttacking = false;
 	}
 }
 void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
@@ -452,7 +508,7 @@ void AHeroCharacter::ResetCombo()
 	CurrentCombo = 0;
 }
 
-void AHeroCharacter::StrongAttack(const FInputActionValue& value)
+void AHeroCharacter::StrongAttack()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
@@ -464,7 +520,7 @@ void AHeroCharacter::StrongAttack(const FInputActionValue& value)
 
 		}
 
-		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.4f, false);
+		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 0.38f, false);
 	}
 }
 
@@ -473,9 +529,7 @@ void AHeroCharacter::EndStrongAttack()
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
 	{
-		DealDamage();
 		PlayerController->SetIgnoreMoveInput(false);
-
 	}
 }
 
@@ -492,8 +546,6 @@ void AHeroCharacter::Die()
 			Camera->SetActive(false);
 		}
 	}
-
-
 }
 
 void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -540,7 +592,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			PlayerController->SetIgnoreMoveInput(false);
 			PlayerController->SetIgnoreLookInput(false);
 		}
-		else if (!AnimInstance->Montage_IsPlaying(ParryMontage) && !(AnimInstance->Montage_IsPlaying(DefenseBreakMontage))) //패링에 실패하고 가드브레이크가 안터졌으면 가드
+		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)&& !HeroAnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //패링에 실패하고 가드브레이크가 안터졌으면 가드
 		{
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
@@ -561,7 +613,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					case EBossState::LUNGEATTACK:
 						KnockBack(3000);
 						break;
-					case EBossState::JUMPATTACK:
+					case EBossState::JUMPSTRIKE:
 						KnockBack(3000);
 						break;
 					case EBossState::THRUSTATTACK:
@@ -605,36 +657,42 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 		PlayerController->SetIgnoreMoveInput(false); // 몽타주가 끝난 후 이동 재활성화
 	}
 }
-void AHeroCharacter::Run(const FInputActionValue& value)
-{
-	UE_LOG(LogTemp, Display, TEXT("Run"));
-	auto movement = GetCharacterMovement();
-	//현재 달리기 모드라면
-	if (movement->MaxWalkSpeed > walkSpeed)
-	{
-		//걷기속도로 전환
-		movement->MaxWalkSpeed = walkSpeed;
-	}
-	//현재 달리기 모드가 아니라면
-	else if (!AnimInstance->Montage_IsPlaying(GuardMontage))
-	{
-		//달리기속도로 전환
-		movement->MaxWalkSpeed = runSpeed;
-	}
-}
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
 {
-	if (IsBossPostureBroken()) //체간이 무너지면
+
+	ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
+	BossStatus = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UStatusComponent>();
+	UE_LOG(LogTemp, Error, TEXT("Canceled"));
+	if (IsBossPostureBroken() && BossStatus->GetLifePoints() == 1)
 	{
+		if (BossDie)
+		{
+			UFSMComponent* FSM = Cast<UFSMComponent>(BossDie->GetComponentByClass(UFSMComponent::StaticClass()));
+			if (FSM)
+			{
+				FSM->RespondToInput(); //보스의 죽을준비
+			}
+		}
+		AnimInstance->Montage_Play(GameFinishAttackMontage);
+	}
+	else if (IsBossPostureBroken()) //체간이 무너지면
+	{
+
 		//시간을 느리게 함
 		//입력을 받으면 시간이 다시 빨라짐
 		//입력은 bool값으로 구분 
-		ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+
 		if (bIsDilated)
 		{
 			if (bCanExecution)
 			{
+				//플레이어가 보스 쳐다보게 하기
+				FVector BossLocation = BossDie->GetActorLocation();
+				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), BossLocation);
+				SetActorRotation(LookAtRotation);
+
 				Camera->SetFieldOfView(70.f);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
@@ -648,6 +706,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 					}
 				}
 				AnimInstance->Montage_Play(ExecutionMontage);
+				GetWorld()->GetTimerManager().SetTimer(ExcuteTimerHandle, this, &AHeroCharacter::ShakeCam, 1.62f, false);
 				GetWorld()->GetTimerManager().SetTimer(CameraHandle, this, &AHeroCharacter::MakeCameraDefault, 2.f, false);
 			}
 		}
@@ -656,31 +715,42 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	{
 		if (IsAttacking)
 		{
+			UE_LOG(LogTemp, Error, TEXT("Canceled3"));
 			if (CanNextCombo)
 			{
+				UE_LOG(LogTemp, Error, TEXT("Canceled4"));
 				IsComboInputOn = true;
 			}
 		}
 		else
 		{
-			if (!HeroAnim->Montage_IsPlaying(GuardMontage) && !HeroAnim->Montage_IsPlaying(GetParriedMontage))
+			UE_LOG(LogTemp, Error, TEXT("Canceled1"));
+
+			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
+				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
+				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
 			{
-				if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
+				//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
+				UE_LOG(LogTemp, Error, TEXT("2222"));
+				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
+				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
 				{
 					AttackStartComboState();
-					bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
-					if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
-					{
-						DealDamage();
-						HeroAnim->PlayAttackMontage();
-						HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-						IsAttacking = true;
-					}
+					UE_LOG(LogTemp, Error, TEXT("3333"));
+					HeroAnim->PlayAttackMontage();
+					HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+					IsAttacking = true;
 				}
 			}
 		}
 	}
 }
+void AHeroCharacter::ReadyToAttack()
+{
+	if (!AnimInstance->IsAnyMontagePlaying())
+		AnimInstance->Montage_Play(AttackReadyMontage);
+}
+
 FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
 {
 	switch (ComboNum)
@@ -698,9 +768,24 @@ FName AHeroCharacter::GetSectionNameFromCombo(int32 ComboNum) const
 
 void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	IsAttacking = false;
-	AttackEndComboState();
-	UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d"), CurrentCombo);
+	if (CurrentCombo >= MaxCombo)
+	{
+		IsAttacking = false;
+		AttackEndComboState();
+
+		FString strName = Montage->GetName();
+		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
+	}
+	else if (CanNextCombo == false || IsComboInputOn == false)
+	{
+		IsAttacking = false;
+		AttackEndComboState();
+
+		FString strName = Montage->GetName();
+		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
+
+	}
+
 }
 
 void AHeroCharacter::AttackStartComboState()
@@ -710,7 +795,7 @@ void AHeroCharacter::AttackStartComboState()
 	IsComboInputOn = false;
 	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
 	UE_LOG(LogTemp, Error, TEXT("StartCombo, Currentcombo = %d"), CurrentCombo);
-	
+
 }
 
 void AHeroCharacter::AttackEndComboState()
@@ -723,9 +808,7 @@ void AHeroCharacter::AttackEndComboState()
 
 void AHeroCharacter::DealDamage()
 {
-	// 이미 데미지를 입은 액터들을 추적하기 위한 맵
-	static TMap<AActor*, bool> DamagedActors;
-
+	UE_LOG(LogTemp, Warning, TEXT("42               DealDAmzge"));
 	if (ParryCheck)
 	{
 		FVector SphereLocation = ParryCheck->GetComponentLocation();
@@ -734,44 +817,107 @@ void AHeroCharacter::DealDamage()
 		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1)); // 예시로 LockOnPawn 타입 추가
 
-		TArray<AActor*> ActorsToIgnore;
-		TArray<AActor*> OutActors;
+		//TArray<AActor*> ActorsToIgnore;
+		//TArray<AActor*> OutActors;
+		//UKismetSystemLibrary::SphereOverlapActors(
+			//	GetWorld(),
+			//	SphereLocation,
+			//	SphereSize,
+			//	ObjectTypes,
+			//	nullptr, // QueryParams, 기본값 사용 (모든 타입의 액터와 오버랩)
+			//	ActorsToIgnore,
+			//	OutActors
+			//);
 
-		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 12, FColor::Red, false, 5.0f);
+		TArray<FHitResult> Hits;
+		FCollisionShape Shape;
+		Shape.SetSphere(SphereSize);
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
 
-		UKismetSystemLibrary::SphereOverlapActors(
-			GetWorld(),
-			SphereLocation,
-			SphereSize,
-			ObjectTypes,
-			nullptr, // QueryParams, 기본값 사용 (모든 타입의 액터와 오버랩)
-			ActorsToIgnore,
-			OutActors
-		);
-		for (AActor* OverlappedActor : OutActors)
+		DrawDebugSphere(GetWorld(), SphereLocation, SphereSize, 32, FColor::Black);
+
+		if (GetWorld()->SweepMultiByChannel(Hits, SphereLocation, SphereLocation, FQuat::Identity,
+			ECollisionChannel::ECC_Pawn, Shape, QueryParams))
 		{
-			UE_LOG(LogTemp, Error, TEXT("Overllaped"));
-			if (OverlappedActor && !DamagedActors.Contains(OverlappedActor)) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
+			for (const FHitResult& HitResult : Hits)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Overllaped"));
-				// State 컴포넌트를 가져옴
-				UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
-				if (ActorStatus)
+				AActor* OverlappedActor = HitResult.GetActor();
+				if (OverlappedActor) // 액터 유효성 확인 및 이미 데미지를 입었는지 체크
 				{
-					UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
-					// 액터를 이미 데미지를 입은 것으로 표시			
-					DamagedActors.Add(OverlappedActor, true);
-					if (ActorStatus->TryApplyDamage(10, 10) &&  IsBossPostureBroken()) //체간이 무너지면
+					UE_LOG(LogTemp, Error, TEXT("Overllaped"));
+					// State 컴포넌트를 가져옴
+					UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
+					if (ActorStatus)
 					{
-						MakeSlowTimeDilation();
+						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());		
+						if (ActorStatus->TryApplyDamage(this, 10, 10)) //체간이 무너지면
+						{
+							ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
+							if (Boss)
+							{
+								UFSMComponent* FSM = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
+								if (FSM)
+								{
+									if (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY)
+									{
+
+									}
+									else
+									{
+										AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
+											EWeaponCollisionType::DAMAGE);
+										if (IsBossPostureBroken())
+										{
+											MakeSlowTimeDilation();
+										}
+
+										//else
+										//{
+										//		/*bool BlockedOrParried = (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY)*/
+										//		if (FSM && (FSM->GetCurrentStateE() == EBossState::BLOCK))
+										//		{
+										//			AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
+										//				EWeaponCollisionType::BLOCK);
+										//		}
+										//		else if (FSM->GetCurrentStateE() == EBossState::PARRY)
+										//		{
+										//			AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
+										//				EWeaponCollisionType::PARRY);
+										//			Status->TryApplyDamage(this, 3, 0);
+										//		}
+										//	}
+										//}
+
+									}
+								}
+							}
+						}
 					}
 				}
+
 			}
 		}
-		// 맵 초기화 (다음 프레임에 다시 데미지를 줄 수 있도록)
-		DamagedActors.Empty();
 	}
 }
+
+void AHeroCharacter::PutInDamage()
+{
+
+}
+
+bool AHeroCharacter::GetMousePressed()
+{
+	return bMousePressed;
+}
+
+void AHeroCharacter::ChangeMousePressed()
+{
+	bMousePressed = !bMousePressed;
+}
+
+
+
 void AHeroCharacter::ResetTimeDilation()
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
@@ -782,14 +928,26 @@ void AHeroCharacter::ResetTimeDilation()
 
 void AHeroCharacter::MakeSlowTimeDilation()
 {
-	UGameplayStatics::SetGlobalTimeDilation(this, 0.05f);
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
 	GetWorld()->GetTimerManager().SetTimer(TimeDilationHandle, this, &AHeroCharacter::ResetTimeDilation, 2.f, false);
 	bIsDilated = true;
 	bCanExecution = true;
+	SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	SpringArm->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("upperarm_r"));
+	if (SpringArm->GetAttachParent() == GetMesh() && SpringArm->GetAttachSocketName() == TEXT("upperarm_r"))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SpringArm successfully attached to socket 'upperarm_r' on the skeletal mesh"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Failed"));
+	}
 }
 
 void AHeroCharacter::MakeCameraDefault()
 {
+	//SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+	//SpringArm->SetupAttachment(GetRootComponent());
 	Camera->SetFieldOfView(90.f);
 }
 
@@ -808,8 +966,9 @@ bool AHeroCharacter::IsBossPostureBroken()
 	return false;
 }
 //대쉬 이벤트처리 함수 구현
-void AHeroCharacter::Dash(const FInputActionValue& value)
+void AHeroCharacter::Dash()
 {
+	AnimInstance->Montage_Play(SlideMontage);
 	//만약 지금 대쉬가 가능한 상태라면
 	if (bCanLaunch)
 	{
@@ -831,11 +990,12 @@ void AHeroCharacter::UseItem(const FInputActionValue& value)
 	Status->UsePortion();
 }
 
+
 //앞으로 대쉬 기능 함수 구현
 void AHeroCharacter::LaunchFoward()
 {
 	//앞으로 이동시킬 Velocity
-	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 900;
+	FVector LaunchVelocity = GetVelocity().GetSafeNormal() * 1000;
 	//캐릭터를 앞으로 이동
 	LaunchCharacter(LaunchVelocity, true, false);
 }

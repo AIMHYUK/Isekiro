@@ -5,6 +5,7 @@
 #include "FSM/StateObject.h"
 #include "FSM/BossStates/StrafeState.h"
 #include "Character/BossCharacter.h"
+#include "IsekiroGameModeBase.h"
 #include "ActorComponents/StatusComponent.h"
 
 UFSMComponent::UFSMComponent()
@@ -63,8 +64,6 @@ void UFSMComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 			ChangeStateTo(NewState);
 		}
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Def Percent: %f"), DefenseProb);
 
 	if (CanStun())
 	{
@@ -252,6 +251,11 @@ bool UFSMComponent::IsPostureBroken() const
 	return PostureState == EPostureState::BROKEN;
 }
 
+EPostureState UFSMComponent::GetPostureState() const
+{
+	return PostureState;
+}
+
 void UFSMComponent::SetPostureState(EPostureState _PostureState)
 {
 	PostureState = _PostureState;
@@ -314,10 +318,21 @@ void UFSMComponent::StartParryOrBlock()
 	if (Prob <= ParryProbability)
 	{
 		if (CurrentStateE == EBossState::DEFLECTED || !IsMeleeState(CurrentStateE))
-			ChangeStateTo(EBossState::BLOCK);
+		{
+
+		}		
 		else ChangeStateTo(EBossState::PARRY);
+		{
+			AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
+				EWeaponCollisionType::PARRY);
+		}
 	}
-	else ChangeStateTo(EBossState::BLOCK);
+	else 
+	{
+		ChangeStateTo(EBossState::BLOCK);
+		AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
+			EWeaponCollisionType::BLOCK);
+	}
 }
 
 void UFSMComponent::EnableDefense(bool bEnabled)

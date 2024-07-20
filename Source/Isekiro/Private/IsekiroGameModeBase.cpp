@@ -15,6 +15,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ShinobiExecutionWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 void AIsekiroGameModeBase::BeginPlay()
 {
@@ -96,9 +97,9 @@ void AIsekiroGameModeBase::PlayerIsDead()
 		GameOverWidget->AddToViewport(); //위젯띄우기
 		UGameplayStatics::PlaySound2D(this, DeathSound);
 		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AIsekiroGameModeBase::RestartLevel, 3.0f, false);	
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AIsekiroGameModeBase::RestartLevel, 3.0f, false);
 	}
-	
+
 }
 
 void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
@@ -110,6 +111,24 @@ void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
 UBossWidget* AIsekiroGameModeBase::GetBossUI()
 {
 	return BossUI;
+}
+
+void AIsekiroGameModeBase::SpawnCollisionEffect(AActor* Owning, FVector Origin, EWeaponCollisionType Type)
+{
+	if (Owning)
+	{
+		auto GM = Owning->GetWorld()->GetAuthGameMode<AIsekiroGameModeBase>();
+		if (GM) GM->SpawnWeaponCollisionEffect(Origin, Type);
+	}
+}
+
+void AIsekiroGameModeBase::SpawnWeaponCollisionEffect(FVector Loc, EWeaponCollisionType Type)
+{
+	auto TypeRef = WeaponCollisionType.Find(Type);
+	if (TypeRef && *TypeRef)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *TypeRef, Loc);
+	}
 }
 
 void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -128,16 +147,16 @@ void AIsekiroGameModeBase::UpdateHPBar()
 {
 	if (mainUI)
 	{
-        mainUI->HPBar->SetPercent(State->GetHPPercent());
+		mainUI->HPBar->SetPercent(State->GetHPPercent());
 	}
 }
 
 void AIsekiroGameModeBase::UpdatePostureBar()
 {
-    if (mainUI)
-    {
-        mainUI->PostureBar->SetPercent(State->GetPosturePercent());
-    }
+	if (mainUI)
+	{
+		mainUI->PostureBar->SetPercent(State->GetPosturePercent());
+	}
 }
 
 void AIsekiroGameModeBase::SetMaxPortion()

@@ -10,7 +10,7 @@ UParryState::UParryState()
 	MaxRunTime = .5f;
 	TotalRunTime = 0.f;
 	StateDistance.Max = 350.f;
-	TravelDist = 100.f;
+	TravelDist = 10.f;
 }
 
 void UParryState::Start()

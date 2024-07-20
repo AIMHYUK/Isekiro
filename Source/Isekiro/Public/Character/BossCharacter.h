@@ -19,7 +19,7 @@ class UBoxComponent;
 class UCapsuleComponent;
 class UBossWidget;
 class UWidgetComponent;
-
+class UStaticMeshComponent;
 UCLASS()
 class ISEKIRO_API ABossCharacter : public ABaseCharacter
 {
@@ -62,17 +62,30 @@ public:
 
 	bool IsLockedOnTarget() const;
 	void SetLockOnTarget(bool _bLockOnTarget);
+	void ResetHeight();
+
+	void EquipKatana();
+	void EquipBow();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<USkeletalMeshComponent> RetargetedSKMesh;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
-	TObjectPtr<UStaticMeshComponent> WeaponSMesh;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> BowEquippedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> KatanaEquippedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> BowStashedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> KatanaStashedMesh;
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
+	TObjectPtr<UStaticMeshComponent> ScabbardMesh;
+
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -80,7 +93,7 @@ protected:
 	void OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
-	void OnStatusChanged(float OldHealth, float OldPosture, float NewHealth, float NewPosture);
+	void OnStatusChanged(AActor* Initiator, float OldHealth, float OldPosture, float NewHealth, float NewPosture);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UCapsuleComponent> LockOnComponent;
