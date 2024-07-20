@@ -15,6 +15,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ShinobiExecutionWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 void AIsekiroGameModeBase::BeginPlay()
 {
@@ -110,6 +111,15 @@ void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
 UBossWidget* AIsekiroGameModeBase::GetBossUI()
 {
 	return BossUI;
+}
+
+void AIsekiroGameModeBase::SpawnWeaponCollisionEffect(FVector Loc, EWeaponCollisionType Type)
+{
+	auto TypeRef = WeaponCollisionType.Find(Type);
+	if (TypeRef && *TypeRef)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), *TypeRef, Loc);
+	}
 }
 
 void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
