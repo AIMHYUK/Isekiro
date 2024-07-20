@@ -336,11 +336,9 @@ void AHeroCharacter::Move(const FInputActionValue& value)
 		FRotator YawRotation(0, Rotation.Yaw, 0); //yaw사용
 
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		UE_LOG(LogTemp, Warning, TEXT("ForwardDirection: %s"), *ForwardDirection.ToString());
 		AddMovementInput(ForwardDirection, Vector.Y);
 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		UE_LOG(LogTemp, Warning, TEXT("RightDirection: %s"), *RightDirection.ToString());
 		AddMovementInput(RightDirection, Vector.X);
 	}
 }
@@ -479,6 +477,7 @@ void AHeroCharacter::PlayParriedMontage()
 		if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 			ResetCombo();
 			AnimInstance->Montage_Play(GetParriedMontage);
+			IsAttacking = false;
 	}
 }
 void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
@@ -521,7 +520,7 @@ void AHeroCharacter::StrongAttack()
 
 		}
 
-		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 1.4f, false);
+		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 0.38f, false);
 	}
 }
 
@@ -595,7 +594,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			PlayerController->SetIgnoreMoveInput(false);
 			PlayerController->SetIgnoreLookInput(false);
 		}
-		else if (!AnimInstance->IsAnyMontagePlaying()) //패링에 실패하고 가드브레이크가 안터졌으면 가드
+		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)&& !HeroAnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //패링에 실패하고 가드브레이크가 안터졌으면 가드
 		{
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
@@ -662,7 +661,7 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 }
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
-{ 
+{
 
 	ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 
@@ -718,37 +717,35 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	{
 		if (IsAttacking)
 		{
+			UE_LOG(LogTemp, Error, TEXT("Canceled3"));
 			if (CanNextCombo)
 			{
+				UE_LOG(LogTemp, Error, TEXT("Canceled4"));
 				IsComboInputOn = true;
 			}
 		}
 		else
 		{
-			//UE_LOG(LogTemp, Error, TEXT("Canceled1"));
+			UE_LOG(LogTemp, Error, TEXT("Canceled1"));
 
 			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
 				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
 				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
 			{
-				if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
+				//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
+				UE_LOG(LogTemp, Error, TEXT("2222"));
+				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
+				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
 				{
-					//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
-					UE_LOG(LogTemp, Error, TEXT("2222"));
-					bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
-					if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
-					{
-						AttackStartComboState();
-						UE_LOG(LogTemp, Error, TEXT("3333"));
-						HeroAnim->PlayAttackMontage();
-						HeroAnim->JumpToAttackMontageSection(CurrentCombo);
-						IsAttacking = true;
-					}
+					AttackStartComboState();
+					UE_LOG(LogTemp, Error, TEXT("3333"));
+					HeroAnim->PlayAttackMontage();
+					HeroAnim->JumpToAttackMontageSection(CurrentCombo);
+					IsAttacking = true;
 				}
 			}
 		}
 	}
-	
 }
 void AHeroCharacter::ReadyToAttack()
 {
