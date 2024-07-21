@@ -430,7 +430,7 @@ void AHeroCharacter::EndGuard(const FInputActionValue& Value)
 void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 {
 	bool bIsPressed = Value.Get<bool>();
-	if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+	if (!AnimInstance->Montage_IsPlaying(AttackMontage)&& !AnimInstance->Montage_IsPlaying(AttackReadyMontage) && !AnimInstance->Montage_IsPlaying(StrongAttackMontage))
 	{
 		ParryCheck->ParryStarted();
 		GuardState = ECharacterGuardState::ECGS_Guarding;
@@ -438,7 +438,6 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 		auto Movement = GetCharacterMovement();
 		//가드걷기속도로 전환
 		Movement->MaxWalkSpeed = GuardWalkSpeed;
-
 	}
 }
 
@@ -618,15 +617,20 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					{
 						KnockBack(3000);
 						Status->TryApplyDamage(this, 20, 30);
+						AIsekiroGameModeBase::SpawnCollisionEffect(this, GetActorLocation(),
+							EWeaponCollisionType::DAMAGE);
 					}
 					else
 					{
+						KnockBack(800);
 						ApplyDamage(0);
 						ApplyPosture(10);
 						UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
 						int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
 						FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
 						AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
+						AIsekiroGameModeBase::SpawnCollisionEffect(this, ParryCheck->GetComponentLocation() ,
+							EWeaponCollisionType::BLOCK);
 					}
 				}
 				ResetCombo();
@@ -648,9 +652,57 @@ void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool 
 	{
 		GuardState = ECharacterGuardState::ECGS_Guarding;
 		UE_LOG(LogTemp, Error, TEXT("Called"));
-		PlayGuardMontage();
+		PlayGuardSoonStopMontage();
 	}
 }
+void AHeroCharacter::StopMontage()
+{
+	// 가드 몽타주가 재생 중인지 확인
+	if (AnimInstance->Montage_IsPlaying(GuardMontage))
+	{
+		// 가드 몽타주 중지
+		AnimInstance->Montage_Stop(0.2f, GuardMontage);
+		UE_LOG(LogTemp, Error, TEXT("Stopped"));
+	}
+	GetWorld()->GetTimerManager().ClearTimer(MontageTimerHandle);
+}
+void AHeroCharacter::PlayGuardSoonStopMontage()
+{
+	if (!AnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //가드브레이크는 출력되야함
+	{
+		AnimInstance->Montage_Play(GuardMontage);
+		GetWorld()->GetTimerManager().SetTimer(MontageTimerHandle, this, &AHeroCharacter::StopMontage, 0.5f, false);
+	}
+}
+//void AHeroCharacter::SwitchToCineCamera()
+//{
+//	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
+//	if (PlayerController)
+//	{
+//		PlayerController->SetViewTargetWithBlend(this, 1.0f);
+//		SetupCameraMovementTimeline(); // 카메라 움직임 시작
+//	}
+//}
+//void AHeroCharacter::SetupCameraMovementTimeline()
+//{
+//	// Timeline을 초기화하고, 트랙을 추가합니다.
+//	CameraMovementTimeline->AddInterpFloat(CameraMovementCurve, InterpFunction, FName("Alpha"));
+//
+//	// Timeline의 Update 이벤트에 바인딩할 함수
+//	CameraMovementTimeline->SetTimelinePostUpdateFunc(FOnTimelineEvent::CreateUObject(this, &AMyCharacter::OnTimelineUpdate));
+//
+//	// Timeline 재생 시작
+//	CameraMovementTimeline->PlayFromStart();
+//}
+//
+//void AHeroCharacter::OnTimelineUpdate(float Value)
+//{
+//	// Timeline 값에 따라 카메라 위치와 회전 설정
+//	FVector NewLocation = FMath::Lerp(StartLocation, EndLocation, Value);
+//	FRotator NewRotation = FMath::Lerp(StartRotation, EndRotation, Value);
+//	CineCamera->SetWorldLocationAndRotation(NewLocation, NewRotation);
+//}
+
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -668,7 +720,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 
 	BossStatus = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UStatusComponent>();
-	if (IsBossPostureBroken() && BossStatus->GetLifePoints() == 1)
+	if (IsBossPostureBroken() && BossStatus->GetLifePoints() == 1 && !AnimInstance->IsAnyMontagePlaying()) //막타
 	{
 		if (BossDie)
 		{
@@ -678,9 +730,8 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 				FSM->RespondToInput(); //보스의 죽을준비
 			}
 		}
-		AnimInstance->Montage_Play(GameFinishAttackMontage);
 	}
-	else if (IsBossPostureBroken()) //체간이 무너지면
+	else if (IsBossPostureBroken()) //체간이 무너지면 1페
 	{
 
 		//시간을 느리게 함
@@ -695,8 +746,7 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 				FVector BossLocation = BossDie->GetActorLocation();
 				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), BossLocation);
 				SetActorRotation(LookAtRotation);
-
-				Camera->SetFieldOfView(70.f);
+				GetController()->SetIgnoreMoveInput(true);
 				GetWorld()->GetTimerManager().ClearTimer(TimeDilationHandle);
 				ResetTimeDilation();
 
@@ -708,7 +758,6 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 						FSM->RespondToInput(); //보스의 죽을준비
 					}
 				}
-				AnimInstance->Montage_Play(ExecutionMontage);
 				GetWorld()->GetTimerManager().SetTimer(ExcuteTimerHandle, this, &AHeroCharacter::ShakeCam, 1.62f, false);
 				GetWorld()->GetTimerManager().SetTimer(CameraHandle, this, &AHeroCharacter::MakeCameraDefault, 2.f, false);
 			}
@@ -728,13 +777,12 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 		else
 		{
 			
-			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
-				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
+			if (GuardState == ECharacterGuardState::ECGS_UnGuarded && !HeroAnim->Montage_IsPlaying(GetParriedMontage)
 				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
 			{
 				//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
 				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
-				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
+				if (!bIsPlaying)
 				{
 					AttackStartComboState();
 					HeroAnim->PlayAttackMontage();
@@ -845,7 +893,7 @@ void AHeroCharacter::DealDamage()
 					if (ActorStatus)
 					{
 						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());		
-						if (ActorStatus->TryApplyDamage(this, 100, 10)) //체간이 무너지면
+						if (ActorStatus->TryApplyDamage(this, 100, 100)) //체간이 무너지면
 						{
 							ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 							if (Boss)
@@ -862,27 +910,14 @@ void AHeroCharacter::DealDamage()
 									{
 										AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
 											EWeaponCollisionType::DAMAGE);
-										if (IsBossPostureBroken())
+										if (IsBossPostureBroken() && ActorStatus->GetLifePoints() == 1)
+										{
+											MakeSlowTimeForLastBossKill();
+										}
+										else
 										{
 											MakeSlowTimeDilation();
 										}
-
-										//else
-										//{
-										//		/*bool BlockedOrParried = (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY)*/
-										//		if (FSM && (FSM->GetCurrentStateE() == EBossState::BLOCK))
-										//		{
-										//			AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
-										//				EWeaponCollisionType::BLOCK);
-										//		}
-										//		else if (FSM->GetCurrentStateE() == EBossState::PARRY)
-										//		{
-										//			AIsekiroGameModeBase::SpawnCollisionEffect(this, HitResult.ImpactPoint,
-										//				EWeaponCollisionType::PARRY);
-										//			Status->TryApplyDamage(this, 3, 0);
-										//		}
-										//	}
-										//}
 
 									}
 								}
@@ -920,7 +955,12 @@ void AHeroCharacter::ResetTimeDilation()
 	bCanExecution = false;
 
 }
-
+void AHeroCharacter::MakeSlowTimeForLastBossKill()
+{
+	UGameplayStatics::SetGlobalTimeDilation(this, 0.1f);
+	bIsDilated = true;
+	bCanExecution = true;
+}
 void AHeroCharacter::MakeSlowTimeDilation()
 {
 	UGameplayStatics::SetGlobalTimeDilation(this, 0.9f);
@@ -944,6 +984,7 @@ void AHeroCharacter::MakeCameraDefault()
 	//SpringArm->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 	//SpringArm->SetupAttachment(GetRootComponent());
 	Camera->SetFieldOfView(90.f);
+	GetController()->SetIgnoreMoveInput(false);
 }
 
 bool AHeroCharacter::IsBossPostureBroken()
