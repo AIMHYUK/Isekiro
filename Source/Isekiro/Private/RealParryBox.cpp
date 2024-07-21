@@ -113,7 +113,7 @@ void URealParryBox::OnParryCheckBeginOverlap(UPrimitiveComponent* OverlappedComp
 		MyCharacter->PlayParryMontage();
 		AIsekiroGameModeBase::SpawnCollisionEffect(OtherActor, GetComponentLocation(), EWeaponCollisionType::PARRY);
 		float TimeDilation;
-		MyCharacter->GetHazardState() == EHazardState::EHS_Hazard ? TimeDilation = .3f : TimeDilation = .85f;
+		MyCharacter->GetHazardState() == EHazardState::EHS_Hazard ? TimeDilation = .85f : TimeDilation = .85f;
 		UGameplayStatics::SetGlobalTimeDilation(this, TimeDilation);
 
 		if (Boss)

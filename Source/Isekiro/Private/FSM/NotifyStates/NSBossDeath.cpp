@@ -9,12 +9,14 @@
 void UNSBossDeath::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	auto FSM = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
-	if (FSM)
+	if (MeshComp && MeshComp->GetOwner())
 	{
-		FSM->SetPostureState(EPostureState::BROKEN);
+		auto FSM = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
+		if (FSM)
+		{
+			FSM->SetPostureState(EPostureState::BROKEN);
+		}
 	}
-
 	//change posture state to BROKEN
 }
 
@@ -26,15 +28,17 @@ void UNSBossDeath::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
 void UNSBossDeath::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	auto Boss = MeshComp->GetOwner<ABossCharacter>();
-	if (Boss)
+	if (MeshComp && MeshComp->GetOwner())
 	{
-		auto FSM = Boss->GetComponentByClass<UFSMComponent>();
-		if (FSM)
+		auto Boss = MeshComp->GetOwner<ABossCharacter>();
+		if (Boss)
 		{
-			if (Boss->GetBossUI()) Boss->GetBossUI()->DisplayPostureBroken(false);
-			FSM->SetPostureState(EPostureState::STABLE);
+			auto FSM = Boss->GetComponentByClass<UFSMComponent>();
+			if (FSM)
+			{
+				if (Boss->GetBossUI()) Boss->GetBossUI()->DisplayPostureBroken(false);
+				FSM->SetPostureState(EPostureState::STABLE);
+			}
 		}
 	}
-
 }

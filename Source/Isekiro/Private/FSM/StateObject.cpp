@@ -26,7 +26,7 @@ void UStateObject::Start()
 	EBossState NewStateE = GetFSMState();
 	if (FSMComp && (NewStateE != EBossState::NONE && NewStateE != EBossState::MAX))
 	{
-		FSMComp->SetFSMState(GetFSMState());
+		FSMComp->SetCurrentState(GetFSMState());
 	}
 
 	PlayMontage();
@@ -41,24 +41,44 @@ EBossState UStateObject::Update(float DeltaTime)
 
 void UStateObject::Stop()
 {
-	StopMovement();
-	StopMontage();
-	if (Instigator) Instigator->EquipKatana();
 	UE_LOG(LogTemp, Warning, TEXT("42 Stop: %s"), *UEnum::GetValueAsString(GetFSMState()));
+	StopMontage();
+	StopMovement();
+
+	if (Instigator) Instigator->EquipKatana();
 }
 
 void UStateObject::Activate()
 {
 }
 
-void UStateObject::JumpToSection(FName SectionName)
+UAnimMontage* UStateObject::GetMontage() const
 {
 	if (Instigator && SelectedIndex != -1)
 	{
+		return MontageStates[SelectedIndex].Montage;
+	}
+
+	return nullptr;
+}
+
+UAnimInstance* UStateObject::GetAnimInstance() const
+{
+	if (Instigator)
+	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
 		{
-			if (Anim) Anim->Montage_JumpToSection(SectionName, MontageStates[SelectedIndex].Montage);
+			if (Anim) return Anim;
 		}
+	}
+	return nullptr;
+}
+
+void UStateObject::JumpToSection(FName SectionName)
+{
+	if (GetAnimInstance() && GetMontage())
+	{
+		GetAnimInstance()->Montage_JumpToSection(SectionName, GetMontage());
 	}
 }
 
@@ -91,11 +111,14 @@ void UStateObject::PlayMontage()
 
 void UStateObject::StopMontage()
 {
-	if (Instigator/* && SelectedIndex != -1*/)
+	if (GetMontage())
 	{
 		auto Anim = Instigator->GetMesh()->GetAnimInstance();
 		{
-			if (Anim) Anim->Montage_Stop(0.1f, MontageStates[SelectedIndex].Montage);
+			if (Anim)
+			{
+				Anim->Montage_Stop(0.1f, GetMontage());
+			}
 		}
 	}
 }
@@ -133,7 +156,6 @@ FStateDistance UStateObject::GetStateDistance() const
 void UStateObject::RespondToInput()
 {
 }
-
 
 UWorld* UStateObject::GetWorld() const
 {

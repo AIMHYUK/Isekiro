@@ -7,6 +7,8 @@
 #include "Character/BossCharacter.h"
 #include "IsekiroGameModeBase.h"
 #include "ActorComponents/StatusComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
 
 UFSMComponent::UFSMComponent()
 {
@@ -28,13 +30,20 @@ UFSMComponent::UFSMComponent()
 
 	DeflectedBlockProb = .4f;
 
-	bHasEnteredFight = false;
+	bHasEnteredFight = true;
+
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
 }
 
 
 void UFSMComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AudioComp)
+	{
+		AudioComp->OnAudioFinished.AddDynamic(this, &UFSMComponent::OnDialogueFinished);
+	}
 
 	DefenseProb = DefenseProbability;
 
@@ -154,11 +163,6 @@ bool UFSMComponent::IsCurrentStateActive() const
 	return BossCharacter->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying();
 }
 
-void UFSMComponent::SetFSMState(EBossState _CurrentStateE)
-{
-	CurrentStateE = _CurrentStateE;
-}
-
 bool UFSMComponent::TargetWithinRangeFor(EBossState BossState)
 {
 	if (BossState == EBossState::NONE) return false;
@@ -185,12 +189,12 @@ void UFSMComponent::ChangeStateTo(EBossState NewState)
 
 	if (PrepNewState(NewState))
 	{
-		SetPreviousState(NewState);
+		SetPreviousPatternState(NewState);
 		CurrentStateE = NewState;
 	}
 	else
 	{
-		SetPreviousState(NewState);
+		SetPreviousPatternState(NewState);
 		CurrentStateE = EBossState::NONE;
 	}
 }
@@ -211,12 +215,6 @@ bool UFSMComponent::IsMeleeState(EBossState State) const
 bool UFSMComponent::CanRecoverPosture() const
 {
 	return CanStun() && !IsReactionState(CurrentStateE) && CurrentStateE != EBossState::NORMALATTACK;
-}
-
-void UFSMComponent::SetPreviousState(EBossState State)
-{
-	if (!IsReactionState(State) && State != EBossState::NORMALATTACK && CurrentStateE != EBossState::STRAFE)
-		PrevStateE = CurrentStateE;
 }
 
 void UFSMComponent::RespondToInput()
@@ -322,15 +320,15 @@ void UFSMComponent::StartParryOrBlock()
 		if (CurrentStateE == EBossState::DEFLECTED || !IsMeleeState(CurrentStateE))
 		{
 
-		}		
-		else 
+		}
+		else
 		{
 			ChangeStateTo(EBossState::PARRY);
 			AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
 				EWeaponCollisionType::PARRY);
 		}
 	}
-	else 
+	else
 	{
 		ChangeStateTo(EBossState::BLOCK);
 		AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
@@ -341,6 +339,43 @@ void UFSMComponent::StartParryOrBlock()
 void UFSMComponent::EnableDefense(bool bEnabled)
 {
 	bEnabled ? DefenseProb = DefenseProbability : DefenseProb = DeflectedBlockProb;
+}
+
+bool UFSMComponent::HasEnteredFight() const
+{
+	return bHasEnteredFight;
+}
+
+void UFSMComponent::SetHasEnteredFight(bool _bHasEnteredFight)
+{
+	bHasEnteredFight = false;
+}
+
+bool UFSMComponent::IsDialogueActive() const
+{
+	return bDialogueActive;
+}
+
+void UFSMComponent::PlayBossSound(EBossDialogue DialogueType)
+{
+	if (DialogueType == EBossDialogue::NONE) return;
+
+	auto DialogueIt = BossDialogue.Find(DialogueType);
+	if (DialogueIt && *DialogueIt)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Dialogue Started"));
+		AudioComp->SetSound(*DialogueIt);
+		AudioComp->Play();
+
+		//UGameplayStatics::PlaySound2D(GetWorld(), *DialogueIt);
+		bDialogueActive = true;
+	}
+}
+
+void UFSMComponent::OnDialogueFinished()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Dialogue Finished"));
+	if(bDialogueActive) bDialogueActive = false;
 }
 
 bool UFSMComponent::CanDefend()
@@ -397,4 +432,15 @@ bool UFSMComponent::PrepNewState(EBossState NewState)
 	else UE_LOG(LogTemp, Warning, TEXT("Could not find Boss State in BossStateMap."));
 
 	return false;
+}
+
+void UFSMComponent::SetCurrentState(EBossState _CurrentStateE)
+{
+	CurrentStateE = _CurrentStateE;
+}
+
+void UFSMComponent::SetPreviousPatternState(EBossState State)
+{
+	if (!IsReactionState(State) && State != EBossState::NORMALATTACK && CurrentStateE != EBossState::STRAFE)
+		PrevStateE = CurrentStateE;
 }

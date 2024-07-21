@@ -17,6 +17,17 @@ struct FStateDistance
 	float Max;
 };
 
+UENUM()
+enum class EBossDialogue : uint8
+{
+	NONE UMETA(DisplayName = "None"),
+	START01 UMETA(DisplayName = "Start01"), 
+	START02 UMETA(DisplayName = "Start02"), 
+	ONELIFE UMETA(DisplayName = "OneLife"), 
+	KILL UMETA(DisplayName = "Kill"), 
+	DEAD UMETA(DisplayName = "Dead")
+};
+
 UENUM(Blueprintable)
 enum class EBossState : uint8
 {
@@ -83,6 +94,7 @@ DECLARE_MULTICAST_DELEGATE(FStateResponseDelegate);
 
 class UStateObject;
 class ABossCharacter;
+class UAudioComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ISEKIRO_API UFSMComponent : public UActorComponent
@@ -130,32 +142,46 @@ public:
 
 	void EnableDefense(bool bEnabled);
 
+	bool HasEnteredFight() const;
+	void SetHasEnteredFight(bool _bHasEnteredFight);
+	bool IsDialogueActive() const;
+
+	void PlayBossSound(EBossDialogue DialogueType);
+
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TMap<EBossState, TSubclassOf<UStateObject>> BossStateMap;
-	
+
+	TObjectPtr<UAudioComponent> AudioComp;
+
 private:
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Dialogue", meta = (AllowPrivateAccess))
+	TMap<EBossDialogue, USoundBase*> BossDialogue;
 	bool bHasEnteredFight;
+	bool bDialogueActive;
+	UFUNCTION()
+	void OnDialogueFinished();
 
 	bool HandleDodgeProbability();
 	void PerformDodge();
 
-	UPROPERTY(EditAnywhere, Category = "Settings", meta=(AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, Category = "Settings", meta = (AllowPrivateAccess))
 	EBossState CurrentStateE;
 	EBossState PrevStateE;
-	void SetPreviousState(EBossState State);
-	EFightingSpace FightSpace;
-	EPostureState PostureState;
+	void SetCurrentState(EBossState _CurrentStateE);
+	void SetPreviousPatternState(EBossState State);
 
 	bool PrepNewState(EBossState NewState);
-	void SetFSMState(EBossState _CurrentStateE);
+
 	UPROPERTY()
 	TObjectPtr<UStateObject> CurrentState;
-
 	TObjectPtr<AActor> Target;
 	TObjectPtr<ABossCharacter> BossCharacter;
+
+	EFightingSpace FightSpace;
+	EPostureState PostureState;
 
 	bool bCanStun;
 	float DodgeMaxProb;
@@ -173,8 +199,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))
 	float DeflectedBlockProb;
 	float DefenseProb;
-
-
 
 	//Probability of parrying attacks. Performs Block otherwise.
 	UPROPERTY(EditAnywhere, Category = "Settings|Defense", meta = (AllowPrivateAccess), meta = (ClampMin = "0.0"), meta = (ClampMax = "1.0"))

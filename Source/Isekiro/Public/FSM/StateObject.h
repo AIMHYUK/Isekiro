@@ -48,12 +48,15 @@ public:
 
 	virtual void RespondToInput();
 
+	UAnimMontage* GetMontage() const;
 
 protected:
 	virtual UWorld* GetWorld() const override;
 	
 
 protected:
+	UAnimInstance* GetAnimInstance() const;
+
 	void JumpToSection(FName SectionName);
 	void PlayMontage();
 	void StopMontage();

@@ -16,6 +16,7 @@ void URunState::Start()
 	Super::Start();
 	StartMovement();
 
+	if (FSMComp) FSMComp->PlayBossSound(EBossDialogue::START02);
 	SelectNextState();
 }
 
@@ -33,7 +34,11 @@ EBossState URunState::Update(float DeltaTime)
 		}
 		else
 		{
-			SelectNextState();
+			if (FSMComp && FSMComp->HasEnteredFight()) 
+			{
+				SelectedState = EBossState::PATTERNATTACK;
+			}
+			else SelectNextState();
 		}
 	}
 	return EBossState::NONE;
@@ -60,9 +65,16 @@ EBossState URunState::UpdateMovement(float DeltaTime)
 
 void URunState::SelectNextState()
 {
-	int32 index = FMath::RandRange(0, TransitionStates.Num() - 1);
-	if (ensure(TransitionStates.IsValidIndex(index)))
-		SelectedState = TransitionStates[index];
-	else SelectedState = EBossState::NONE;
+	if (FSMComp && FSMComp->HasEnteredFight())
+	{
+		SelectedState = EBossState::PATTERNATTACK;
+	}
+	else 
+	{
+		int32 index = FMath::RandRange(0, TransitionStates.Num() - 1);
+		if (ensure(TransitionStates.IsValidIndex(index)))
+			SelectedState = TransitionStates[index];
+		else SelectedState = EBossState::NONE;
+	}	
 }
 

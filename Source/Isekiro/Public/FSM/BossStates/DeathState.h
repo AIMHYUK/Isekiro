@@ -21,6 +21,9 @@ public:
 protected:
 	virtual void RespondToInput() override;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Settings")
+	TObjectPtr<USoundBase> OpeningVoiceLineSound;
+
 private:
 	UFUNCTION()
 	void Execute();

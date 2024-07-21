@@ -11,12 +11,16 @@ UPatternState::UPatternState()
 	counter = 0;
 	TravelDist = 300.f;
 	StateDistance.Min = 0.f;
-	StateDistance.Max = 900.f;
+	StateDistance.Max = 750.f;
 }
 
 void UPatternState::Start()
 {
 	Super::Start();
+	if (FSMComp && FSMComp->HasEnteredFight())
+	{
+		FSMComp->SetHasEnteredFight(false);
+	}
 }
 
 EBossState UPatternState::Update(float DeltaTime)

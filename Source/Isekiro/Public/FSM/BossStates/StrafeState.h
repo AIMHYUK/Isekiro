@@ -30,5 +30,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings")
 	float StrafeMaxTime;
 	float StrafeTotalTime;
-
+private:
+	UFUNCTION()
+	void EnteredFight();
 };

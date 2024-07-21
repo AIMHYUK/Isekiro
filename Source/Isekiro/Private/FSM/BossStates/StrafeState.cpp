@@ -16,15 +16,27 @@ void UStrafeState::Start()
 {
 	Super::Start();
 	StartMovement();
-	StrafeMaxTime =FMath::RandRange(1.5f, StrafeMaxTime);
+
+	if (FSMComp && FSMComp->HasEnteredFight())
+	{
+		FTimerHandle Handle;
+		GetWorld()->GetTimerManager().SetTimer(Handle, this, &UStrafeState::EnteredFight, .5f, false);
+		StrafeMaxTime = 2.2f;
+	}
+	else
+		StrafeMaxTime = FMath::RandRange(std::min(StrafeMaxTime, StrafeMaxTime - 1.f), StrafeMaxTime);
 }
 
 EBossState UStrafeState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
-	if(StrafeTotalTime >= StrafeMaxTime && FSMComp)
+	if (StrafeTotalTime >= StrafeMaxTime && FSMComp)
 	{
-		return FSMComp->RandomState();
+		if (FSMComp && FSMComp->HasEnteredFight())
+		{
+			FSMComp->ChangeStateTo(EBossState::RUN);
+		}
+		else return FSMComp->RandomState();
 	}
 	return EBossState::NONE;
 }
@@ -49,4 +61,9 @@ EBossState UStrafeState::UpdateMovement(float DeltaTime)
 		}
 	}
 	return EBossState::NONE;
+}
+
+void UStrafeState::EnteredFight()
+{
+	if (FSMComp) FSMComp->PlayBossSound(EBossDialogue::START01);
 }

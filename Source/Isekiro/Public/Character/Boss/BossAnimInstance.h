@@ -59,6 +59,7 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_EquipBow();
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly)
