@@ -66,7 +66,9 @@ public:
 
 	void PlayerIsDead();
 	void RestartLevel();
-	UBossWidget* GetBossUI();
+	UBossWidget* GetBossUI();	
+	UFUNCTION(BlueprintCallable)
+	UCharacterWidget* GetMainUI();
 protected:
 
 	virtual void BeginPlay() override;
@@ -85,5 +87,6 @@ private:
 	UShinobiExecutionWidget* ExecutionWidget;
 
 	bool IsGameOverWidgetVisible = false;
+
 
 };

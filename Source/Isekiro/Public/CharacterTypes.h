@@ -6,7 +6,9 @@ enum class ECharacterGuardState : uint8
 	ECGS_Guarding UMETA(DisplayName = "Guarding"), //블루프린트에서 사용할 이름
 	ECGS_Parrying UMETA(DisplayName = "Parrying"),
 	ECGS_UnGuarded UMETA(DisplayName = "UnGuarded"),
-	ECGS_GuardBroken UMETA(DisplayName = "GuardBroken")
+	ECGS_GuardBroken UMETA(DisplayName = "GuardBroken"),
+	ECGS_HitWhileGuard UMETA(DisplayName = "HitWhileGuard")
+
 };
 
 UENUM(BlueprintType)
