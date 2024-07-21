@@ -434,7 +434,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 	{
 		ParryCheck->ParryStarted();
 		GuardState = ECharacterGuardState::ECGS_Guarding;
-	
+
 		auto Movement = GetCharacterMovement();
 		//가드걷기속도로 전환
 		Movement->MaxWalkSpeed = GuardWalkSpeed;
@@ -482,9 +482,9 @@ void AHeroCharacter::PlayParriedMontage()
 	{
 		if (!AnimInstance->Montage_IsPlaying(GetParriedMontage))
 			ResetCombo();
-			AnimInstance->Montage_Play(GetParriedMontage);
-			IsAttacking = false;
-			UE_LOG(LogTemp, Error, TEXT("12PlayParried %d"), IsAttacking);
+		AnimInstance->Montage_Play(GetParriedMontage);
+		IsAttacking = false;
+		UE_LOG(LogTemp, Error, TEXT("12PlayParried %d"), IsAttacking);
 	}
 }
 void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
@@ -560,6 +560,7 @@ void AHeroCharacter::Die()
 
 void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (OtherActor && OtherActor->ActorHasTag("WireSpot")) return;
 
 	HeroAnimInstance = Cast<UHeroAnimInstance>(AnimInstance);
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
@@ -602,13 +603,14 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			PlayerController->SetIgnoreMoveInput(false);
 			PlayerController->SetIgnoreLookInput(false);
 		}
-		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)&& !HeroAnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //패링에 실패하고 가드브레이크가 안터졌으면 가드
+		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage) && !HeroAnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //패링에 실패하고 가드브레이크가 안터졌으면 가드
 		{
 			GuardState = ECharacterGuardState::ECGS_HitWhileGuard;
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
 			{
-				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
+				if (!AnimInstance->OnMontageEnded.IsBound())
+					AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
 				AnimInstance->Montage_Play(HittedWhileGuardMontage);
 				UE_LOG(LogTemp, Error, TEXT("Play HIt while guard"));
 				BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
@@ -631,9 +633,9 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 				}
 				ResetCombo();
 			}
-			}
 		}
-	
+	}
+
 	if (IsDead())
 	{
 		Die();
@@ -721,13 +723,13 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 
 			if (CanNextCombo)
 			{
-				
+
 				IsComboInputOn = true;
 			}
 		}
 		else
 		{
-			
+
 			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
 				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
 				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
@@ -844,7 +846,7 @@ void AHeroCharacter::DealDamage()
 					UStatusComponent* ActorStatus = OverlappedActor->FindComponentByClass<UStatusComponent>();
 					if (ActorStatus)
 					{
-						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());		
+						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());
 						if (ActorStatus->TryApplyDamage(this, 100, 10)) //체간이 무너지면
 						{
 							ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
@@ -853,7 +855,7 @@ void AHeroCharacter::DealDamage()
 								UFSMComponent* FSM = Cast<UFSMComponent>(Boss->GetComponentByClass(UFSMComponent::StaticClass()));
 								if (FSM)
 								{
-									if (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY || 
+									if (FSM->GetCurrentStateE() == EBossState::BLOCK || FSM->GetCurrentStateE() == EBossState::PARRY ||
 										FSM->GetCurrentStateE() == EBossState::DODGE || FSM->GetCurrentStateE() == EBossState::DODGEATTACK)
 									{
 

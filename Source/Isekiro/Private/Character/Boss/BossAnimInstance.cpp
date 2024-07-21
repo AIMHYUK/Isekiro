@@ -172,3 +172,20 @@ void UBossAnimInstance::AnimNotify_RemoveAllUI()
 {
 	UWidgetLayoutLibrary::RemoveAllWidgets(GetOwningActor());
 }
+
+void UBossAnimInstance::AnimNotify_Adjust()
+{
+	if (BossCharacter)
+	{
+		BossCharacter->AdjustKatana();
+	}
+}
+
+void UBossAnimInstance::AnimNotify_Adjust1()
+{
+	if (BossCharacter)
+	{
+		BossCharacter->AdjustKatana1();
+	}
+}
+

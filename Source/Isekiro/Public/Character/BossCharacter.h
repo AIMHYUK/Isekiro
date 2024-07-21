@@ -13,6 +13,14 @@
  * 
  */
 
+UENUM()
+enum class EPerilousAttackType : uint8
+{
+	NONE UMETA(DisplayName = "None"),
+	SWEEP UMETA(DisplayName = "Sweep"),
+	THRUST UMETA(DisplayName = "Thrust")
+};
+
 class UFSMComponent;
 class UStateObject;
 class UBoxComponent;
@@ -34,6 +42,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void BeginAttack();
+	void BeginPerilousAttack(EPerilousAttackType Type);
 	UFUNCTION(BlueprintCallable)
 	void EndAttack();
 
@@ -66,6 +75,8 @@ public:
 
 	void EquipKatana();
 	void EquipBow();
+	void AdjustKatana();
+	void AdjustKatana1();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Settings|Components")
@@ -74,6 +85,9 @@ protected:
 	TObjectPtr<UFSMComponent> FSMComponent;
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
 	TObjectPtr<UBoxComponent> AttackBoxComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components")
+	TObjectPtr<UBoxComponent> PerilousSweepBoxComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
 	TObjectPtr<UStaticMeshComponent> BowEquippedMesh;
@@ -86,6 +100,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Components|StaticMeshes")
 	TObjectPtr<UStaticMeshComponent> ScabbardMesh;
 
+	UFUNCTION()
+	void OnPerilousSweepBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

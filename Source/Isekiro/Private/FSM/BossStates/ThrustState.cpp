@@ -37,7 +37,7 @@ void UThrustState::StartMovement()
 {
 	Super::StartMovement();
 
-	if (Instigator && Target)
+	if (Instigator)
 	{
 		Instigator->SetLockOnTarget(false);
 

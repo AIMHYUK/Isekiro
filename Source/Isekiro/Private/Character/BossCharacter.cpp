@@ -24,8 +24,14 @@ ABossCharacter::ABossCharacter()
 	AttackBoxComp = CreateDefaultSubobject<UBoxComponent>("AttackBoxComponent");
 	AttackBoxComp->SetupAttachment(RootComponent);
 	AttackBoxComp->SetRelativeLocation(FVector(80.f, 0.f, 0.f));
-	AttackBoxComp->SetBoxExtent(FVector(80.f, 80.f, 75.f));
+	AttackBoxComp->SetBoxExtent(FVector(80.f, 24.f, 24.f));
 	AttackBoxComp->SetCollisionProfileName("Arrow");
+
+	PerilousSweepBoxComp = CreateDefaultSubobject<UBoxComponent>("PerilousSweepBoxCompnent");
+	PerilousSweepBoxComp->SetupAttachment(RootComponent);
+	PerilousSweepBoxComp->SetRelativeLocation(FVector(80.f, 0.f, -30.f));
+	PerilousSweepBoxComp->SetBoxExtent(FVector(80.f, 24.f, 24.f));
+	PerilousSweepBoxComp->SetCollisionProfileName("Arrow");
 
 	TargetOffset = 120.0f;
 	TargetOffsetBuffer = 30.f;
@@ -114,6 +120,15 @@ void ABossCharacter::BeginPlay()
 		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+	if (PerilousSweepBoxComp)
+	{
+		PerilousSweepBoxComp->IgnoreActorWhenMoving(this, true);
+
+		PerilousSweepBoxComp->OnComponentBeginOverlap.AddDynamic(this, &ABossCharacter::OnPerilousSweepBoxOverlapped);
+
+		PerilousSweepBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 	if (StatusComponent)
 	{
 		StatusComponent->OnStatusChanged.AddDynamic(this, &ABossCharacter::OnStatusChanged);
@@ -129,6 +144,16 @@ void ABossCharacter::BeginPlay()
 	}
 
 	EquipKatana();
+
+	if (!Target)
+	{
+		auto Hero = UGameplayStatics::GetActorOfClass(GetWorld(), AHeroCharacter::StaticClass());
+		if (Hero)
+		{
+			Target = Hero;
+		}
+	}
+
 }
 
 void ABossCharacter::Tick(float DeltaTime)
@@ -183,10 +208,26 @@ void ABossCharacter::BeginAttack()
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
+void ABossCharacter::BeginPerilousAttack(EPerilousAttackType Type)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Begin Perilous Attack"));
+
+	switch (Type)
+	{
+	case EPerilousAttackType::SWEEP:
+		PerilousSweepBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		break;
+	case EPerilousAttackType::THRUST:
+		AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		break;
+	}
+}
+
 void ABossCharacter::EndAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("End Attack"));
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PerilousSweepBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABossCharacter::FireArrow()
@@ -204,10 +245,15 @@ AActor* ABossCharacter::GetTarget() const
 	return Target;
 }
 
-void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep,
-	const FHitResult& SweepResult)
+void ABossCharacter::OnPerilousSweepBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
+	PerilousSweepBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void ABossCharacter::OnAttackBoxOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlapping with %s"), *OtherActor->GetName());
 	AttackBoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -425,6 +471,18 @@ void ABossCharacter::EquipBow()
 
 	KatanaEquippedMesh->SetVisibility(false);
 	KatanaStashedMesh->SetVisibility(true);
+}
+
+void ABossCharacter::AdjustKatana()
+{
+	KatanaEquippedMesh->AttachToComponent(GetMesh(), 
+		FAttachmentTransformRules::SnapToTargetIncludingScale, "RightHandSocketSheath");
+}
+
+void ABossCharacter::AdjustKatana1()
+{
+	KatanaEquippedMesh->AttachToComponent(GetMesh(),
+		FAttachmentTransformRules::SnapToTargetIncludingScale, "RightHandSocketSheath1");
 }
 
 EDirection ABossCharacter::GetCurrentDirection() const

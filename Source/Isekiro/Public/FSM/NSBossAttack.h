@@ -9,11 +9,19 @@
 /**
  *
  */
+enum class EPerilousAttackType : uint8;
 UCLASS()
 class ISEKIRO_API UNSBossAttack : public UAnimNotifyState
 {
 	GENERATED_BODY()
 public:
+	UNSBossAttack();
+
+	UPROPERTY(EditAnywhere)
+	bool bPerilousAttack;
+	UPROPERTY(EditAnywhere)
+	EPerilousAttackType PerilousAttackType;
+
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
 		virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;

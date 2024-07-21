@@ -4,17 +4,21 @@
 #include "FSM/NSBossAttack.h"
 #include "Character/BossCharacter.h"
 
+UNSBossAttack::UNSBossAttack()
+{
+	bPerilousAttack = false;
+	PerilousAttackType = EPerilousAttackType::NONE;
+}
+
 void UNSBossAttack::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
 
 	auto Character = Cast<ABossCharacter>(MeshComp->GetOwner());
-	UE_LOG(LogTemp, Warning, TEXT("111"));
 
 	if (Character)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("222"));
-		Character->BeginAttack();
+		bPerilousAttack ? Character->BeginPerilousAttack(PerilousAttackType) : Character->BeginAttack();
 	}
 }
 

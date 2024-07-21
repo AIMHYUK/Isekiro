@@ -3,6 +3,7 @@
 
 #include "FSM/BossStates/StrafeState.h"
 #include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 UStrafeState::UStrafeState()
 {
@@ -25,11 +26,30 @@ void UStrafeState::Start()
 	}
 	else
 		StrafeMaxTime = FMath::RandRange(std::min(StrafeMaxTime, StrafeMaxTime - 1.f), StrafeMaxTime);
+
+	
+	if (Instigator && Instigator->GetTarget())
+	{
+		auto Status = Instigator->GetTarget()->GetComponentByClass<UStatusComponent>();
+		if (!Status->HasHealth())
+		{
+			int32 SecNum = FMath::RandRange(1, 2);
+			JumpToSection(FName(FString::FromInt(SecNum)));
+			StopMovement();
+		}
+	}
 }
 
 EBossState UStrafeState::Update(float DeltaTime)
 {
 	Super::Update(DeltaTime);
+
+	auto Status = Instigator->GetTarget()->GetComponentByClass<UStatusComponent>();
+	if (!Status->HasHealth())
+	{
+		return EBossState::NONE;
+	}
+
 	if (StrafeTotalTime >= StrafeMaxTime && FSMComp)
 	{
 		if (FSMComp && FSMComp->HasEnteredFight())

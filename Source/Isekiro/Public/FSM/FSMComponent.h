@@ -47,10 +47,10 @@ enum class EBossState : uint8
 	//Near 
 	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),
 	
+	//Near
+	STRAFE UMETA(DisplayName = "Strafe"),
 	//Both
 	JUMPSTRIKE UMETA(DisplayName = "JumpStrike"),
-	//Both
-	STRAFE UMETA(DisplayName = "Strafe"),
 
 	//Far
 	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),

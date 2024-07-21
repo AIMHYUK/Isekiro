@@ -7,7 +7,7 @@
 #include "BossAnimInstance.generated.h"
 
 /**
- * 
+ *
  */
 
 class UFSMComponent;
@@ -18,7 +18,7 @@ UCLASS()
 class ISEKIRO_API UBossAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
-public: 
+public:
 	UBossAnimInstance();
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
@@ -32,7 +32,7 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_StartAttack();
-	
+
 	UFUNCTION()
 	void AnimNotify_StartAttack_Arrow();
 
@@ -62,6 +62,11 @@ protected:
 
 	UFUNCTION()
 	void AnimNotify_RemoveAllUI();
+
+	UFUNCTION()
+	void AnimNotify_Adjust();
+	UFUNCTION()
+	void AnimNotify_Adjust1();
 
 protected:
 

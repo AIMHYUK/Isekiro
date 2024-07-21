@@ -17,11 +17,20 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/AudioComponent.h"
 
+
+AIsekiroGameModeBase::AIsekiroGameModeBase()
+{
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComponent");
+}
 
 void AIsekiroGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	if (LevelName == "MainMap") return;
 
 	if (MainWidget != nullptr)
 	{
@@ -51,19 +60,25 @@ void AIsekiroGameModeBase::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in AIsekiroGameModeBase::BeginPlay"));
 	}
-	bIsPlayerBossFight = true;
-	if (bIsPlayerBossFight)
-	{
-		if (BossWidget != nullptr)
-		{
-			BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
 
-			if (BossUI != nullptr)
-				BossUI->AddToViewport();
+	LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	if (LevelName == "GameWorld1")
+	{
+
+		bIsPlayerBossFight = true;
+		if (bIsPlayerBossFight)
+		{
+			if (BossWidget != nullptr)
+			{
+				BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
+
+				if (BossUI != nullptr)
+					BossUI->AddToViewport();
+			}
 		}
+		ExecutionWidget = CreateWidget<UShinobiExecutionWidget>(GetWorld(), ExecutionWidgetClass);
 	}
 
-	ExecutionWidget = CreateWidget<UShinobiExecutionWidget>(GetWorld(), ExecutionWidgetClass);
 	//캐릭터가 죽으면 게임오버 위젯 + 3초후 게임 시작
 }
 
@@ -74,6 +89,40 @@ void AIsekiroGameModeBase::Tick(float DeltaSeconds)
 	{
 		PlayerIsDead();
 		IsGameOverWidgetVisible = true;
+	}
+}
+
+void AIsekiroGameModeBase::PlayBackgroundAudio(EBackgroundAudioType Type)
+{
+	if (AudioComp)
+	{
+		auto AudioIt = BackgroundAudio.Find(Type);
+		if (ensure(AudioIt && *AudioIt))
+		{
+			AudioComp->SetSound(*AudioIt);
+			AudioComp->Play();
+		}
+	}
+}
+
+void AIsekiroGameModeBase::FadeInBackgroundAudio(EBackgroundAudioType Type, float FadeInTime)
+{
+	if (AudioComp)
+	{
+		auto AudioIt = BackgroundAudio.Find(Type);
+		if (ensure(AudioIt && *AudioIt))
+		{
+			AudioComp->SetSound(*AudioIt);
+			AudioComp->FadeIn(FadeInTime);
+		}
+	}
+}
+
+void AIsekiroGameModeBase::FadeOutBackgroundAudio(float FadeOutTime)
+{
+	if (AudioComp)
+	{
+		AudioComp->FadeOut(FadeOutTime, 0.f);
 	}
 }
 
@@ -96,21 +145,14 @@ void AIsekiroGameModeBase::GameHasEnded()
 
 void AIsekiroGameModeBase::PlayerIsDead()
 {
+	UWidgetLayoutLibrary::RemoveAllWidgets(GetWorld());
 	GameOverWidget = CreateWidget<UGameOverWidget>(GetWorld(), GameOverWidgetFactory);
 	if (GameOverWidget)
 	{
 		GameOverWidget->AddToViewport(); //위젯띄우기
 		UGameplayStatics::PlaySound2D(this, DeathSound);
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AIsekiroGameModeBase::RestartLevel, 3.0f, false);
+		AudioComp->SetVolumeMultiplier(.65f);
 	}
-
-}
-
-void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
-{
-	FString MapName = UGameplayStatics::GetCurrentLevelName(GetWorld());
-	UGameplayStatics::OpenLevel(GetWorld(), FName(*MapName));
 }
 
 UBossWidget* AIsekiroGameModeBase::GetBossUI()
@@ -144,13 +186,18 @@ void AIsekiroGameModeBase::SpawnWeaponCollisionEffect(FVector Loc, EWeaponCollis
 void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
-	if (BossWidget != nullptr)
-	{
-		BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
 
-		if (BossUI != nullptr)
-			BossUI->AddToViewport();
-	}
+	FString LevelName = UGameplayStatics::GetCurrentLevelName(GetWorld());
+	if (LevelName == "GameWorld1")
+	{
+		if (BossWidget != nullptr)
+		{
+			BossUI = CreateWidget<UBossWidget>(GetWorld(), BossWidget);
+
+			if (BossUI != nullptr)
+				BossUI->AddToViewport();
+		}
+	}	
 }
 
 void AIsekiroGameModeBase::UpdateHPBar()

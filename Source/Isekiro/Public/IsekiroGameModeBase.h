@@ -21,6 +21,15 @@ enum class EWeaponCollisionType
 	DAMAGE
 };
 
+UENUM(Blueprintable)
+enum class EBackgroundAudioType : uint8
+{
+	MAINMENU UMETA(DisplayName="MainMenu"),
+	ASHINACASTLE UMETA(DisplayName = "AshinaCastle"),
+	GENICHIRO UMETA(DisplayName = "Genichiro"),
+	WIND UMETA(DisplayName = "Wind")
+};
+
 class UNiagaraSystem; 
 
 UCLASS()
@@ -29,6 +38,8 @@ class ISEKIRO_API AIsekiroGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 	friend class ABossCharacter;
 public:
+	AIsekiroGameModeBase();
+
 	static void SpawnCollisionEffect(AActor* Initiated, FVector Origin, EWeaponCollisionType Type);
 
 	UPROPERTY(EditDefaultsOnly)
@@ -65,17 +76,29 @@ public:
 	void GameHasEnded();
 
 	void PlayerIsDead();
-	void RestartLevel();
 	UBossWidget* GetBossUI();
 	UFUNCTION(BlueprintCallable)
 	UCharacterWidget* GetMainUI();
 	void RemoveOneBossLife();
+
 protected:
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	UPROPERTY(EditDefaultsOnly)
 	USoundBase* ExecutionSound;
+
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> AudioComp;
+	UPROPERTY(EditDefaultsOnly, Category="Settings")
+	TMap<EBackgroundAudioType, USoundBase*> BackgroundAudio;
+	
+	UFUNCTION(BlueprintCallable)
+	void PlayBackgroundAudio(EBackgroundAudioType Type);
+	UFUNCTION(BlueprintCallable)
+	void FadeInBackgroundAudio(EBackgroundAudioType Type, float FadeInTime);
+	UFUNCTION(BlueprintCallable)
+	void FadeOutBackgroundAudio(float FadeOutTime);
 
 private:
 	float HPPercent;

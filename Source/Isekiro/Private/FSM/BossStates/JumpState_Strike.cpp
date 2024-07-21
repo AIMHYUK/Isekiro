@@ -66,7 +66,7 @@ void UJumpState_Strike::StartMovement()
 		break;
 	}
 	case 1:
-		if (Target)
+		if (Instigator)
 		{
 			TotalRunTime = 0.f;
 			MaxRunTime = .25f;

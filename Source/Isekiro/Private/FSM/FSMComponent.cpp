@@ -54,7 +54,7 @@ void UFSMComponent::BeginPlay()
 		BossCharacter = Boss;
 	}
 
-	if (ensure(CurrentStateE != EBossState::NONE))
+	if (CurrentStateE != EBossState::NONE)
 	{
 		ChangeStateTo(CurrentStateE);
 	}
@@ -117,7 +117,7 @@ EBossState UFSMComponent::RandomState()
 	{
 	case EFightingSpace::NEAR:
 		min = (int32)EBossState::NORMALATTACK;
-		max = (int32)EBossState::STRAFE;
+		max = (int32)EBossState::JUMPSTRIKE;
 		break;
 	case EFightingSpace::FAR:
 		min = (int32)EBossState::JUMPSTRIKE;
