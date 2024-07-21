@@ -609,42 +609,31 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 			if (AnimInstance)
 			{
 				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
-				/*AnimInstance->Montage_Play(HittedWhileGuardMontage);*/
+				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				UE_LOG(LogTemp, Error, TEXT("Play HIt while guard"));
 				BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
 				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
-					ApplyDamage(0);
-					ApplyPosture(10);
-					UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
-					int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
-					FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
-					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
-					UE_LOG(LogTemp, Error, TEXT("Invalid section name: %s"), *GuardSelectedSection.ToString());
-					switch (BossState)
+					if (HazardState == EHazardState::EHS_Hazard)
 					{
-					case EBossState::LUNGEATTACK:
 						KnockBack(3000);
-						break;
-					case EBossState::JUMPSTRIKE:
-						KnockBack(3000);
-						break;
-					case EBossState::THRUSTATTACK:
-						GuardState = ECharacterGuardState::ECGS_GuardBroken;
-						AnimInstance->Montage_Play(DefenseBreakMontage);
-						break;
-					case EBossState::DISTANCEATTACK:
-						GuardState = ECharacterGuardState::ECGS_GuardBroken;
-						AnimInstance->Montage_Play(DefenseBreakMontage);
-						break;
-					default:
-						KnockBack(800);
-						break;
+						Status->TryApplyDamage(this, 20, 30);
 					}
-					ResetCombo();
+					else
+					{
+						ApplyDamage(0);
+						ApplyPosture(10);
+						UE_LOG(LogTemp, Error, TEXT("HIt while guard"));
+						int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
+						FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
+						AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
+					}
 				}
+				ResetCombo();
+			}
 			}
 		}
-	}
+	
 	if (IsDead())
 	{
 		Die();
@@ -661,7 +650,6 @@ void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool 
 		UE_LOG(LogTemp, Error, TEXT("Called"));
 		PlayGuardMontage();
 	}
-	UE_LOG(LogTemp, Error, TEXT("OnHittedWhileGuard %d"), IsAttacking);
 }
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
