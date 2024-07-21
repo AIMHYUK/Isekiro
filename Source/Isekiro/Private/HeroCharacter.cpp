@@ -193,7 +193,7 @@ void AHeroCharacter::PostInitializeComponents() //생성자 비스무리한거 �
 
 			if (IsComboInputOn)
 			{
-				UE_LOG(LogTemp, Error, TEXT("11111"));
+				UE_LOG(LogTemp, Error, TEXT("Deligate %d"), IsAttacking);
 				AttackStartComboState();
 				HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 			}
@@ -218,6 +218,9 @@ void AHeroCharacter::Tick(float DeltaTime)
 	{
 		Status->RecoverPosture(5.f);
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Blue, FString::Printf(TEXT("Delegate : %d"), HeroAnim->OnNextAttackCheck.IsBound()));
+
 
 
 	switch (ActionState)
@@ -427,18 +430,21 @@ void AHeroCharacter::EndGuard(const FInputActionValue& Value)
 void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 {
 	bool bIsPressed = Value.Get<bool>();
-	ParryCheck->ParryStarted();
-	GuardState = ECharacterGuardState::ECGS_Guarding;
+	if (!AnimInstance->Montage_IsPlaying(AttackMontage))
+	{
+		ParryCheck->ParryStarted();
+		GuardState = ECharacterGuardState::ECGS_Guarding;
+	
+		auto Movement = GetCharacterMovement();
+		//가드걷기속도로 전환
+		Movement->MaxWalkSpeed = GuardWalkSpeed;
 
-	auto Movement = GetCharacterMovement();
-	//가드걷기속도로 전환
-	Movement->MaxWalkSpeed = GuardWalkSpeed;
-
+	}
 }
 
 void AHeroCharacter::PlayGuardMontage()
 {
-	if (!AnimInstance->IsAnyMontagePlaying()) //가드브레이크는 출력되야함
+	if (!AnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //가드브레이크는 출력되야함
 	{
 		AnimInstance->Montage_Play(GuardMontage);
 	}
@@ -470,7 +476,7 @@ void AHeroCharacter::PlayParryMontage()
 
 }
 void AHeroCharacter::PlayParriedMontage()
-{ //by justin
+{ //by justinattack
 	BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
 	if (BossState == EBossState::PARRY)
 	{
@@ -478,6 +484,7 @@ void AHeroCharacter::PlayParriedMontage()
 			ResetCombo();
 			AnimInstance->Montage_Play(GetParriedMontage);
 			IsAttacking = false;
+			UE_LOG(LogTemp, Error, TEXT("12PlayParried %d"), IsAttacking);
 	}
 }
 void AHeroCharacter::KnockBack(float Distance) // 뒤로 밀리는 함수
@@ -522,6 +529,7 @@ void AHeroCharacter::StrongAttack()
 
 		GetWorldTimerManager().SetTimer(StrongAttackTimerHandle, this, &AHeroCharacter::EndStrongAttack, 0.38f, false);
 	}
+	UE_LOG(LogTemp, Error, TEXT("Strong attack %d"), IsAttacking);
 }
 
 void AHeroCharacter::EndStrongAttack()
@@ -530,6 +538,8 @@ void AHeroCharacter::EndStrongAttack()
 	if (PlayerController)
 	{
 		PlayerController->SetIgnoreMoveInput(false);
+		IsAttacking = false;
+		UE_LOG(LogTemp, Error, TEXT("12EndStrongATtack %d"), IsAttacking);
 	}
 }
 
@@ -567,7 +577,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 		{
 			PlayerController->SetIgnoreMoveInput(true);
 			PlayerController->SetIgnoreLookInput(true); //못 움직이게 하고 맞는 판정
-
+			AIsekiroGameModeBase::SpawnCollisionEffect(this, GetActorLocation(), EWeaponCollisionType::DAMAGE);
 			if (AnimInstance)
 			{
 				if (GetHazardState() == EHazardState::EHS_Hazard)
@@ -594,11 +604,12 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 		}
 		else if (!HeroAnimInstance->Montage_IsPlaying(ParryMontage)&& !HeroAnimInstance->Montage_IsPlaying(DefenseBreakMontage)) //패링에 실패하고 가드브레이크가 안터졌으면 가드
 		{
+			GuardState = ECharacterGuardState::ECGS_HitWhileGuard;
 			GuardMontageSections = { TEXT("DefenseHit1"), TEXT("DefenseHit2"), TEXT("DefenseHit3"), TEXT("DefenseHit4") }; //섹션 이름 받아서
 			if (AnimInstance)
 			{
 				AnimInstance->OnMontageEnded.AddDynamic(this, &AHeroCharacter::OnHittedWhileGuardMontageEnded);
-				AnimInstance->Montage_Play(HittedWhileGuardMontage);
+				/*AnimInstance->Montage_Play(HittedWhileGuardMontage);*/
 				BossState = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UFSMComponent>()->GetCurrentStateE();
 				if (GuardMontageSections.Num() > 0) //랜덤한 가드히트모션 
 				{
@@ -608,6 +619,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 					int32 GuardSectionIndex = FMath::RandRange(0, GuardMontageSections.Num() - 1);
 					FName GuardSelectedSection = GuardMontageSections[GuardSectionIndex]; //랜덤하게 플레이하기
 					AnimInstance->Montage_JumpToSection(GuardSelectedSection, HittedWhileGuardMontage);
+					UE_LOG(LogTemp, Error, TEXT("Invalid section name: %s"), *GuardSelectedSection.ToString());
 					switch (BossState)
 					{
 					case EBossState::LUNGEATTACK:
@@ -645,9 +657,11 @@ void AHeroCharacter::OnHittedWhileGuardMontageEnded(UAnimMontage* Montage, bool 
 {
 	if (Montage == HittedWhileGuardMontage)
 	{
+		GuardState = ECharacterGuardState::ECGS_Guarding;
+		UE_LOG(LogTemp, Error, TEXT("Called"));
 		PlayGuardMontage();
-
 	}
+	UE_LOG(LogTemp, Error, TEXT("OnHittedWhileGuard %d"), IsAttacking);
 }
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -655,16 +669,17 @@ void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	if (PlayerController)
 	{
 		PlayerController->SetIgnoreMoveInput(false); // 몽타주가 끝난 후 이동 재활성화
+		IsAttacking = false;
+		UE_LOG(LogTemp, Error, TEXT("12OnHittedMontead %d"), IsAttacking);
 	}
 }
 
 void AHeroCharacter::Attack(const FInputActionValue& value)
 {
-
+	UE_LOG(LogTemp, Error, TEXT("attack clicked %d"), IsAttacking);
 	ABossCharacter* BossDie = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 
 	BossStatus = UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass())->GetComponentByClass<UStatusComponent>();
-	UE_LOG(LogTemp, Error, TEXT("Canceled"));
 	if (IsBossPostureBroken() && BossStatus->GetLifePoints() == 1)
 	{
 		if (BossDie)
@@ -715,28 +730,25 @@ void AHeroCharacter::Attack(const FInputActionValue& value)
 	{
 		if (IsAttacking)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Canceled3"));
+
 			if (CanNextCombo)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Canceled4"));
+				
 				IsComboInputOn = true;
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("Canceled1"));
-
+			
 			if (!HeroAnim->Montage_IsPlaying(GuardMontage)
 				&& !HeroAnim->Montage_IsPlaying(GetParriedMontage)
 				&& !HeroAnim->Montage_IsPlaying(StrongAttackMontage))
 			{
 				//UE_LOG(LogTemp, Error, TEXT("Canceled2"));
-				UE_LOG(LogTemp, Error, TEXT("2222"));
 				bool bIsPlaying = HeroAnim->Montage_IsPlaying(AttackMontage);
 				if (!bIsPlaying && !(HeroAnim->Montage_IsPlaying(GuardMontage)))
 				{
 					AttackStartComboState();
-					UE_LOG(LogTemp, Error, TEXT("3333"));
 					HeroAnim->PlayAttackMontage();
 					HeroAnim->JumpToAttackMontageSection(CurrentCombo);
 					IsAttacking = true;
@@ -773,19 +785,14 @@ void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupt
 		IsAttacking = false;
 		AttackEndComboState();
 
-		FString strName = Montage->GetName();
-		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
 	}
 	else if (CanNextCombo == false || IsComboInputOn == false)
 	{
 		IsAttacking = false;
 		AttackEndComboState();
 
-		FString strName = Montage->GetName();
-		UE_LOG(LogTemp, Error, TEXT("onEnded, Currentcombo = %d - %s"), CurrentCombo, *strName);
 
 	}
-
 }
 
 void AHeroCharacter::AttackStartComboState()
@@ -808,7 +815,6 @@ void AHeroCharacter::AttackEndComboState()
 
 void AHeroCharacter::DealDamage()
 {
-	UE_LOG(LogTemp, Warning, TEXT("42               DealDAmzge"));
 	if (ParryCheck)
 	{
 		FVector SphereLocation = ParryCheck->GetComponentLocation();

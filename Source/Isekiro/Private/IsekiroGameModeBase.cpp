@@ -75,6 +75,11 @@ void AIsekiroGameModeBase::Tick(float DeltaSeconds)
 	}
 }
 
+UCharacterWidget* AIsekiroGameModeBase::GetMainUI()
+{
+	return mainUI;
+}
+
 void AIsekiroGameModeBase::GameHasEnded()
 {
 	BossUI->RemoveFromViewport();
@@ -145,10 +150,10 @@ void AIsekiroGameModeBase::InitGame(const FString& MapName, const FString& Optio
 
 void AIsekiroGameModeBase::UpdateHPBar()
 {
-	if (mainUI)
-	{
-		mainUI->HPBar->SetPercent(State->GetHPPercent());
-	}
+	//if (mainUI)
+	//{
+	//	mainUI->HPBar->SetPercent(State->GetHPPercent());
+	//}
 }
 
 void AIsekiroGameModeBase::UpdatePostureBar()

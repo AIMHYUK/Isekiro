@@ -5,6 +5,8 @@
 #include "ActorComponents/StatusComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Components/ProgressBar.h"
+#include "Components/Image.h"
+#include "RealHpBar.h"
 
 
 void UCharacterWidget::NativeConstruct()
@@ -16,4 +18,9 @@ void UCharacterWidget::NativeConstruct()
 void UCharacterWidget::UpdateProgressBar()
 {
        
+}
+
+URealHpBar* UCharacterWidget::GetRealHpBar()
+{
+    return RealHpBar;
 }
