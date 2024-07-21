@@ -221,7 +221,7 @@ void ABossCharacter::OnCapsuleOverlapped(UPrimitiveComponent* OverlappedComponen
 void ABossCharacter::OnStatusChanged(AActor* Initiator, float OldHealth, float OldPosture, float NewHealth, float NewPosture)
 {
 	if (!ensure(Initiator)) return;
-
+	UE_LOG(LogTemp, Warning, TEXT("AAAAAAAAAAAAAAAAAAAAAAAAA"));
 	if (StatusComponent && FSMComponent)
 	{
 		if (FSMComponent->GetCurrentStateE() == EBossState::DODGE)

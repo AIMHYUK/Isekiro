@@ -857,7 +857,7 @@ void AHeroCharacter::DealDamage()
 					if (ActorStatus)
 					{
 						UE_LOG(LogTemp, Display, TEXT("OverlappedActor : %s"), *OverlappedActor->GetName());		
-						if (ActorStatus->TryApplyDamage(this, 100, 10)) //체간이 무너지면
+						if (ActorStatus->TryApplyDamage(this, 3, 10)) //체간이 무너지면
 						{
 							ABossCharacter* Boss = Cast<ABossCharacter>(UGameplayStatics::GetActorOfClass(this, ABossCharacter::StaticClass()));
 							if (Boss)
