@@ -22,7 +22,7 @@ class UMaterialInstanceDynamic;
 class URealParryBox;
 class AIsekiroGameModeBase;
 class AHeroPlayerController;
-
+class USoundBase;
 UCLASS()
 class ISEKIRO_API AHeroCharacter : public ACharacter
 {
@@ -226,6 +226,9 @@ public:
 	
 	//UFUNCTION(BlueprintCallable, Category = "Camera")
 	//void SwitchToCineCamera();
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* PortionSoud;
 protected:
 
 	virtual void BeginPlay() override;

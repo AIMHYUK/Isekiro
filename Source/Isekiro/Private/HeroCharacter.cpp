@@ -438,6 +438,7 @@ void AHeroCharacter::StartGuard(const FInputActionValue& Value)
 		auto Movement = GetCharacterMovement();
 		//가드걷기속도로 전환
 		Movement->MaxWalkSpeed = GuardWalkSpeed;
+		IsAttacking = false;
 	}
 }
 
@@ -643,6 +644,7 @@ void AHeroCharacter::PlayHittedMontage(UPrimitiveComponent* OverlappedComponent,
 		Die();
 		IsekiroGameModeBase->PlayerIsDead();
 	}
+	IsAttacking = false;
 	//CallHPBarFunction();
 	//CallPostureBarFunction();
 }
@@ -674,34 +676,6 @@ void AHeroCharacter::PlayGuardSoonStopMontage()
 		GetWorld()->GetTimerManager().SetTimer(MontageTimerHandle, this, &AHeroCharacter::StopMontage, 0.5f, false);
 	}
 }
-//void AHeroCharacter::SwitchToCineCamera()
-//{
-//	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0);
-//	if (PlayerController)
-//	{
-//		PlayerController->SetViewTargetWithBlend(this, 1.0f);
-//		SetupCameraMovementTimeline(); // 카메라 움직임 시작
-//	}
-//}
-//void AHeroCharacter::SetupCameraMovementTimeline()
-//{
-//	// Timeline을 초기화하고, 트랙을 추가합니다.
-//	CameraMovementTimeline->AddInterpFloat(CameraMovementCurve, InterpFunction, FName("Alpha"));
-//
-//	// Timeline의 Update 이벤트에 바인딩할 함수
-//	CameraMovementTimeline->SetTimelinePostUpdateFunc(FOnTimelineEvent::CreateUObject(this, &AMyCharacter::OnTimelineUpdate));
-//
-//	// Timeline 재생 시작
-//	CameraMovementTimeline->PlayFromStart();
-//}
-//
-//void AHeroCharacter::OnTimelineUpdate(float Value)
-//{
-//	// Timeline 값에 따라 카메라 위치와 회전 설정
-//	FVector NewLocation = FMath::Lerp(StartLocation, EndLocation, Value);
-//	FRotator NewRotation = FMath::Lerp(StartRotation, EndRotation, Value);
-//	CineCamera->SetWorldLocationAndRotation(NewLocation, NewRotation);
-//}
 
 void AHeroCharacter::OnHittedMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -826,7 +800,6 @@ void AHeroCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	{
 		IsAttacking = false;
 		AttackEndComboState();
-
 
 	}
 }
@@ -1024,6 +997,8 @@ void AHeroCharacter::Dash()
 void AHeroCharacter::UseItem(const FInputActionValue& value)
 {
 	Status->UsePortion();
+	AnimInstance->Montage_Play(KeepGuardMontage);
+	UGameplayStatics::PlaySound2D(this, PortionSoud);
 }
 
 

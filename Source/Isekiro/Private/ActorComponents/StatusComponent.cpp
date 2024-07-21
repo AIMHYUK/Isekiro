@@ -13,8 +13,8 @@ UStatusComponent::UStatusComponent()
 	Posture = 0;
 	MaxPosture = 100;
 	MaxHealth = Health;
-	Portion = 3;
-	MaxPortion = 3;
+	Portion = 10;
+	MaxPortion = 10;
 	LifePoints = 2;
 	bIsDead = false;
 }
