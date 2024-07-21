@@ -165,6 +165,7 @@ public:
 	FTimerHandle TimeDilationHandle;
 	FTimerHandle CameraHandle;
 	void ResetTimeDilation();
+	void MakeSlowTimeForLastBossKill();
 	void MakeSlowTimeDilation();
 	void MakeCameraDefault();
 	bool bIsDilated = false;
@@ -214,6 +215,17 @@ public:
 	}
 
 	void ReadyToAttack();
+
+	bool bIsMouseRightClicking = false;
+	FTimerHandle MontageTimerHandle;
+
+	// 타이머 완료 시 호출될 함수 선언
+	void StopMontage();
+	
+	void PlayGuardSoonStopMontage();
+	
+	//UFUNCTION(BlueprintCallable, Category = "Camera")
+	//void SwitchToCineCamera();
 protected:
 
 	virtual void BeginPlay() override;

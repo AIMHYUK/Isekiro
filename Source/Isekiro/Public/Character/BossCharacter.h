@@ -61,6 +61,7 @@ public:
 	bool IsWithinTarget(FVector Location, float Offset) const;
 
 	bool IsLockedOnTarget() const;
+	UFUNCTION(BlueprintCallable)
 	void SetLockOnTarget(bool _bLockOnTarget);
 	void ResetHeight();
 
