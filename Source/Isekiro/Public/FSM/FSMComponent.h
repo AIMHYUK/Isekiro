@@ -43,19 +43,17 @@ enum class EBossState : uint8
 	DEFLECTED UMETA(DisplayName = "Deflected"),				
 				
 	//Near
-	NORMALATTACK UMETA(DisplayName = "NormalAttack"),
-	//Near
-	JUMPSTRIKE UMETA(DisplayName = "JumpStrike"),						
-		
-	//Both
+	NORMALATTACK UMETA(DisplayName = "NormalAttack"),					
+	//Near 
 	COUNTERATTACK UMETA(DisplayName = "CounterAttack"),
+	
 	//Both
-	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
-	//Both
-	JUMPFIRE  UMETA(DisplayName = "JumpFire"),
+	JUMPSTRIKE UMETA(DisplayName = "JumpStrike"),
 	//Both
 	STRAFE UMETA(DisplayName = "Strafe"),
 
+	//Far
+	DISTANCEATTACK UMETA(DisplayName = "DistanceAttack"),
 	//Far
 	THRUSTATTACK UMETA(DisplayName = "ThrustAttack"),
 	//Far
@@ -71,7 +69,10 @@ enum class EBossState : uint8
 	DODGEATTACK UMETA(DisplayName = "DodgeAttack"),			
 
 	//Death
-	DEATH UMETA(DisplayName = "Death"),						
+	DEATH UMETA(DisplayName = "Death"),	
+
+	//Both
+	JUMPFIRE  UMETA(DisplayName = "JumpFire"),
 
 	MAX UMETA(DisplayName = "Max")
 };

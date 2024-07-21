@@ -16,7 +16,7 @@ void URunState::Start()
 	Super::Start();
 	StartMovement();
 
-	if (FSMComp) FSMComp->PlayBossSound(EBossDialogue::START02);
+	if (FSMComp && FSMComp->HasEnteredFight()) FSMComp->PlayBossSound(EBossDialogue::START02);
 	SelectNextState();
 }
 

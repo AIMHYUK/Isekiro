@@ -120,7 +120,7 @@ EBossState UFSMComponent::RandomState()
 		max = (int32)EBossState::STRAFE;
 		break;
 	case EFightingSpace::FAR:
-		min = (int32)EBossState::THRUSTATTACK;
+		min = (int32)EBossState::JUMPSTRIKE;
 		max = (int32)EBossState::LUNGEATTACK;
 		break;
 	}
@@ -317,16 +317,9 @@ void UFSMComponent::StartParryOrBlock()
 	float Prob = FMath::RandRange(0.f, 1.f);
 	if (Prob <= ParryProbability)
 	{
-		if (CurrentStateE == EBossState::DEFLECTED || !IsMeleeState(CurrentStateE))
-		{
-
-		}
-		else
-		{
-			ChangeStateTo(EBossState::PARRY);
-			AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
-				EWeaponCollisionType::PARRY);
-		}
+		ChangeStateTo(EBossState::PARRY);
+		AIsekiroGameModeBase::SpawnCollisionEffect(GetOwner(), BossCharacter->GetMesh()->GetSocketLocation(TEXT("RightHandSocketBase")),
+			EWeaponCollisionType::PARRY);
 	}
 	else
 	{
@@ -348,7 +341,7 @@ bool UFSMComponent::HasEnteredFight() const
 
 void UFSMComponent::SetHasEnteredFight(bool _bHasEnteredFight)
 {
-	bHasEnteredFight = false;
+	bHasEnteredFight = _bHasEnteredFight;
 }
 
 bool UFSMComponent::IsDialogueActive() const
