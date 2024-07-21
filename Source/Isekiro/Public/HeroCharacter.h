@@ -187,7 +187,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UBossWidget> BossUI;
 
-	void KillLifePoint();
+	void RemoveBossLifePoint();
 	FName GetSectionNameFromCombo(int32 ComboNum) const;
 
 	void PutInDamage();

@@ -25,7 +25,6 @@ void UDeathState::Start()
 	if (Instigator)
 	{
 		Instigator->SetLockOnTarget(false);
-		if (Instigator->GetBossUI()) Instigator->GetBossUI()->DisplayPostureBroken(true);
 	}
 }
 
@@ -66,8 +65,6 @@ void UDeathState::RespondToInput()
 	if (bHasAlreadyResponded) return;
 
 	bHasAlreadyResponded = true;
-
-	if (Instigator->GetBossUI()) Instigator->GetBossUI()->DisplayPostureBroken(false);
 
 	Execute();
 }

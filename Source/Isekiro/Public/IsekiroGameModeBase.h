@@ -66,9 +66,10 @@ public:
 
 	void PlayerIsDead();
 	void RestartLevel();
-	UBossWidget* GetBossUI();	
+	UBossWidget* GetBossUI();
 	UFUNCTION(BlueprintCallable)
 	UCharacterWidget* GetMainUI();
+	void RemoveOneBossLife();
 protected:
 
 	virtual void BeginPlay() override;

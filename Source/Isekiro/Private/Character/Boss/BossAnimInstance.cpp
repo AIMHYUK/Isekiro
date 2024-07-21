@@ -8,6 +8,7 @@
 #include "ActorComponents/StatusComponent.h"
 #include "IsekiroGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 
 UBossAnimInstance::UBossAnimInstance()
 {
@@ -106,7 +107,7 @@ void UBossAnimInstance::AnimNotify_RemoveALifePoint()
 		Hero = Cast<AHeroCharacter>(BossCharacter->GetTarget());
 		if (Hero)
 		{
-			Hero->KillLifePoint();
+			Hero->RemoveBossLifePoint();
 		}
 	}
 }
@@ -165,4 +166,9 @@ void UBossAnimInstance::AnimNotify_EquipBow()
 	{
 		BossCharacter->EquipBow();
 	}
+}
+
+void UBossAnimInstance::AnimNotify_RemoveAllUI()
+{
+	UWidgetLayoutLibrary::RemoveAllWidgets(GetOwningActor());
 }

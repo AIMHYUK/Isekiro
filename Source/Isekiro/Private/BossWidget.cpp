@@ -5,33 +5,27 @@
 #include "Components/ProgressBar.h"
 #include "Components/Image.h"
 #include "Components/WidgetSwitcher.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Character/BossCharacter.h"
+#include "ActorComponents/StatusComponent.h"
 
 void UBossWidget::NativeConstruct()
 {
-	/*Super::NativeConstruct();*/
-	Image_PostureBreak->SetVisibility(ESlateVisibility::Collapsed);
+	Super::NativeConstruct();
+
+	auto Boss = UGameplayStatics::GetActorOfClass(GetWorld(), ABossCharacter::StaticClass());
+	if (Boss)
+	{
+		auto Status = Boss->GetComponentByClass<UStatusComponent>();
+		if (Status) WidgetSwitcher->SetActiveWidgetIndex(Status->GetLifePoints()); //Boss's total life points
+	}
+	else WidgetSwitcher->SetActiveWidgetIndex(0); //Boss's total life points
 }
 
-void UBossWidget::DisplayPostureBroken(bool bDisplay)
+void UBossWidget::RemoveBossLifePoint()
 {
-	if (bDisplay)
+	if (WidgetSwitcher)
 	{
-		Image_PostureBreak->SetVisibility(ESlateVisibility::HitTestInvisible);
-	}
-	else
-	{
-		Image_PostureBreak->SetVisibility(ESlateVisibility::Collapsed);
-	}
-}
-
-void UBossWidget::DisplayLoseLifePoint(bool bCanLoseLife)
-{
-	if (bCanLoseLife)
-	{
-		if (WidgetSwitcher)
-		{
-			WidgetSwitcher->SetActiveWidgetIndex(1);
-		}
+		WidgetSwitcher->SetActiveWidgetIndex(WidgetSwitcher->ActiveWidgetIndex - 1);
 	}
 }

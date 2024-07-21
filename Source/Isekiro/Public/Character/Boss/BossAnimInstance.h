@@ -60,6 +60,9 @@ protected:
 	UFUNCTION()
 	void AnimNotify_EquipBow();
 
+	UFUNCTION()
+	void AnimNotify_RemoveAllUI();
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly)

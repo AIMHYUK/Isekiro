@@ -16,6 +16,8 @@
 #include "ShinobiExecutionWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+
 
 void AIsekiroGameModeBase::BeginPlay()
 {
@@ -82,8 +84,6 @@ UCharacterWidget* AIsekiroGameModeBase::GetMainUI()
 
 void AIsekiroGameModeBase::GameHasEnded()
 {
-	BossUI->RemoveFromViewport();
-	mainUI->RemoveFromViewport();
 	if (ExecutionWidget) ExecutionWidget->AddToViewport();
 	AHeroCharacter* HeroCharacter = Cast<AHeroCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	UGameplayStatics::PlaySound2D(GetWorld(), ExecutionSound);
@@ -116,6 +116,11 @@ void AIsekiroGameModeBase::RestartLevel() //3초후 재시작
 UBossWidget* AIsekiroGameModeBase::GetBossUI()
 {
 	return BossUI;
+}
+
+void AIsekiroGameModeBase::RemoveOneBossLife()
+{
+	GetBossUI()->RemoveBossLifePoint();
 }
 
 void AIsekiroGameModeBase::SpawnCollisionEffect(AActor* Owning, FVector Origin, EWeaponCollisionType Type)

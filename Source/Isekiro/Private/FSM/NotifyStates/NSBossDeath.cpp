@@ -36,7 +36,6 @@ void UNSBossDeath::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 			auto FSM = Boss->GetComponentByClass<UFSMComponent>();
 			if (FSM)
 			{
-				if (Boss->GetBossUI()) Boss->GetBossUI()->DisplayPostureBroken(false);
 				FSM->SetPostureState(EPostureState::STABLE);
 			}
 		}
