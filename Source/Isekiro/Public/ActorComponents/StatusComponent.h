@@ -29,6 +29,7 @@ public:
 
 	float GetHealth() const;
 	float GetPosture() const;
+	UFUNCTION(BlueprintCallable)
 	int GetLifePoints() const;
 	void RemoveOneLifePoint();
 	void OfficiallyDeclareDead();
