@@ -23,6 +23,16 @@ void UNSBossDeath::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 void UNSBossDeath::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
+
+	Total += FrameDeltaTime;
+	if (Total >= Duration)
+	{
+		auto FSM = MeshComp->GetOwner()->GetComponentByClass<UFSMComponent>();
+		if (FSM && !FSM->CanExecute())
+		{
+			FSM->SetCanExecute(true);
+		}
+	}
 }
 
 void UNSBossDeath::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -37,6 +47,7 @@ void UNSBossDeath::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase
 			if (FSM)
 			{
 				FSM->SetPostureState(EPostureState::STABLE);
+				FSM->SetCanExecute(false);
 			}
 		}
 	}

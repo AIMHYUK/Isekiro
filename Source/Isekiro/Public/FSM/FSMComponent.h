@@ -149,6 +149,10 @@ public:
 
 	void PlayBossSound(EBossDialogue DialogueType);
 
+	UFUNCTION(BlueprintCallable)
+	bool CanExecute() const;
+	void SetCanExecute(bool _bCanExecute);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -158,6 +162,9 @@ protected:
 	TObjectPtr<UAudioComponent> AudioComp;
 
 private:
+	bool bCanExecute; 
+
+
 	UPROPERTY(EditDefaultsOnly, Category = "Settings|Dialogue", meta = (AllowPrivateAccess))
 	TMap<EBossDialogue, USoundBase*> BossDialogue;
 	bool bHasEnteredFight;

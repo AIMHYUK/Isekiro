@@ -33,6 +33,8 @@ UFSMComponent::UFSMComponent()
 	bHasEnteredFight = true;
 
 	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+
+	bCanExecute = false;
 }
 
 
@@ -363,6 +365,16 @@ void UFSMComponent::PlayBossSound(EBossDialogue DialogueType)
 		//UGameplayStatics::PlaySound2D(GetWorld(), *DialogueIt);
 		bDialogueActive = true;
 	}
+}
+
+bool UFSMComponent::CanExecute() const
+{
+	return bCanExecute;
+}
+
+void UFSMComponent::SetCanExecute(bool _bCanExecute)
+{
+	bCanExecute = _bCanExecute;
 }
 
 void UFSMComponent::OnDialogueFinished()

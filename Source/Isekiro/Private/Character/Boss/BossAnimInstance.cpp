@@ -109,6 +109,11 @@ void UBossAnimInstance::AnimNotify_RemoveALifePoint()
 		{
 			Hero->RemoveBossLifePoint();
 		}
+
+		if (FSMComp)
+		{
+			FSMComp->SetCanExecute(false);
+		}
 	}
 }
 
