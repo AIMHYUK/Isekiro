@@ -41,13 +41,44 @@ Unreal Engine 5.6으로 제작한 세키로(Sekiro: Shadows Die Twice) 스타일
 - 플레이어가 공격할수록 보스의 **회피(Dodge) 확률**이 점진적으로 증가
 - 방어(Block) / 패리(Parry) 확률을 별도로 설정 가능
 
+### 타겟 락온 시스템 (Target Lock-on System)
+
+> `Component-based` · `Vector Dot Product` · `Modular Design`
+
+<!-- GIF: 락온 시연 -->
+<!-- ![Target Lock-on](docs/gifs/lockon.gif) -->
+
+**[Core Mechanics]**
+
+- **Component-based Design**: `UActorComponent`를 활용하여 모든 플레이어 캐릭터에 즉시 탑재 가능한 모듈형 락온 시스템 구현.
+- **Optimal Target Scoring**: 내적(Dot Product)을 활용해 카메라 정면 벡터와 타겟 벡터 간의 유사도를 측정, 화면 중앙에 가장 가까운 적을 우선적으로 선택하는 알고리즘 설계.
+- **Dynamic View Control**: `RInterp To`를 이용해 타겟 추적 시 카메라 회전의 부드러운 보간 처리 및 락온 상태에 따른 캐릭터 이동 방식(Strafing) 자동 전환.
+- **Obstacle Awareness**: Line Trace를 통한 시야 검사(Line of Sight)를 수행하여 장애물 뒤의 적은 타겟 대상에서 제외.
+
+---
+
+### 그래플링 훅 시스템 (Grappling Hook System)
+
+> `Physics-based` · `Predictive Targeting` · `State Synchronization`
+
+<!-- GIF: 그래플링 훅 시연 -->
+<!-- ![Grappling Hook](docs/gifs/hook.gif) -->
+
+**[Core Mechanics]**
+
+- **Predictive Landing Logic**: 타겟 지점 감지 후 하단 트레이스를 추가 수행하여 캐릭터가 실제 착지 가능한 지형(Walkable Surface)인지 사전에 검증.
+- **Smooth Motion Profiling**: Timeline과 Curve를 결합하여 발사 시 가속도와 도착 시 감속도를 조절, 물리적으로 자연스러운 이동 궤적 구현.
+- **Cable Physics Integration**: 언리얼 엔진의 Cable Component를 활용해 발사체와 캐릭터 손(Socket) 사이의 물리적 연결 및 환경 충돌 구현.
+- **Anim-driven State Control**: 애니메이션 노티파이(Anim Notify)를 활용해 이동 로직의 시작/종료 시점과 캐릭터의 Flying/Falling 상태를 정밀하게 동기화.
+
+---
+
 ### 전투 시스템
 
 - **콤보 공격**: 입력 타이밍에 따라 연속 공격 가능
 - **패리 & 자세 게이지**: 성공적인 패리 시 보스의 자세 게이지 누적, 자세가 무너지면 처형 가능
 - **처형(Execution)**: 보스의 자세(Posture)가 완전히 무너졌을 때 처형 공격 실행
 - **화살(Arrow)**: 보스의 원거리 공격. Niagara 트레일 이펙트 포함
-- **락온(Target Lock-On)**: `TargetLockOnComponent`로 보스 고정 시점 지원
 
 ### 캐릭터 구조
 
