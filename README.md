@@ -2,6 +2,10 @@
 
 Unreal Engine 5.6으로 제작한 세키로(Sekiro: Shadows Die Twice) 스타일의 3인칭 액션 게임 프로젝트입니다.
 
+## 시연 영상
+
+[![Isekiro Demo](https://img.youtube.com/vi/BzzkD_gu2F0/0.jpg)](https://youtu.be/BzzkD_gu2F0)
+
 ## 개요
 
 플레이어가 사무라이 캐릭터를 조종하며 보스와 1:1 전투를 펼치는 게임입니다. 세키로의 핵심 전투 메커니즘인 **패리(Parry)**, **자세 게이지(Posture)**, **처형(Execution)** 시스템을 직접 구현한 것이 특징입니다.
