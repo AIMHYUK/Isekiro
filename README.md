@@ -73,6 +73,23 @@ Unreal Engine 5.6으로 제작한 세키로(Sekiro: Shadows Die Twice) 스타일
 
 ---
 
+### 패링 시스템 (Parry System)
+
+> `Collision-based Timing` · `Time Dilation` · `Posture Damage`
+
+<!-- GIF: 패링 시연 -->
+<!-- ![Parry](docs/gifs/parry.gif) -->
+
+**[Core Mechanics]**
+
+- **Frame-precise Parry Window**: `URealParryBox`(`USphereComponent` 기반)의 Overlap 이벤트로 패리 판정 구현. 일반 상태에서는 약 8프레임(0.133초), 위험(Hazard) 상태에서는 1프레임(0.016초)으로 패리 윈도우가 극도로 좁아지는 난이도 연동 설계.
+- **Invincibility on Parry**: 패리 입력 시 플레이어 캡슐의 데미지 채널(`ECC_GameTraceChannel3`) 충돌 응답을 즉시 `Ignore`로 전환하여 무적 판정 구현. 패리 종료 시 복구.
+- **Hit-stop & Time Dilation**: 패리 성공 시 `SetGlobalTimeDilation(0.85f)`로 슬로우 모션을 적용하고 0.5초 후 타이머로 복구하여 타격감 연출.
+- **Posture Damage**: 패리 성공마다 보스에게 자세 데미지(3) 누적. 자세가 완전히 무너지면 `MakeSlowTimeDilation`을 호출하여 처형 연출 트리거.
+- **Cooldown Management**: 패리 윈도우와 쿨다운을 별도의 `FTimerHandle`로 분리 관리하여 연속 패리 어뷰징 방지.
+
+---
+
 ### 전투 시스템
 
 - **콤보 공격**: 입력 타이밍에 따라 연속 공격 가능
